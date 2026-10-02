@@ -1,4 +1,5 @@
-# LuPNet - Lung Perfusion Network model
+# LuPNet
+## Lung Perfusion Network model
 
 ### A physics-based model of the fibrotic lung and its pulmonary circulation
 
