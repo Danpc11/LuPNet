@@ -1,0 +1,43 @@
+{
+ "tissue_curve": [
+  0.014082,
+  -1.952144,
+  84.548795
+ ],
+ "dlco_curve": [
+  -0.001628,
+  0.246811,
+  -5.302886
+ ],
+ "dlco_residual_sd": 0.1386,
+ "mixture": {
+  "weights": [
+   0.7736,
+   0.2264
+  ],
+  "means": [
+   0.0213,
+   -0.2335
+  ],
+  "sds": [
+   0.1217,
+   0.172
+  ],
+  "vascular_component": 1
+ },
+ "logistic": {
+  "intercept": -0.9266,
+  "coef_FVC": -0.02392,
+  "coef_log_ratio": 1.9439,
+  "auc_with_noise": 0.773
+ },
+ "n_patients": 260,
+ "fvc_range": [
+  42.4,
+  80.3
+ ],
+ "dlco_range": [
+  7.3,
+  64.9
+ ]
+}

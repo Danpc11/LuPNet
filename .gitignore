@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+results/ph_cohorts/*
+!results/ph_cohorts/.gitkeep
+results/runs/

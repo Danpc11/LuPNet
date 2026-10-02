@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LuPNet PH-IPF calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1b2a35; --muted: #5b6b77; --paper: #f7f9fa; --panel: #ffffff; --line: #d7dee3;
+    --oxygen: #2b6cb0; --exchange: #2a9d8f; --venous: #7b2d5b; --warn: #9a5b00;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #e3eaee; --muted: #9fb0bb; --paper: #10181e; --panel: #172229; --line: #2a3a44;
+      --oxygen: #6fa8e0; --exchange: #4cc2b3; --venous: #d08ab3; --warn: #e2a64a; }
+  }
+  :root[data-theme="dark"] { --ink: #e3eaee; --muted: #9fb0bb; --paper: #10181e; --panel: #172229; --line: #2a3a44;
+      --oxygen: #6fa8e0; --exchange: #4cc2b3; --venous: #d08ab3; --warn: #e2a64a; }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.55 "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 32px 20px 48px; }
+  h1 { font: 650 clamp(1.7rem, 3.4vw, 2.5rem)/1.15 "Source Serif 4", Georgia, serif; margin: 0 0 8px; max-width: 24ch; }
+  .lede { color: var(--muted); max-width: 68ch; margin: 0 0 28px; }
+  .grid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .inputs, .map { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  label { display: block; font-weight: 500; margin: 14px 0 4px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input[type=number] { width: 100%; font: inherit; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+  input:focus-visible { outline: 3px solid var(--oxygen); outline-offset: 1px; }
+  .results { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row span:first-child { color: var(--muted); }
+  .row b { font-weight: 600; white-space: nowrap; }
+  .verdict { margin: 16px 0 4px; font: 650 1.15rem/1.35 "Source Serif 4", Georgia, serif; }
+  .note { color: var(--warn); font-size: .92rem; margin-top: 8px; }
+  .map h2 { font: 650 1.2rem/1.3 "Source Serif 4", Georgia, serif; margin: 0 0 4px; }
+  .map p { color: var(--muted); margin: 0 0 12px; font-size: .95rem; }
+  .canvas-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; }
+  canvas { width: 100%; height: 100%; display: block; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); margin-top: 10px; }
+  .scale { display: inline-block; width: 120px; height: 10px; border-radius: 5px; vertical-align: middle;
+           background: linear-gradient(90deg, var(--exchange), var(--venous)); margin: 0 6px; }
+  details { margin-top: 28px; max-width: 76ch; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p, details li { color: var(--muted); }
+  footer { margin-top: 28px; color: var(--muted); font-size: .88rem; max-width: 76ch; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Is this patient's pulmonary hypertension more than fibrosis?</h1>
+  <p class="lede">Enter the lung function of a patient with idiopathic pulmonary fibrosis. LuPNet places them among __NPAT__ virtual patients simulated with and without a structural vasculopathy, and estimates how much of their expected pulmonary artery pressure fibrosis alone would explain. For research use only; it does not replace right heart catheterization.</p>
+
+  <div class="grid">
+    <section class="inputs" aria-label="Patient data">
+      <label for="fvc">FVC <small>(% predicted)</small></label>
+      <input id="fvc" type="number" min="20" max="120" step="1" value="55" inputmode="decimal">
+      <label for="dlco">DLCO <small>(% predicted, haemoglobin-corrected)</small></label>
+      <input id="dlco" type="number" min="5" max="120" step="1" value="30" inputmode="decimal">
+      <label for="spo2">Resting SpO₂ <small>(%, optional)</small></label>
+      <input id="spo2" type="number" min="70" max="100" step="1" placeholder="e.g. 93" inputmode="decimal">
+
+      <div class="results" aria-live="polite">
+        <p class="verdict" id="verdict"></p>
+        <div class="row"><span>Probability of mPAP ≥ 25 mmHg</span><b id="pph"></b></div>
+        <div class="row"><span>Probability of the vascular phenotype</span><b id="pvasc"></b></div>
+        <div class="row"><span>mPAP expected from fibrosis alone</span><b id="tissue"></b></div>
+        <div class="row"><span>DLCO expected for this FVC without vasculopathy</span><b id="dlexp"></b></div>
+        <div class="row"><span>25 most similar virtual patients: mPAP</span><b id="twins"></b></div>
+        <div class="row"><span>… of whom with mPAP ≥ 25 mmHg</span><b id="twph"></b></div>
+        <div class="row" id="zrow" hidden><span>Zisman 2007 formula (with SpO₂)</span><b id="zis"></b></div>
+        <p class="note" id="note" hidden></p>
+      </div>
+    </section>
+
+    <section class="map" aria-label="Virtual cohort">
+      <h2>Where the patient sits</h2>
+      <p>Each dot is a virtual patient, coloured by its simulated mean pulmonary artery pressure. The line is the DLCO that tissue loss alone produces at each FVC; patients well below it carry the vascular phenotype.</p>
+      <div class="canvas-wrap"><canvas id="plot" role="img" aria-label="Scatter of FVC against DLCO for the virtual cohort, with the patient marked"></canvas></div>
+      <div class="legend">
+        <span>mPAP 15<span class="scale"></span>35+ mmHg</span>
+        <span>— expected DLCO without vasculopathy</span>
+        <span>○ this patient</span>
+      </div>
+    </section>
+  </div>
+
+  <details>
+    <summary>How the estimates are made</summary>
+    <ul>
+      <li>The virtual patients come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Half of them carry a structural small-artery vasculopathy with its own course, and fibrosis progresses at a different speed in each patient.</li>
+      <li>The vasculopathy was calibrated so that the cohort reproduces the distribution of mPAP in mild-to-moderate IPF (ARTEMIS-IPF), the weak correlation of mPAP with DLCO and its absence with FVC. The prevalence of PH in advanced disease was not fitted.</li>
+      <li>The probability of PH is a logistic model of FVC and FVC/DLCO fitted to the virtual cohort with realistic measurement noise (AUC __AUC__). The vascular-phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve.</li>
+      <li>The virtual cohort spans FVC __FMIN__–__FMAX__% and DLCO __DMIN__–__DMAX__%. The model underestimates restriction in very advanced disease (its FVC does not fall below about 42%), so estimates at low FVC overstate the tissue contribution.</li>
+    </ul>
+  </details>
+  <footer>LuPNet, Instituto Nacional de Medicina Genómica. Code and data: github.com/Danpc11/LuPNet. Research software, not a medical device.</footer>
+</main>
+<script>
+const COEF = __COEF__;
+const COH = __COHORT__;   // [FVC, DLCO, mPAP, vasculopathy]
+const $ = id => document.getElementById(id);
+const polyval = (c, x) => c.reduce((s, a) => s * x + a, 0);
+const npdf = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2) / s;
+const fmt = (x, d = 0) => Number.isFinite(x) ? x.toFixed(d) : '–';
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+function estimate(fvc, dlco) {
+  const tissue = polyval(COEF.tissue_curve, fvc);
+  const dlexp = Math.exp(polyval(COEF.dlco_curve, fvc));
+  const res = Math.log(dlco) - Math.log(dlexp);
+  const M = COEF.mixture, v = M.vascular_component;
+  const lik = M.weights.map((w, k) => w * npdf(res, M.means[k], M.sds[k]));
+  const pvasc = lik[v] / (lik[0] + lik[1]);
+  const L = COEF.logistic;
+  const pph = 1 / (1 + Math.exp(-(L.intercept + L.coef_FVC * fvc + L.coef_log_ratio * Math.log(fvc / dlco))));
+  const sF = 12, sD = 0.45;
+  const near = COH.map(p => [((p[0] - fvc) / sF) ** 2 + ((Math.log(p[1]) - Math.log(dlco)) / sD) ** 2, p])
+                  .sort((a, b) => a[0] - b[0]).slice(0, 25).map(x => x[1]);
+  const m = near.map(p => p[2]).sort((a, b) => a - b);
+  const q = f => m[Math.min(m.length - 1, Math.floor(f * (m.length - 1)))];
+  return { tissue, dlexp, pvasc, pph, twin: [q(0.5), q(0.25), q(0.75)], twph: near.filter(p => p[2] >= 25).length / near.length };
+}
+
+function update() {
+  const fvc = parseFloat($('fvc').value), dlco = parseFloat($('dlco').value), spo2 = parseFloat($('spo2').value);
+  const note = $('note');
+  if (!(fvc > 0) || !(dlco > 0)) { $('verdict').textContent = 'Enter FVC and DLCO to see the estimates.'; return; }
+  const e = estimate(fvc, dlco);
+  $('pph').textContent = fmt(100 * e.pph) + '%';
+  $('pvasc').textContent = fmt(100 * e.pvasc) + '%';
+  $('tissue').textContent = fmt(e.tissue, 1) + ' mmHg';
+  $('dlexp').textContent = fmt(e.dlexp) + '%';
+  $('twins').textContent = `${fmt(e.twin[0], 1)} mmHg (IQR ${fmt(e.twin[1], 1)}–${fmt(e.twin[2], 1)})`;
+  $('twph').textContent = fmt(100 * e.twph) + '%';
+  $('verdict').textContent = e.pvasc > 0.5
+    ? 'DLCO is lower than fibrosis alone explains: this pattern points to a vascular component.'
+    : 'DLCO is in line with the extent of fibrosis: a large vascular component is less likely.';
+  if (spo2 > 0) {
+    $('zrow').hidden = false;
+    $('zis').textContent = fmt(-11.9 + 0.272 * spo2 + 0.0659 * (100 - spo2) ** 2 + 3.06 * (fvc / dlco), 1) + ' mmHg';
+  } else { $('zrow').hidden = true; }
+  const msg = [];
+  if (fvc < COEF.fvc_range[0] || fvc > COEF.fvc_range[1]) msg.push(`FVC outside the simulated range (${fmt(COEF.fvc_range[0])}–${fmt(COEF.fvc_range[1])}%); estimates are extrapolated.`);
+  if (dlco < COEF.dlco_range[0] || dlco > COEF.dlco_range[1]) msg.push(`DLCO outside the simulated range (${fmt(COEF.dlco_range[0])}–${fmt(COEF.dlco_range[1])}%).`);
+  note.hidden = !msg.length; note.textContent = msg.join(' ');
+  draw(fvc, dlco);
+}
+
+function draw(fvc, dlco) {
+  const c = $('plot'), r = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+  c.width = W * r; c.height = H * r; const g = c.getContext('2d'); g.scale(r, r);
+  const pad = { l: 46, r: 12, t: 10, b: 36 }, x0 = 30, x1 = 95, y0 = 0, y1 = 80;
+  const X = v => pad.l + (v - x0) / (x1 - x0) * (W - pad.l - pad.r), Y = v => H - pad.b - (v - y0) / (y1 - y0) * (H - pad.t - pad.b);
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = css('--line'); g.fillStyle = css('--muted'); g.font = '12px "IBM Plex Sans", system-ui, sans-serif'; g.lineWidth = 1;
+  for (let v = 30; v <= 90; v += 10) { g.beginPath(); g.moveTo(X(v), Y(y0)); g.lineTo(X(v), Y(y1)); g.stroke(); g.fillText(v, X(v) - 7, H - pad.b + 16); }
+  for (let v = 0; v <= 80; v += 20) { g.beginPath(); g.moveTo(X(x0), Y(v)); g.lineTo(X(x1), Y(v)); g.stroke(); g.fillText(v, pad.l - 26, Y(v) + 4); }
+  g.fillText('FVC (% predicted)', W / 2 - 50, H - 4);
+  g.save(); g.translate(12, H / 2 + 50); g.rotate(-Math.PI / 2); g.fillText('DLCO (% predicted)', 0, 0); g.restore();
+  const lo = css('--exchange'), hi = css('--venous');
+  const mix = (a, b, t) => { const h = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const A = h(a), B = h(b);
+    return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; };
+  for (const p of COH) {
+    const t = Math.max(0, Math.min(1, (p[2] - 15) / 20));
+    g.fillStyle = mix(lo, hi, t); g.globalAlpha = 0.75;
+    g.beginPath(); g.arc(X(p[0]), Y(p[1]), 3.2, 0, 2 * Math.PI); g.fill();
+  }
+  g.globalAlpha = 1; g.strokeStyle = css('--ink'); g.lineWidth = 1.6; g.beginPath();
+  for (let v = COEF.fvc_range[0]; v <= COEF.fvc_range[1]; v += 0.5) { const yv = Math.exp(polyval(COEF.dlco_curve, v)); v === COEF.fvc_range[0] ? g.moveTo(X(v), Y(yv)) : g.lineTo(X(v), Y(yv)); }
+  g.stroke();
+  if (fvc >= x0 && fvc <= x1 && dlco >= y0 && dlco <= y1) {
+    g.strokeStyle = css('--oxygen'); g.lineWidth = 2.5; g.beginPath(); g.arc(X(fvc), Y(dlco), 8, 0, 2 * Math.PI); g.stroke();
+  }
+}
+
+['fvc', 'dlco', 'spo2'].forEach(id => $(id).addEventListener('input', update));
+window.addEventListener('resize', () => update());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', update);
+update();
+</script>
+</body>
+</html>
