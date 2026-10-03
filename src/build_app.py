@@ -15,4 +15,4 @@ rep = {"__COEF__": json.dumps(C), "__COHORT__": json.dumps(pts), "__NPAT__": str
 for k, v in rep.items():
     t = t.replace(k, v)
 assert "__" not in t, "unfilled placeholder"
-open(os.path.join(ROOT, "index.html"), "w").write(t); print("index.html written,", len(pts), "virtual patients")
+open(os.path.join(ROOT, "index.html"), "w").write(t); print("index.html written,", len(pts), "simulated cases")
