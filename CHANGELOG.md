@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (2026-10)
+
+- Archival release for Zenodo; code, data and simulations are identical to 0.2.0.
+- Manuscript status in the README updated to "in preparation".
+
 ## 0.2.0 (2026-10)
 
 - Alternative vascular mechanism: `vasc_mode="fibrosis"` (lesion scaled by the extent of fibrosis), `--vmode` in `src/ph_cohort.py`.
