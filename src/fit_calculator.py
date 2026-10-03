@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build the inputs of the PH-IPF calculator from the virtual cohorts.
+"""Build the inputs of the PH-IPF calculator from the in silico cohorts.
 
-1. data/virtual_ph_cohort.tsv: one row per virtual patient (final visit) from the calibrated cohort (200 patients,
+1. data/virtual_ph_cohort.tsv: one row per simulated case (final visit) from the calibrated cohort (200 patients,
    tag big2), the advanced-disease cohort (60, tag adv2) and the cohort without vasculopathy (60, tag hom).
 2. results/ph_calculator.json:
-   - tissue_curve: expected mPAP from tissue loss alone as a function of FVC (virtual patients without vasculopathy);
+   - tissue_curve: expected mPAP from tissue loss alone as a function of FVC (simulated cases without vasculopathy);
    - dlco_curve: expected log DLCO for a given FVC without vasculopathy, and its residual SD;
    - mixture: two-component Gaussian mixture of the DLCO residual (all patients with vasculopathy model);
    - logistic: P(mPAP >= 25 | FVC, DLCO), fitted with measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
@@ -20,9 +20,10 @@ ap = argparse.ArgumentParser(); ap.add_argument("--cohorts", default=os.path.joi
 
 
 def load(tag, group):
+    from cohort_io import cases
     rows = []
-    for f in sorted(glob.glob(os.path.join(a.cohorts, f"{tag}_*.tsv"))):
-        d = pd.read_csv(f, sep="\t"); r0, x = d.iloc[0], d.iloc[-1]
+    for _, d in cases(a.cohorts, tag):
+        r0, x = d.iloc[0], d.iloc[-1]
         A = float(x["vasc_A"]) if "vasc_A" in d else 0.0
         rows.append(dict(cohort=group, mPAP=round(float(x.mPAP), 2), FVC=round(float(100 * x.FVC / r0.FVC), 1),
                          DLCO=round(float(100 * x.DLCO / r0.DLCO), 1), vasculopathy=int(A > 0), vasc_A=round(A, 3)))
