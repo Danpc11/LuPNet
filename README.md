@@ -6,7 +6,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
-![Version](https://img.shields.io/badge/version-0.2.0-1f6feb)
 
 ---
 
@@ -75,7 +74,7 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 
 ## Reproducing the manuscript
 
-*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (submitted). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), so figures and tables can be rebuilt without re-running the simulations:
+*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), so figures and tables can be rebuilt without re-running the simulations:
 
 ```bash
 python src/make_figures_erj.py        # Figures 1-4 and Table 1 -> results/figures/
