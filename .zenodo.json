@@ -6,12 +6,16 @@
   "description": "Physics-based network model of the fibrotic lung and its pulmonary circulation, with a shared shear-stress remodelling law for the pulmonary vessels, in silico cohorts of pulmonary hypertension in idiopathic pulmonary fibrosis, and a browser-based research calculator. Code, data and simulations accompanying the manuscript 'A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis'.",
   "creators": [
     {
-      "name": "Pérez-Calixto, Daniel",
-      "affiliation": "Instituto Nacional de Medicina Genómica"
+      "name": "Toscano-Marquez, Fernanda",
+      "affiliation": "Instituto Nacional de Enfermedades Respiratorias \"Ismael Cosío Villegas\""
     },
     {
-      "name": "Hernández-Lemus, Enrique",
-      "affiliation": "Instituto Nacional de Medicina Genómica"
+      "name": "Cisneros, José",
+      "affiliation": "Instituto Nacional de Enfermedades Respiratorias \"Ismael Cosío Villegas\""
+    },
+    {
+      "name": "Maldonado, Mariel",
+      "affiliation": "Instituto Nacional de Enfermedades Respiratorias \"Ismael Cosío Villegas\""
     },
     {
       "name": "Cervera, Alejandra",
@@ -19,6 +23,22 @@
     },
     {
       "name": "Tovar, Hugo",
+      "affiliation": "Instituto Nacional de Medicina Genómica"
+    },
+    {
+      "name": "Vázquez-Victorio, Genaro",
+      "affiliation": "Facultad de Ciencias, Universidad Nacional Autónoma de México"
+    },
+    {
+      "name": "Pardo, Annie",
+      "affiliation": "Facultad de Ciencias, Universidad Nacional Autónoma de México"
+    },
+    {
+      "name": "Selman, Moises",
+      "affiliation": "Instituto Nacional de Enfermedades Respiratorias \"Ismael Cosío Villegas\""
+    },
+    {
+      "name": "Pérez-Calixto, Daniel",
       "affiliation": "Instituto Nacional de Medicina Genómica"
     }
   ],
