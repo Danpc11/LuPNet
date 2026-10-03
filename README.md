@@ -6,6 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23125038.svg)](https://doi.org/10.5281/zenodo.23125038)
 
 ---
 
@@ -113,6 +114,10 @@ Each simulated case is an independent run of the model, not a real patient.
 - In very advanced disease the simulated FVC does not fall below about 42%, so at a given low FVC the model carries more tissue loss than patients do; the overall PH prevalence in a dedicated advanced cohort is overestimated (67–71% vs 46%).
 - The arterial morphometry comes from the casts of one lung, so the pulmonary exponent b has no confidence interval yet.
 - The pulsatility of the pulmonary artery is an effective value, not a measured waveform.
+
+## How to cite
+
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.2.1). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
 
 ## License
 
