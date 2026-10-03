@@ -58,7 +58,7 @@ $$R_\mathrm{les}=R_{ta,0}\,A\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right),\qquad 
 
 A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopathy before the start (`t_vasc0`), τ its time constant (`vasc_tau`), and c_cap multiplies the capillary bed of every unit (`cap_frac` = f_cap). With A = 0 the model is unchanged.
 
-**Virtual patients** (`src/ph_cohort.py`): with probability 0.5 a patient has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between patients (years per model unit × lognormal, σ = 0.5); one visit at a random stage.
+**Simulated cases** (`src/ph_cohort.py`): with probability 0.5 a patient has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between patients (years per model unit × lognormal, σ = 0.5); one visit at a random stage.
 
 ## 4. Pulmonary hypertension in IPF
 
