@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Virtual IPF cohorts for pulmonary hypertension (PH), with a structural vasculopathy independent of fibrosis.
 
-Each virtual patient has
+Each simulated case has
   - its own fibrosis course (seed) and speed (years per model unit scaled by a lognormal factor, sd 0.5),
   - with probability P_VASC, a bounded structural small-artery vasculopathy: a non-remodelable series lesion
     R_les = R_ta0 * A * (1 - exp(-(t_yr + t0) / tau)), A ~ lognormal(A_MED, A_SIG), t0 ~ U(0, 10) yr,
@@ -30,13 +30,13 @@ BASE = os.path.join(ROOT, "data", "calibrated_ipf_params.json")
 TARGETS = dict(lt20=51, b20_25=30, ge25=19, ge35=4, rDLCO=-0.30, rFVC=0.0, ratio=0.73)
 
 
-def make_params(seed, G, stop, A, t0, ypu, tau, cap):
+def make_params(seed, G, stop, A, t0, ypu, tau, cap, vmode="independent"):
     d = json.load(open(BASE)); p = Params()
     for k, v in d.items():
         if hasattr(p, k):
             setattr(p, k, tuple(v) if isinstance(getattr(p, k), tuple) else v)
     p.law, p.b, p.G, p.seed, p.stop_healthy = "shared", 0.925, G, seed, stop
-    p.vasc_A, p.vasc_tau, p.t_vasc0, p.cap_frac = A, tau, t0, cap
+    p.vasc_A, p.vasc_tau, p.t_vasc0, p.cap_frac, p.vasc_mode = A, tau, t0, cap, vmode
     p.years_per_unit *= ypu; p.stop_mPAP = 1e9
     return p
 
@@ -56,7 +56,7 @@ def cmd_run(a):
         f = os.path.join(OUT, f"{a.tag}_{i:03d}.tsv")
         if os.path.exists(f):
             continue
-        p = make_params(a.pseed + i, a.G, float(stop[i]), float(A[i]), float(t0[i]), float(ypu[i]), a.tau, a.cap)
+        p = make_params(a.pseed + i, a.G, float(stop[i]), float(A[i]), float(t0[i]), float(ypu[i]), a.tau, a.cap, a.vmode)
         t = time.time(); rows, _, _ = run(p, do_exercise=False)
         df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G
         df.to_csv(f, sep="\t", index=False)
@@ -69,9 +69,10 @@ def cmd_analyze(a):
         T = pd.read_csv(a.table, sep="\t")
         R = T[T.cohort == a.tag][["mPAP", "FVC", "DLCO"]].reset_index(drop=True) if a.tag else T[["mPAP", "FVC", "DLCO"]]
     else:
+        from cohort_io import cases
         rows = []
-        for f in sorted(glob.glob(os.path.join(OUT, f"{a.tag}_*.tsv"))):
-            d = pd.read_csv(f, sep="\t"); r0, x = d.iloc[0], d.iloc[-1]
+        for _, d in cases(OUT, a.tag):
+            r0, x = d.iloc[0], d.iloc[-1]
             rows.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO))
         R = pd.DataFrame(rows)
     if len(R) == 0:
@@ -106,6 +107,7 @@ if __name__ == "__main__":
     r.add_argument("--lo", type=float, default=0.25); r.add_argument("--hi", type=float, default=0.85); r.add_argument("--G", type=int, default=8)
     r.add_argument("--p_vasc", type=float, default=0.5); r.add_argument("--a_med", type=float, default=1.5); r.add_argument("--a_sig", type=float, default=1.1)
     r.add_argument("--tau", type=float, default=2.0); r.add_argument("--cap", type=float, default=0.05)
+    r.add_argument("--vmode", default="independent", choices=["independent", "fibrosis"])
     z = sub.add_parser("analyze"); z.add_argument("--tag", default="")
     z.add_argument("--table", default="", help="summary table (data/virtual_ph_cohort.tsv); --tag selects its cohort column")
     a = ap.parse_args()
