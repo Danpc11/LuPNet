@@ -103,6 +103,7 @@ class Params:
     # shared target law (InFlow): one tau0 for every vessel, exact Womersley sensing on the first harmonic
     vasc_A: float = 0.0           # bounded vasculopathy: maximum lesion resistance in units of the terminal-arteriole
                                   # resistance; R_les = R_ta0 vasc_A (1 - exp(-(t_yr + t_vasc0) / vasc_tau))
+    vasc_mode: str = "independent"  # "independent" (own time course) | "fibrosis" (scales with fibrotic extent)
     vasc_tau: float = 5.0         # time constant of the bounded vasculopathy (years)
     cap_frac: float = 0.0         # capillary loss coupled to the vasculopathy: capillary factor 1/(1 + cap_frac (exp(k t) - 1))
     t_vasc0: float = 0.0          # years of vasculopathy already elapsed at the start (independent of fibrosis)
