@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
-results/ph_cohorts/*
-!results/ph_cohorts/.gitkeep
+.pytest_cache/
 results/runs/
+results/figures/
+results/*.tsv
