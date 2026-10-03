@@ -206,7 +206,10 @@ def run(p: Params, snapshots=(0.1, 0.3, 0.5), do_exercise=True, verbose=False):
             surfactant_step(L, st, dt)
         t += dt
         if p.vasc_A > 0:
-            sv = p.vasc_A * (1.0 - np.exp(-(t * p.years_per_unit + p.t_vasc0) / p.vasc_tau))
+            if p.vasc_mode == "fibrosis":      # alternative: lesion proportional to the extent of fibrosis
+                sv = p.vasc_A * (1.0 - rows[-1]["healthy"]) / 0.5
+            else:
+                sv = p.vasc_A * (1.0 - np.exp(-(t * p.years_per_unit + p.t_vasc0) / p.vasc_tau))
             L.R_lesion = np.full(L.N, L._Rta0 * sv)
             if p.cap_frac > 0:
                 L.cap_vasc = 1.0 / (1.0 + p.cap_frac * sv)
