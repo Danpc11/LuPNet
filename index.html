@@ -55,7 +55,7 @@
 <body>
 <main>
   <h1>Is this patient's pulmonary hypertension more than fibrosis?</h1>
-  <p class="lede">Enter the lung function of a patient with idiopathic pulmonary fibrosis. LuPNet places them among 260 virtual patients simulated with and without a structural vasculopathy, and estimates how much of their expected pulmonary artery pressure fibrosis alone would explain. For research use only; it does not replace right heart catheterization.</p>
+  <p class="lede">Enter the lung function of a patient with idiopathic pulmonary fibrosis. LuPNet places them among 260 simulated cases simulated with and without a structural vasculopathy, and estimates how much of their expected pulmonary artery pressure fibrosis alone would explain. For research use only; it does not replace right heart catheterization.</p>
 
   <div class="grid">
     <section class="inputs" aria-label="Patient data">
@@ -72,7 +72,7 @@
         <div class="row"><span>Probability of the vascular phenotype</span><b id="pvasc"></b></div>
         <div class="row"><span>mPAP expected from fibrosis alone</span><b id="tissue"></b></div>
         <div class="row"><span>DLCO expected for this FVC without vasculopathy</span><b id="dlexp"></b></div>
-        <div class="row"><span>25 most similar virtual patients: mPAP</span><b id="twins"></b></div>
+        <div class="row"><span>25 most similar simulated cases: mPAP</span><b id="twins"></b></div>
         <div class="row"><span>… of whom with mPAP ≥ 25 mmHg</span><b id="twph"></b></div>
         <div class="row" id="zrow" hidden><span>Zisman 2007 formula (with SpO₂)</span><b id="zis"></b></div>
         <p class="note" id="note" hidden></p>
@@ -81,8 +81,8 @@
 
     <section class="map" aria-label="Virtual cohort">
       <h2>Where the patient sits</h2>
-      <p>Each dot is a virtual patient, coloured by its simulated mean pulmonary artery pressure. The line is the DLCO that tissue loss alone produces at each FVC; patients well below it carry the vascular phenotype.</p>
-      <div class="canvas-wrap"><canvas id="plot" role="img" aria-label="Scatter of FVC against DLCO for the virtual cohort, with the patient marked"></canvas></div>
+      <p>Each dot is a simulated case, coloured by its simulated mean pulmonary artery pressure. The line is the DLCO that tissue loss alone produces at each FVC; patients well below it carry the vascular phenotype.</p>
+      <div class="canvas-wrap"><canvas id="plot" role="img" aria-label="Scatter of FVC against DLCO for the in silico cohort, with the patient marked"></canvas></div>
       <div class="legend">
         <span>mPAP 15<span class="scale"></span>35+ mmHg</span>
         <span>— expected DLCO without vasculopathy</span>
@@ -94,10 +94,10 @@
   <details>
     <summary>How the estimates are made</summary>
     <ul>
-      <li>The virtual patients come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Half of them carry a structural small-artery vasculopathy with its own course, and fibrosis progresses at a different speed in each patient.</li>
+      <li>The simulated cases come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Each simulated case is an independent run of the model, not a real patient. Half of the cases carry a structural small-artery vasculopathy with its own course, and fibrosis progresses at a different speed in each case.</li>
       <li>The vasculopathy was calibrated so that the cohort reproduces the distribution of mPAP in mild-to-moderate IPF (ARTEMIS-IPF), the weak correlation of mPAP with DLCO and its absence with FVC. The prevalence of PH in advanced disease was not fitted.</li>
-      <li>The probability of PH is a logistic model of FVC and FVC/DLCO fitted to the virtual cohort with realistic measurement noise (AUC 0.77). The vascular-phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve.</li>
-      <li>The virtual cohort spans FVC 42–80% and DLCO 7–65%. The model underestimates restriction in very advanced disease (its FVC does not fall below about 42%), so estimates at low FVC overstate the tissue contribution.</li>
+      <li>The probability of PH is a logistic model of FVC and FVC/DLCO fitted to the in silico cohort with realistic measurement noise (AUC 0.77). The vascular-phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve.</li>
+      <li>The in silico cohort spans FVC 42–80% and DLCO 7–65%. The model underestimates restriction in very advanced disease (its FVC does not fall below about 42%), so estimates at low FVC overstate the tissue contribution.</li>
     </ul>
   </details>
   <footer>LuPNet, Instituto Nacional de Medicina Genómica. Code and data: github.com/Danpc11/LuPNet. Research software, not a medical device.</footer>
