@@ -7,8 +7,10 @@ Figure 3: advanced disease (out of sample). Figure 4: the vascular phenotype. Ta
 """
 import argparse, glob, os, sys
 import numpy as np, pandas as pd
+import logging
 import matplotlib
 matplotlib.use("Agg")
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 import matplotlib.pyplot as plt
 from scipy.optimize import brentq, minimize_scalar
 from scipy.stats import pearsonr
@@ -22,7 +24,7 @@ ap = argparse.ArgumentParser(); ap.add_argument("--cohorts", default=os.path.joi
 ap.add_argument("--out", default=os.path.join(ROOT, "results", "figures")); a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 MM = 1 / 25.4
-plt.rcParams.update({"font.family": "Liberation Sans", "font.size": 7, "axes.labelsize": 7, "axes.titlesize": 7,
+plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "DejaVu Sans"], "font.size": 7, "axes.labelsize": 7, "axes.titlesize": 7,
                      "xtick.labelsize": 6.5, "ytick.labelsize": 6.5, "legend.fontsize": 6.5, "axes.linewidth": 0.6,
                      "xtick.major.width": 0.6, "ytick.major.width": 0.6, "xtick.major.size": 2.5, "ytick.major.size": 2.5,
                      "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False, "savefig.dpi": 600,
@@ -123,8 +125,8 @@ def network_schematic(ax):
     ax.text(0.12, 1.78, "Main pulmonary\nartery", fontsize=6, va="bottom")
     ax.text(xla + 0.05, 1.78, "Left atrium\n(8 mmHg)", fontsize=6, va="bottom")
     ax.text(xr + 1.5 * dx, 3.62, "Arterial tree\n10 explicit generations", fontsize=6, ha="center", va="top", color=BLUE)
-    ax.text(xa + 0.21, 3.62, "Sub-tree\nto 10 µm", fontsize=6, ha="center", va="top", color=BLUE)
-    ax.text(0.5 * (xu0 + xu1), 3.62, "Gas-exchange\nunits (1,024)", fontsize=6, ha="center", va="top")
+    ax.text(xa + 0.21, 3.62, "Sub-tree to\n10 µm radius", fontsize=6, ha="center", va="top", color=BLUE)
+    ax.text(0.5 * (xu0 + xu1), 3.62, "Gas-exchange\nunits", fontsize=6, ha="center", va="top")
     ax.text(xv + 1.5 * dx, 3.62, "Venous tree", fontsize=6, ha="center", va="top", color="#4D4D9F")
     # key on the right
     x0k = 7.45; yk = 3.3; dy = 0.36
@@ -251,7 +253,7 @@ ax = fig.add_subplot(gs[0, 0]); x = np.arange(4)
 ax.bar(x - 0.19, pt, 0.36, color=BLUE, label="Model (n = %d)" % len(MILD))
 ax.errorbar(x - 0.19, pt, yerr=[pt - lo, hi - pt], fmt="none", ecolor=DARK, elinewidth=0.7, capsize=1.5)
 ax.bar(x + 0.19, [t for *_, t in bins], 0.36, color=LGREY, edgecolor=DARK, lw=0.5, label="ARTEMIS-IPF (n = 488)")
-ax.set(xticks=x, ylabel="Patients (%)", xlabel="Mean pulmonary artery pressure (mmHg)", ylim=(0, 72))
+ax.set(xticks=x, ylabel="Share (%)", xlabel="Mean pulmonary artery pressure (mmHg)", ylim=(0, 72))
 ax.set_xticklabels([b for b, *_ in bins]); ax.legend(loc="upper right")
 tag(ax, "a")
 for k, (col, lab, letter) in enumerate((("FVC", "FVC (% predicted)", "b"), ("DLCO", "DLCO (% predicted)", "c"))):
@@ -277,16 +279,15 @@ ax.set(xticks=[0, 1], xlim=(-0.6, 1.6), ylabel="mPAP (mmHg)", ylim=(12, 50))
 ax.set_xticklabels([f"No vasculopathy\n(n = {len(parts[0])})", f"Vasculopathy\n(n = {len(parts[1])})"])
 tag(ax, "d")
 # e: Table-like dot plot of the seven targets relative to their CI
-def stats(D, rng):
-    mp, fv, dl = noisy(D, rng); ph = D.mPAP >= 25
-    return dict(r_DLCO=pearsonr(mp, dl)[0], r_FVC=pearsonr(mp, fv)[0], ratio=D.DLCO[ph].mean() / D.DLCO[~ph].mean())
-S = pd.DataFrame([stats(MILD.sample(len(MILD), replace=True, random_state=int(rng0.integers(1e9))).reset_index(drop=True), rng0) for _ in range(1000)])
+from ph_stats import bootstrap as ph_bootstrap, point as ph_point, prevalence_ci
+CI_MILD = ph_bootstrap(MILD); PT_MILD = ph_point(MILD)
+S = {"r_DLCO": (CI_MILD["rDLCO"], PT_MILD["rDLCO"]), "r_FVC": (CI_MILD["rFVC"], PT_MILD["rFVC"]), "ratio": (CI_MILD["ratio"], PT_MILD["ratio"])}
 sub = gs[1, 1:].subgridspec(1, 2, width_ratios=[1.0, 0.75], wspace=0.08)
 axL, axR = fig.add_subplot(sub[0, 0]), fig.add_subplot(sub[0, 1])
 items = [("r(mPAP, DLCO)", "r_DLCO", -0.30), ("r(mPAP, FVC)", "r_FVC", 0.0), ("DLCO ratio,\nPH / no PH", "ratio", 0.73)]
 for i, (lab, k, tgt) in enumerate(items):
     ax_ = axL if k != "ratio" else axR
-    l_, m_, h_ = np.percentile(S[k], [2.5, 50, 97.5])
+    (l_, h_), m_ = S[k]
     ax_.plot([l_, h_], [i, i], color=BLUE, lw=1.6, solid_capstyle="butt"); ax_.plot(m_, i, "o", ms=4, color=BLUE)
     ax_.plot(tgt, i, "D", ms=4, mfc="white", mec=DARK, mew=0.9)
 for ax_ in (axL, axR):
@@ -296,7 +297,7 @@ axL.set_xlabel("Correlation coefficient")
 axR.set_xlim(0.4, 1.0); axR.set_xticks([0.4, 0.6, 0.8, 1.0]); axR.set_xlabel("Ratio")
 axR.tick_params(axis="y", length=0); axR.set_yticklabels([]); axR.spines["left"].set_visible(False)
 axL.axhline(1.5, color=LGREY, lw=0.5); axR.axhline(1.5, color=LGREY, lw=0.5)
-axR.plot([], [], color=BLUE, lw=1.6, marker="o", ms=4, label="Model, median\nand 95% CI")
+axR.plot([], [], color=BLUE, lw=1.6, marker="o", ms=4, label="Model, estimate\nand 95% CI")
 axR.plot([], [], "D", ms=4, mfc="white", mec=DARK, mew=0.9, label="Patients")
 axR.legend(loc="upper right", handlelength=1.4)
 tag(axL, "e", x=-0.42)
@@ -360,9 +361,15 @@ cb.outline.set_linewidth(0.5)
 ax.set(xlabel="FVC (% predicted)", ylabel="DLCO (% predicted)")
 tag(ax, "b")
 ax = fig.add_subplot(gs[0, 2])
+def mean_auc(score_fn, n=1000, seed=0):
+    rng = np.random.default_rng(seed); out = []
+    for _ in range(n):
+        mp_, fv_, dl_ = noisy(CAL, rng); out.append(roc_auc_score(mp_ >= 25, score_fn(fv_, dl_)))
+    return float(np.mean(out))
+AUC = {"FVC/DLCO": mean_auc(lambda f, d: f / d), "DLCO": mean_auc(lambda f, d: -d), "FVC": mean_auc(lambda f, d: -f)}
 mp, fv, dlc = noisy(CAL, np.random.default_rng(5)); y = mp >= 25
 for score, c, lab in ((fv / dlc, BLUE, "FVC/DLCO"), (-dlc, GREEN, "DLCO"), (-fv, GREY, "FVC")):
-    fpr, tpr, _ = roc_curve(y, score); ax.plot(fpr, tpr, color=c, label=f"{lab}, AUC {roc_auc_score(y, score):.2f}")
+    fpr, tpr, _ = roc_curve(y, score); ax.plot(fpr, tpr, color=c, label=f"{lab}, AUC {AUC[lab]:.2f}")
 ax.plot([0, 1], [0, 1], color=LGREY, lw=0.6)
 ax.set(xlabel="1 − specificity", ylabel="Sensitivity", xlim=(0, 1), ylim=(0, 1), aspect="equal")
 ax.legend(loc="lower right", handlelength=1.2)
@@ -371,19 +378,18 @@ tag(ax, "c")
 save(fig, "Figure4")
 
 # ------------------------------------------------------------------ Table 1
-def full_stats(D, rng):
-    mp, fv, dl = noisy(D, rng); ph = D.mPAP >= 25
-    return dict(lt20=100 * (D.mPAP < 20).mean(), b20_25=100 * ((D.mPAP >= 20) & (D.mPAP < 25)).mean(), ge25=100 * ph.mean(), ge35=100 * (D.mPAP >= 35).mean(),
-                rD=pearsonr(mp, dl)[0], rF=pearsonr(mp, fv)[0], ratio=D.DLCO[ph].mean() / D.DLCO[~ph].mean())
-T = pd.DataFrame([full_stats(MILD.sample(len(MILD), replace=True, random_state=int(rng0.integers(1e9))).reset_index(drop=True), rng0) for _ in range(1000)])
-P0 = full_stats(MILD, np.random.default_rng(2)); P0["rD"] = noise_avg_r(MILD, "DLCO"); P0["rF"] = noise_avg_r(MILD, "FVC")
+T = {k: CI_MILD[k] for k in CI_MILD}
+P0 = {"lt20": PT_MILD["lt20"], "b20_25": PT_MILD["b20_25"], "ge25": PT_MILD["ge25"], "ge35": PT_MILD["ge35"],
+      "rD": PT_MILD["rDLCO"], "rF": PT_MILD["rFVC"], "ratio": PT_MILD["ratio"]}
+T["rD"], T["rF"] = CI_MILD["rDLCO"], CI_MILD["rFVC"]
 rows = [("mPAP < 20 mmHg, %", "lt20", "51", "ARTEMIS-IPF"), ("mPAP 20–25 mmHg, %", "b20_25", "30", "ARTEMIS-IPF"), ("mPAP ≥ 25 mmHg, %", "ge25", "19", "ARTEMIS-IPF"),
         ("mPAP ≥ 35 mmHg, %", "ge35", "4", "ARTEMIS-IPF"), ("r(mPAP, DLCO)", "rD", "≈ −0.30", "Zisman 2007"), ("r(mPAP, FVC)", "rF", "≈ 0", "Zisman 2007; ARTEMIS-IPF"),
         ("DLCO, PH / no PH", "ratio", "0.73", "Japanese cohort")]
 tab = []
 for lab, k, tgt, src in rows:
-    l_, h_ = np.percentile(T[k], [2.5, 97.5]); fmt = "{:.0f}" if k in ("lt20", "b20_25", "ge25", "ge35") else "{:.2f}"
+    l_, h_ = T[k]; fmt = "{:.0f}" if k in ("lt20", "b20_25", "ge25", "ge35") else "{:.2f}"
     tab.append(dict(Quantity=lab, Model=fmt.format(P0[k]), CI95=f"{fmt.format(l_)} to {fmt.format(h_)}", Patients=tgt, Source=src))
 pd.DataFrame(tab).to_csv(os.path.join(a.out, "Table1.tsv"), sep="\t", index=False)
 print(pd.DataFrame(tab).to_string(index=False))
+print("AUC (mean of 1,000 noise realisations):", {k: round(v, 3) for k, v in AUC.items()})
 print(f"b_best {b_best}, arterial factor {e_art:.3f}, venous factor {e_ven:.3f}, healthy mPAP {vs['PPA']:.2f}; dBIC {dbic:.1f}; n mild {len(MILD)}, adv<50 {len(A5)}")
