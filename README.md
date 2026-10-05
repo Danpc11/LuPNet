@@ -26,12 +26,12 @@ With one constant fixed on the main pulmonary artery, the law predicts the diame
 
 | | Model | 95% CI | Patients |
 |---|---|---|---|
-| mPAP < 20 mmHg | 54% | 46–61 | 51% |
+| mPAP < 20 mmHg | 54% | 46–62 | 51% |
 | mPAP 20–25 | 29% | 22–36 | 30% |
 | mPAP ≥ 25 | 17% | 12–23 | 19% |
 | mPAP ≥ 35 | 4% | 1–7 | 4% |
-| r(mPAP, DLCO) | −0.35 | −0.46 to −0.23 | ≈ −0.30 |
-| r(mPAP, FVC) | −0.13 | −0.27 to 0.01 | ≈ 0 |
+| r(mPAP, DLCO) | −0.35 | −0.47 to −0.22 | ≈ −0.30 |
+| r(mPAP, FVC) | −0.13 | −0.27 to 0.02 | ≈ 0 |
 | DLCO with / without PH | 0.78 | 0.68–0.88 | 0.73 |
 
 These seven numbers were fitted with five vasculopathy parameters. Not fitted: the prevalence of PH in advanced disease (47% vs 46% in transplant candidates in the calibrated cohort), the share of severe PH there, the absence of an FVC difference between patients with and without PH, and a distinct low-DLCO phenotype that concentrates almost all PH.
@@ -75,11 +75,11 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 
 ## Reproducing the manuscript
 
-*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), so figures and tables can be rebuilt without re-running the simulations:
+*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
 
 ```bash
 python src/make_figures_erj.py        # Figures 1-4 and Table 1 -> results/figures/
-python src/supplement_tables.py       # Supplementary tables S2, S4 and S5 -> results/figures/
+python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
 ```
 
 To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
@@ -88,6 +88,8 @@ To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
 python src/ph_cohort.py run --tag big2 --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85
 python src/ph_cohort.py run --tag adv2 --n 60  --seed 6000 --pseed 30000 --lo 0.12 --hi 0.45
 python src/ph_cohort.py run --tag altF --n 100 --seed 7000 --pseed 40000 --vmode fibrosis
+python src/fibrosis_only_cohorts.py --arm hom --n 60
+python src/fibrosis_only_cohorts.py --arm het --n 38
 ```
 
 Each simulated case is an independent run of the model, not a real patient.
@@ -103,6 +105,8 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/make_figures_erj.py`, `src/supplement_tables.py` | Figures and tables of the manuscript |
 | `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
+| `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
+| `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
 | `src/fit_calculator.py`, `src/build_app.py`, `src/app_template.html` | Calculator inputs and page |
 | `data/calibrated_ipf_params.json` | Calibrated parameters of aged IPF |
 | `data/huang1996_pulmonary_*.tsv` | Human pulmonary arterial and venous morphometry |
@@ -117,7 +121,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.2.1). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.2.2). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
 
 ## License
 
