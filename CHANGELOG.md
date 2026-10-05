@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 (2026-10)
+
+- Fibrosis-only cohorts of the manuscript (`hom`, 60 cases; `het`, 38 cases) added to `results/ph_cohorts/` with `src/fibrosis_only_cohorts.py`, which regenerates them exactly.
+- `src/ph_stats.py`: one statistics routine for Table 1, the supplementary tables and `ph_cohort.py analyze`, so identical quantities have identical intervals.
+- Figure 4c reports the mean AUC over 1,000 realisations of measurement noise; Figure 2a y-axis renamed "Share (%)"; Figure 1a labels the sub-tree limit as a 10 µm radius.
+- `pulmonary_shared_law.py` and `pulmonary_veins_shared_law.py` use the effective pulsatilities of the manuscript (φ₁ = 0.8 arteries, 0.4 veins).
+- `run_all.sh` reproduces every figure and table from the shipped cohorts; `data/virtual_ph_cohort.tsv` keeps three decimals.
+- THEORY.md numbers aligned with the manuscript; font fallback for systems without Liberation Sans.
+
 ## 0.2.1 (2026-10)
 
 - Archival release for Zenodo; code, data and simulations are identical to 0.2.0.
