@@ -2,7 +2,7 @@
 """Build the inputs of the PH-IPF calculator from the in silico cohorts.
 
 1. data/virtual_ph_cohort.tsv: one row per simulated case (final visit) from the calibrated cohort (200 patients,
-   tag big2), the advanced-disease cohort (60, tag adv2) and the cohort without vasculopathy (60, tag hom).
+   tag big2), the advanced-disease cohort (60, tag adv2).
 2. results/ph_calculator.json:
    - tissue_curve: expected mPAP from tissue loss alone as a function of FVC (simulated cases without vasculopathy);
    - dlco_curve: expected log DLCO for a given FVC without vasculopathy, and its residual SD;
@@ -25,8 +25,8 @@ def load(tag, group):
     for _, d in cases(a.cohorts, tag):
         r0, x = d.iloc[0], d.iloc[-1]
         A = float(x["vasc_A"]) if "vasc_A" in d else 0.0
-        rows.append(dict(cohort=group, mPAP=round(float(x.mPAP), 2), FVC=round(float(100 * x.FVC / r0.FVC), 1),
-                         DLCO=round(float(100 * x.DLCO / r0.DLCO), 1), vasculopathy=int(A > 0), vasc_A=round(A, 3)))
+        rows.append(dict(cohort=group, mPAP=round(float(x.mPAP), 2), FVC=round(float(100 * x.FVC / r0.FVC), 3),
+                         DLCO=round(float(100 * x.DLCO / r0.DLCO), 3), vasculopathy=int(A > 0), vasc_A=round(A, 3)))
     return pd.DataFrame(rows)
 
 
