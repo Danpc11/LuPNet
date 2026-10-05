@@ -4,7 +4,7 @@ This document describes the model and gives every number reported in the README.
 
 ## 1. Structure
 
-The lung is a set of N gas-exchange units (1,024 by default; `G = 10` generations of a symmetric tree, or an anatomical 3D tree) perfused by an arterial tree and drained by a venous tree. Each unit lumps a region of acini and its capillary sheet. A unit is healthy, fibrotic or honeycombed; fibrotic and honeycomb units have lower compliance, volume, capillary bed and membrane conductance.
+The lung is a set of N gas-exchange units (1,024 by default, `G = 10` generations of a symmetric tree; the in silico cohorts of the manuscript use 256 units, `G = 8`, which give the same results within 0.1 mmHg on average; or an anatomical 3D tree) perfused by an arterial tree and drained by a venous tree. Each unit lumps a region of acini and its capillary sheet. A unit is healthy, fibrotic or honeycombed; fibrotic and honeycomb units have lower compliance, volume, capillary bed and membrane conductance.
 
 **Breathing and mechanics.** Ventilation is distributed by unit compliance; healthy units can lose surfactant function, collapse and recruit cyclically. The forced vital capacity is computed from the volume–pressure behaviour of all units.
 
@@ -40,15 +40,15 @@ The explicit tree stops at generation G. The terminal arteriole of each unit sta
 
 ### 2.4 Tests against human morphometry
 
-Huang et al. (1996) give, for 16 orders of human pulmonary arteries, the number of elements, diameter and length. Each order carries Q/N of a 5 L/min cardiac output.
+Huang et al. (1996) give, for 15 orders of human pulmonary arteries, the number of elements, diameter and length; we add the main pulmonary artery as order 16 (diameter 3.0 cm, Singhal et al. 1973; length 9.05 cm). Each order carries Q/N of a 5 L/min cardiac output.
 
 | Model | Best b | Diameter error (16 orders) |
 |---|---|---|
-| Pulsatile sensing | 0.90–0.925 | factor 1.14 |
+| Pulsatile sensing (φ₁ = 0.8) | 0.90 | factor 1.14 |
 | Mean shear only | 0.825 | factor 1.14 |
 | Murray (b = 1, mean only) | – | factor 1.26 |
 
-With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law applied unchanged to the 15 venous orders predicts their diameters within a factor 1.14–1.18 (venous φ₁ 0.4–0.8). Integrated in the lung model (`law="shared"`, b = 0.925), the explicit arterial generations match Huang within 6%, and the healthy mean pulmonary artery pressure is 14.8 mmHg (calibrated value of the previous, per-vessel law: 14.0).
+With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90), the explicit arterial generations match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg (calibrated value of the previous, per-vessel law: 14.0).
 
 ## 3. Structural vasculopathy
 
@@ -71,11 +71,11 @@ A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopa
 | | Model | Reference |
 |---|---|---|
 | PH with FVC < 50% (calibrated cohort, n = 38) | 47% | 46% (Shorr et al. 2007, 2,525 transplant candidates) |
-| mPAP > 40 mmHg, dedicated advanced cohort (FVC 34–66%, n = 60) | 10% (3–18) | ≈ 9% |
+| mPAP > 40 mmHg, FVC < 50%, pooled calibrated and advanced cohorts (n = 89) | 6% (1–11) | ≈ 9% |
 | FVC, PH vs no PH, advanced cohort | 47 vs 48% | 48.4 vs 51.4% |
 | PH, dedicated advanced cohort | 67% (55–78) | 46% (overestimated; see limitations) |
-| AUC of FVC/DLCO for mPAP ≥ 25 | 0.78 with noise | 0.69–0.74 in ILD cohorts |
-| AUC of DLCO alone / FVC alone | 0.75 / 0.65 | ≈ 0.80 / no discrimination |
+| AUC of FVC/DLCO for mPAP ≥ 25 (mean of 1,000 noise realisations) | 0.75 | 0.69–0.74 in ILD cohorts |
+| AUC of DLCO alone / FVC alone | 0.73 / 0.63 | ≈ 0.80 / no discrimination |
 
 **Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 17.6). The low-DLCO component has 27 of 200 patients, of whom 85% carry vasculopathy and 89% have PH; in the rest, 43% carry vasculopathy and 13% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO.
 
