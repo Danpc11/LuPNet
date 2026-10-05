@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Supplementary tables of the manuscript: S2 (morphometry by order), S4 (alternative vascular mechanism) and
-S5 (2022 haemodynamic definitions). Requires the cohorts big2, adv2 and altF in results/ph_cohorts.
+"""Supplementary tables of the manuscript: S2 (morphometry by order), S4 (alternative vascular mechanism), S5 (2022
+haemodynamic definitions) and the fibrosis-only cohorts of section S5. Requires the cohorts big2, adv2, altF, hom and het
+in results/ph_cohorts.
 
     python3 src/supplement_tables.py
 """
@@ -23,7 +24,7 @@ def cohort(tag):
     return pd.DataFrame(rows)
 
 
-def stats(D, rng):
+def _unused_stats(D, rng):
     mp = D.mPAP + rng.normal(0, 2.5, len(D)); ph = D.mPAP >= 25
     return dict(lt20=100 * (D.mPAP < 20).mean(), b20=100 * ((D.mPAP >= 20) & (D.mPAP < 25)).mean(), ge25=100 * ph.mean(),
                 ge35=100 * (D.mPAP >= 35).mean(), rD=pearsonr(mp, D.DLCO + rng.normal(0, 5, len(D)))[0],
@@ -35,25 +36,44 @@ def noise_avg_r(D, col, seed=0):
     return float(np.mean([pearsonr(D.mPAP + rng.normal(0, 2.5, len(D)), D[col] + rng.normal(0, 5, len(D)))[0] for _ in range(1000)]))
 
 
+from ph_stats import bootstrap, point, prevalence_ci
+from scipy.stats import spearmanr
 # S4: calibrated (independent) vs vasculopathy linked to fibrosis
 rows = []
 for tag, name in (("big2", "independent"), ("altF", "linked to fibrosis")):
-    M = cohort(tag); M = M[(M.FVC >= 50) & (M.FVC <= 90)].reset_index(drop=True)
-    rng = np.random.default_rng(1)
-    B = pd.DataFrame([stats(M.sample(len(M), replace=True, random_state=int(rng.integers(1e9))).reset_index(drop=True), rng) for _ in range(1000)])
-    pt = stats(M, np.random.default_rng(2)); pt["rD"] = noise_avg_r(M, "DLCO"); pt["rF"] = noise_avg_r(M, "FVC")
+    D = cohort(tag); M = D[(D.FVC >= 50) & (D.FVC <= 90)].reset_index(drop=True)
+    ci, pt = bootstrap(M), point(M)
     for k in pt:
-        lo, hi = np.nanpercentile(B[k], [2.5, 97.5]); rows.append(dict(mechanism=name, n=len(M), quantity=k, value=round(pt[k], 3), ci_low=round(lo, 3), ci_high=round(hi, 3)))
+        rows.append(dict(mechanism=name, n=len(M), n_vasculopathy=int((M.A > 0).sum()), quantity=k, value=round(pt[k], 6),
+                         ci_low=round(ci[k][0], 6), ci_high=round(ci[k][1], 6)))
+    print(f"{name}: realised prevalence of vasculopathy {100 * (D.A > 0).mean():.0f}% of {len(D)} cases ({int((M.A > 0).sum())}/{len(M)} with FVC 50-90%)")
 pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS4_alternative_mechanism.tsv"), sep="\t", index=False)
-# S5: 2022 definitions
-C, A = cohort("big2"), cohort("adv2"); M = C[(C.FVC >= 50) & (C.FVC <= 90)]; Adv = pd.concat([C, A])[lambda D: D.FVC < 50]
-rng = np.random.default_rng(0); rows = []
-for lab, D in (("FVC 50-90%", M), ("FVC < 50%", Adv)):
-    for name, f in (("mPAP >= 25", lambda D: (D.mPAP >= 25).mean()), ("mPAP > 20", lambda D: (D.mPAP > 20).mean()),
-                    ("mPAP > 20 and PVR > 2 WU", lambda D: ((D.mPAP > 20) & (D.PVR > 2)).mean()), ("PVR > 5 WU", lambda D: (D.PVR > 5).mean())):
-        b = [f(D.sample(len(D), replace=True, random_state=int(rng.integers(1e9)))) for _ in range(1000)]
-        rows.append(dict(group=lab, n=len(D), definition=name, pct=round(100 * f(D), 1), ci_low=round(100 * np.percentile(b, 2.5), 1), ci_high=round(100 * np.percentile(b, 97.5), 1)))
+# S5: 2022 definitions (mPAP >= 25 in FVC 50-90% uses the same bootstrap as Table 1)
+C, A = cohort("big2"), cohort("adv2"); M = C[(C.FVC >= 50) & (C.FVC <= 90)].reset_index(drop=True)
+Adv = pd.concat([C, A])[lambda D: D.FVC < 50].reset_index(drop=True)
+rows = []
+for lab, D in (("FVC 50-90%", M), ("FVC < 50% (pooled big2 + adv2)", Adv)):
+    for name, f in (("mPAP >= 25", lambda D: D.mPAP >= 25), ("mPAP > 20", lambda D: D.mPAP > 20),
+                    ("mPAP > 20 and PVR > 2 WU", lambda D: (D.mPAP > 20) & (D.PVR > 2)), ("PVR > 5 WU", lambda D: D.PVR > 5)):
+        v, lo, hi = prevalence_ci(D, f)
+        if lab.startswith("FVC 50") and name == "mPAP >= 25":
+            v, (lo, hi) = point(D)["ge25"], bootstrap(D)["ge25"]
+        rows.append(dict(group=lab, n=len(D), definition=name, pct=round(v, 4), ci_low=round(lo, 4), ci_high=round(hi, 4)))
 pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS5_2022_definitions.tsv"), sep="\t", index=False)
+# Fibrosis alone (hom) and variable vascular responses (het): supplement S5 text
+rows = []
+for tag in ("hom", "het"):
+    D = []
+    from cohort_io import cases
+    for _, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
+        r0, x = d.iloc[0], d.iloc[-1]
+        D.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, eta=x.eta_p, hpv=x.hpv_max))
+    D = pd.DataFrame(D); M = D[(D.FVC >= 50) & (D.FVC <= 90)]
+    rows.append(dict(cohort=tag, n=len(D), n_fvc_50_90=len(M), mPAP_mean=round(M.mPAP.mean(), 2), mPAP_sd=round(M.mPAP.std(), 2),
+                     mPAP_ge25=int((M.mPAP >= 25).sum()), r_FVC=round(pearsonr(M.mPAP, M.FVC)[0], 3), r_DLCO=round(pearsonr(M.mPAP, M.DLCO)[0], 3),
+                     spearman_eta=round(spearmanr(M.mPAP, M.eta)[0], 3) if tag == "het" else None,
+                     spearman_hpv=round(spearmanr(M.mPAP, M.hpv)[0], 3) if tag == "het" else None))
+pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS_fibrosis_only.tsv"), sep="\t", index=False)
 # S2: morphometry by order (b = 0.90, phi1 = 0.8 arteries / 0.4 veins)
 Q, RHO, OM, W1 = 5 / 60 * 1e-3, 1060.0, 2 * np.pi * 70 / 60, 2.865
 def tree(f):
@@ -71,4 +91,4 @@ for name, T, phi in (("artery", Ta, 0.8), ("vein", Tv, 0.4)):
     for o, n, dm, dp in zip(T[0].order, T[0].N, T[4], D):
         rows.append(dict(tree=name, order=o, N=n, D_meas_mm=round(dm * 1e3, 3), D_pred_mm=round(dp * 1e3, 3), dev_pct=round(100 * (dp / dm - 1), 1)))
 pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS2_morphometry.tsv"), sep="\t", index=False)
-print("tables S2, S4 and S5 written to results/figures/")
+print("tables S2, S4, S5 and fibrosis-only written to results/figures/")
