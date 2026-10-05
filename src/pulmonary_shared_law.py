@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Step 1-2 of the lung programme: does the shared target law of InFlow predict the human pulmonary arterial tree?
 
-Data: Huang et al. 1996 (J Appl Physiol 81:2123), 16 diameter-defined Strahler orders of the human pulmonary arterial
-tree (number of elements N_n, diameter D_n, length L_n, apparent viscosity mu_n), as tabulated by Shi (2010).
+Data: Huang et al. 1996 (J Appl Physiol 81:2123), 15 diameter-defined Strahler orders of the human pulmonary arterial
+tree (number of elements N_n, diameter D_n, length L_n, apparent viscosity mu_n), plus the main pulmonary artery as
+order 16 (diameter 3.0 cm, Singhal et al. 1973; length 9.05 cm).
 Each order carries Q_n = Q / N_n (Q = 5 L/min). Model: target tau* = tau0 r^(b-1) l^((b-1)/2) (Eq. 1 of InFlow), sensed
 shear S = tau_mean [1 + w1 phi1 G(alpha)] with the harmonic law (w1 = 2.865 from Feaver 2013; phi1 = first-harmonic
 amplitude of pulmonary flow relative to its mean). For each order the radius is the root of S(r) = tau*(r, L_n).
 tau0 is the single free scale (one constant for all 16 orders), fitted by least squares in log D; b is profiled.
-Variants: phi1 = 1.0 / 1.6 / 1.8, pulsatility undamped or damped along the tree, mean-only sensing, Murray (b = 1).
+Variants: phi1 = 0.8 (value used in the manuscript and in the lung model), 0.5 and 1.6, pulsatility undamped or damped
+along the tree, mean-only sensing, Murray (b = 1).
 """
 import os, sys
 import numpy as np, pandas as pd
@@ -40,8 +42,8 @@ def fit(b, phi, damp):
 
 rows = []
 bgrid = np.round(np.arange(0.40, 1.101, 0.025), 3)
-for lab, phi, damp in (("pulsatile phi1=1.6, undamped", 1.6, 0), ("pulsatile phi1=1.6, damped (e-fold 5 orders)", 1.6, 5),
-                       ("pulsatile phi1=1.0", 1.0, 0), ("pulsatile phi1=1.8", 1.8, 0), ("mean-only", 0.0, 0)):
+for lab, phi, damp in (("pulsatile phi1=0.8, undamped", 0.8, 0), ("pulsatile phi1=0.8, damped (e-fold 5 orders)", 0.8, 5),
+                       ("pulsatile phi1=0.5", 0.5, 0), ("pulsatile phi1=1.6", 1.6, 0), ("mean-only", 0.0, 0)):
     res = [fit(b, phi, damp) for b in bgrid]
     rms = np.array([r[0] for r in res]); ib = int(rms.argmin())
     i1 = int(np.where(np.isclose(bgrid, 1.0))[0][0]); i675 = int(np.where(np.isclose(bgrid, 0.675))[0][0])
@@ -52,7 +54,7 @@ R = pd.DataFrame(rows)
 os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'results'), exist_ok=True); R.to_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'results', 'pulmonary_shared_law.tsv'), sep='\t', index=False)
 # per-order comparison at the main model, b = 0.675 and best b
 for b in (0.675, float(R.iloc[0].best_b), 1.0):
-    _, t0 = fit(b, 1.6 if b != 1.0 else 0.0, 0)
-    D = predict(b, t0, 1.6 if b != 1.0 else 0.0, 0)
+    _, t0 = fit(b, 0.8 if b != 1.0 else 0.0, 0)
+    D = predict(b, t0, 0.8 if b != 1.0 else 0.0, 0)
     print(f"b={b}: order  D_meas(mm)  D_pred(mm)")
     for o, dm, dp in zip(H.order, Dm, D): print(f"   {o:2d}  {dm*1e3:8.3f}  {dp*1e3:8.3f}")
