@@ -94,6 +94,10 @@ python src/fibrosis_only_cohorts.py --arm het --n 38
 
 Each simulated case is an independent run of the model, not a real patient.
 
+## Manuscript
+
+`manuscript/` contains the current draft of *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (Word and PDF), its online supplement, and the figures and tables exactly as produced by `run_all.sh` (`manuscript/figures/`). `docs/AUDIT.md` documents an independent recomputation of every number in the manuscript from the stored simulations.
+
 ## Repository
 
 | Path | Content |
@@ -102,7 +106,9 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/run_experiment.py` | One disease simulation from a parameter file |
 | `src/pulmonary_shared_law.py`, `src/pulmonary_veins_shared_law.py` | Tests of the shared law against human morphometry |
 | `src/ph_cohort.py` | In silico PH cohorts (run and analyse; `--vmode fibrosis` for the alternative mechanism) |
-| `src/make_figures_erj.py`, `src/supplement_tables.py` | Figures and tables of the manuscript |
+| `src/make_figures_erj.py`, `src/supplement_tables.py`, `src/make_supplement_figures.py` | Figures and tables of the manuscript and its supplement |
+| `manuscript/` | Manuscript draft, online supplement, figures and tables |
+| `docs/AUDIT.md` | Reproducibility audit |
 | `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |

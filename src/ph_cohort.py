@@ -79,19 +79,11 @@ def cmd_analyze(a):
         raise SystemExit("no patients found: run the cohort first, or pass --table data/virtual_ph_cohort.tsv")
     Rm = R[(R.FVC >= 50) & (R.FVC <= 90)].reset_index(drop=True)
 
-    def stats(D, rng):
-        mp = D.mPAP + rng.normal(0, 2.5, len(D)); ph = D.mPAP >= 25
-        return dict(lt20=100 * (D.mPAP < 20).mean(), b20_25=100 * ((D.mPAP >= 20) & (D.mPAP < 25)).mean(),
-                    ge25=100 * ph.mean(), ge35=100 * (D.mPAP >= 35).mean(),
-                    rDLCO=pearsonr(mp, D.DLCO + rng.normal(0, 5, len(D)))[0], rFVC=pearsonr(mp, D.FVC + rng.normal(0, 5, len(D)))[0],
-                    ratio=D.DLCO[ph].mean() / D.DLCO[~ph].mean() if ph.any() and (~ph).any() else np.nan)
-    rng = np.random.default_rng(1)
-    B = pd.DataFrame([stats(Rm.sample(len(Rm), replace=True, random_state=int(rng.integers(1e9))).reset_index(drop=True), rng)
-                      for _ in range(1000)])
-    pt = stats(Rm, np.random.default_rng(2))
-    print(f"{a.tag}: {len(R)} patients, {len(Rm)} with FVC 50-90%")
-    for k, v in TARGETS.items():
-        lo, hi = np.nanpercentile(B[k], [2.5, 97.5])
+    from ph_stats import bootstrap, point, TARGETS as T_
+    ci, pt = bootstrap(Rm), point(Rm)
+    print(f"{a.tag}: {len(R)} simulated cases, {len(Rm)} with FVC 50-90%")
+    for k, v in T_.items():
+        lo, hi = ci[k]
         print(f"  {k:7s} {pt[k]:7.2f}  (95% CI {lo:.2f} to {hi:.2f})  target {v}  {'inside' if lo <= v <= hi else 'OUTSIDE'}")
     adv = R[R.FVC < 50]
     if len(adv):

@@ -75,7 +75,7 @@ def noisy(D, rng):
 def network_schematic(ax):
     """Panel a of Figure 1: the networks modelled by LuPNet."""
     from matplotlib.patches import FancyBboxPatch, Polygon
-    ax.set_xlim(0, 10); ax.set_ylim(0.15, 3.75); ax.axis("off")
+    ax.set_xlim(0, 10); ax.set_ylim(0.2, 3.7); ax.axis("off")
     yl = np.linspace(0.35, 2.85, 8)                      # eight units drawn
     xr, dx = 0.55, 0.62
     def branch(x0, y0, level, ys, sign):
@@ -182,8 +182,8 @@ D_best, D_675 = predict(ART, b_best, t_best, PHI_A), predict(ART, 0.675, t_675, 
 D_ven = predict(VEN, b_best, t_best, PHI_V)
 e_art, e_ven = 10 ** err(ART, D_best), 10 ** err(VEN, D_ven)
 
-fig = plt.figure(figsize=(180 * MM, 178 * MM))
-gs = fig.add_gridspec(3, 3, hspace=0.62, wspace=0.48, left=0.07, right=0.98, top=0.95, bottom=0.07, height_ratios=[0.95, 1, 1])
+fig = plt.figure(figsize=(180 * MM, 165 * MM))
+gs = fig.add_gridspec(3, 3, hspace=0.55, wspace=0.48, left=0.07, right=0.98, top=0.96, bottom=0.07, height_ratios=[0.72, 1, 1])
 network_schematic(fig.add_subplot(gs[0, :]))
 ax = fig.add_subplot(gs[1, 0])
 o = ART[0].order.values

@@ -8,6 +8,9 @@
 - `pulmonary_shared_law.py` and `pulmonary_veins_shared_law.py` use the effective pulsatilities of the manuscript (φ₁ = 0.8 arteries, 0.4 veins).
 - `run_all.sh` reproduces every figure and table from the shipped cohorts; `data/virtual_ph_cohort.tsv` keeps three decimals.
 - THEORY.md numbers aligned with the manuscript; font fallback for systems without Liberation Sans.
+- `src/make_supplement_figures.py`: figure S1 (FVC and DLCO along the trajectories and the window of the cross-sectional visit) and tables S6-S7 (inter-individual variation of the healthy baseline; lung function by stage).
+- Figure 1: less empty space below the network schematic.
+- `manuscript/`: current draft, online supplement, figures and tables; `docs/AUDIT.md`: reproducibility audit.
 
 ## 0.2.1 (2026-10)
 
