@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3 (unreleased)
+
+- Mathematical invariants of the model as tests (`tests/test_invariants.py`): flow conservation, pressure identity, Wood-unit conversion, uniqueness of the shared-law radius, rest point and normalisation.
+- Audit sensitivity analyses in `src/make_supplement_figures.py`: wedge pressure (table S8), low-DLCO phenotype without vasculopathy labels (S9), honeycomb compliance and the FVC plateau (S10), pressure categories with measurement noise (S11).
+- `docs/AUDIT.md`: mathematical and methodological audit.
+
 ## 0.2.2 (2026-10)
 
 - Fibrosis-only cohorts of the manuscript (`hom`, 60 cases; `het`, 38 cases) added to `results/ph_cohorts/` with `src/fibrosis_only_cohorts.py`, which regenerates them exactly.

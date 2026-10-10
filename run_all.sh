@@ -12,6 +12,6 @@ python3 src/pulmonary_veins_shared_law.py     # the same law vs the venous tree
 # python3 src/fibrosis_only_cohorts.py --arm het --n 38                                            # variable vascular responses
 python3 src/make_figures_erj.py               # Figures 1-4 and Table 1
 python3 src/supplement_tables.py              # Tables S2, S4, S5 and the fibrosis-only cohorts
-python3 src/make_supplement_figures.py        # Figure S1 and tables S6-S7 (range of lung function, baseline variation)
+python3 src/make_supplement_figures.py        # Figure S1 and tables S6-S11 (lung-function range, baseline variation, audit sensitivity analyses)
 python3 src/fit_calculator.py                 # data/virtual_ph_cohort.tsv and results/ph_calculator.json
 python3 src/build_app.py                      # index.html

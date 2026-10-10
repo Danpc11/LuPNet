@@ -63,3 +63,27 @@ Every number in the manuscript is reproduced exactly from the stored simulations
 
 - Confirm references 20 (conference abstract) and 11, and the DLCO AUC of Joseph et al. against the full text.
 - The length of the main pulmonary artery (9.05 cm) comes from a compilation of morphometric data; its diameter is cited from Singhal et al. (1973).
+
+## Mathematical and methodological audit
+
+### Invariants (now automated in `tests/test_invariants.py`)
+
+| Check | Result |
+|---|---|
+| Flow conservation: unit flows add up to cardiac output; every bifurcation conserves flow | Pass (relative error < 1e-9) |
+| mPAP = LAP + Q × equivalent resistance; PVR = (mPAP − LAP) / Q in Wood units | Pass |
+| Poiseuille resistance and unit conversion to Wood units | Pass |
+| Shared law: the mismatch between sensed shear and target decreases monotonically with radius, so the radius is unique | Pass |
+| Healthy tree is a rest point of the remodelling rule; DLCO normalised to 1 at baseline | Pass |
+| Womersley factor: 1 for α → 0, 2.78 at α = 10 | Pass (`tests/test_lupnet.py`) |
+
+### Findings and their impact
+
+1. **FVC plateau in advanced disease (model assumption).** FVC is computed from summed unit compliance; honeycomb units keep 60% of normal compliance (`hc_C = 0.60`), so FVC cannot fall much below 40%. This explains the overestimate of PH prevalence at FVC < 50%. A first-order correction to `hc_C = 0.15` extends FVC to 27% and brings PH prevalence at FVC < 50% to 47% (transplant candidates 46%), with little change in mild-to-moderate disease (table S10). **Recommended fix:** set `hc_C` to the value of fibrotic units, recalibrate the FVC decline and re-run the cohorts.
+2. **Phenotype definition used the vasculopathy labels (methodological).** The expected DLCO was fitted to cases without vasculopathy, information not available in patients. Fitting it to all cases (ordinary or trimmed least squares) keeps the mixture bimodal (ΔBIC 26–28) with sensitivity 59–61% and specificity 94–96% for PH (table S9). **Resolved:** the phenotype can be identified from FVC and DLCO alone.
+3. **Fixed left atrial pressure (8 mmHg).** Varying wedge pressure leaves PH ≥ 25 mmHg, the correlations and the DLCO ratio essentially unchanged, but a 1 mmHg shift moves many cases across 20 mmHg, because one third of cases lie between 18 and 20 mmHg (table S8). Relevant for the 2022 definition.
+4. **Measurement noise applied to correlations but not to pressure categories (methodological inconsistency).** Adding noise to mPAP moves the categories slightly closer to the benchmarks (table S11); conclusions unchanged.
+5. **Diffusing capacity.** The membrane and capillary components are given equal weight in a healthy unit (Roughton–Forster), and θ does not depend on haemoglobin or inspired oxygen. Adequate for relative changes at sea level; altitude or anaemia would require θ(PO₂, Hb).
+6. **Vital capacity as summed compliance.** A linear simplification of the pressure–volume curve; it reproduces relative FVC decline but not absolute volumes in severe restriction.
+7. **Calibration and validation.** The five vasculopathy parameters were chosen against the mild-to-moderate targets; bootstrap intervals reflect sampling of simulated cases, not parameter uncertainty.
+8. **Morphometry.** Flow per order assumes equal division among elements (Q/N); supernumerary branches and the single-lung source are not represented.
