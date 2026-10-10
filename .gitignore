@@ -5,3 +5,4 @@ __pycache__/
 results/runs/
 results/figures/
 results/*.tsv
+manuscript/
