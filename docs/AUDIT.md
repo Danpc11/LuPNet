@@ -1,6 +1,6 @@
 # Reproducibility audit
 
-Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (`manuscript/`).
+Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
 Code: this repository, version 0.2.2.
 
 ## Method

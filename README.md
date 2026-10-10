@@ -7,6 +7,7 @@
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23125038.svg)](https://doi.org/10.5281/zenodo.23125038)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-lightgrey)](LICENSE)
 
 ---
 
@@ -94,10 +95,6 @@ python src/fibrosis_only_cohorts.py --arm het --n 38
 
 Each simulated case is an independent run of the model, not a real patient.
 
-## Manuscript
-
-`manuscript/` contains the current draft of *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (Word and PDF), its online supplement, and the figures and tables exactly as produced by `run_all.sh` (`manuscript/figures/`). `docs/AUDIT.md` documents an independent recomputation of every number in the manuscript from the stored simulations.
-
 ## Repository
 
 | Path | Content |
@@ -107,7 +104,6 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/pulmonary_shared_law.py`, `src/pulmonary_veins_shared_law.py` | Tests of the shared law against human morphometry |
 | `src/ph_cohort.py` | In silico PH cohorts (run and analyse; `--vmode fibrosis` for the alternative mechanism) |
 | `src/make_figures_erj.py`, `src/supplement_tables.py`, `src/make_supplement_figures.py` | Figures and tables of the manuscript and its supplement |
-| `manuscript/` | Manuscript draft, online supplement, figures and tables |
 | `docs/AUDIT.md` | Reproducibility audit |
 | `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
@@ -131,4 +127,4 @@ Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victori
 
 ## License
 
-MIT for the code (`LICENSE`). Transcribed morphometric tables keep the terms of their publishers.
+LuPNet is released under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) (`LICENSE`): it may be used, modified and shared for noncommercial purposes, including academic research, teaching and personal use. **Commercial use requires a separate license from the authors**; contact Daniel Pérez-Calixto (dperez@inmegen.gob.mx). Transcribed morphometric tables keep the terms of their publishers. Versions up to 0.2.1 were released under the MIT License.

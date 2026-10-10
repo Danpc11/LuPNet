@@ -10,7 +10,8 @@
 - THEORY.md numbers aligned with the manuscript; font fallback for systems without Liberation Sans.
 - `src/make_supplement_figures.py`: figure S1 (FVC and DLCO along the trajectories and the window of the cross-sectional visit) and tables S6-S7 (inter-individual variation of the healthy baseline; lung function by stage).
 - Figure 1: less empty space below the network schematic.
-- `manuscript/`: current draft, online supplement, figures and tables; `docs/AUDIT.md`: reproducibility audit.
+- `docs/AUDIT.md`: reproducibility audit (independent recomputation of every number in the manuscript).
+- **License changed** from MIT to the PolyForm Noncommercial License 1.0.0: noncommercial use only; commercial use requires a separate license from the authors. Versions up to 0.2.1 remain under MIT.
 
 ## 0.2.1 (2026-10)
 
