@@ -1,7 +1,7 @@
 # Reproducibility audit
 
 Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
-Code: this repository, version 0.2.2.
+Code: this repository, version 0.3.0.
 
 ## Method
 
@@ -15,30 +15,32 @@ Every number in the manuscript is reproduced exactly from the stored simulations
 
 | Quantity | Manuscript | Recomputed |
 |---|---|---|
-| Calibrated cases / with FVC 50–90% | 200 / 162 | 200 / 162 |
-| Realised prevalence of vasculopathy (calibrated / alternative) | 49% / 38% | 49% / 38% |
-| mPAP < 20 mmHg | 54% (46–62) | 53.7% (45.7–61.7) |
-| mPAP 20–25 mmHg | 29% (22–36) | 29.0% (22.2–36.4) |
-| mPAP ≥ 25 mmHg | 17% (12–23) | 17.3% (11.7–23.5) |
-| mPAP ≥ 35 mmHg | 4% (1–7) | 4.3% (1.2–7.4) |
-| r(mPAP, DLCO) | −0.35 (−0.47 to −0.22) | −0.353 (−0.468 to −0.225) |
-| r(mPAP, FVC) | −0.13 (−0.27 to 0.02) | −0.126 (−0.267 to 0.019) |
-| DLCO ratio, PH / no PH | 0.78 (0.68–0.88) | 0.779 (0.677–0.882) |
-| DLCO ratio at the 21 mmHg threshold | 0.76 | 0.764 |
-| No vasculopathy: mPAP | 18.6 ± 1.3, max 23.2 | 18.6 ± 1.3, 23.2 |
-| Vasculopathy: mPAP, % PH | 25.3 ± 7.0, 37% | 25.3 ± 7.0, 37% |
-| PH with FVC < 50%: calibrated / advanced / pooled | 47% / 71% / 61% | 47% / 71% / 61% |
-| Severe PH (mPAP > 40 mmHg), pooled | 6% (1–11) | 6% (1–11) |
-| FVC with / without PH, FVC < 50% | 47 / 47% | 47.0 / 47.4% |
-| 2022 precapillary PH without vasculopathy | 13%, PVR ≤ 3.0 WU | 11/86, 3.03 WU |
-| PVR > 5 WU, with / without vasculopathy | only with | 9 / 0 |
-| ΔBIC, low-DLCO phenotype | 17.6 | 17.6 |
-| Low-DLCO component | 27; 85% vasculopathy; 89% PH | same |
-| Sensitivity / specificity for PH | 52% / 98% | 52% / 98% |
-| Mean AUC (FVC/DLCO, DLCO, FVC) | 0.75 / 0.73 / 0.63 | 0.752 / 0.733 / 0.627 |
-| Fibrosis alone | 18.2 ± 1.1; r −0.88 and −0.93 | same |
-| Variable vascular responses | SD 1.1; Spearman 0.06 and 0.00 | 1.14; 0.06 and 0.00 |
-| Alternative mechanism (linked to fibrosis) | −0.26, −0.47, 0.51, 66% | same |
+| Calibrated cases / with FVC 50–90% | 200 / 113 | 200 / 113 |
+| Realised prevalence of vasculopathy (calibrated / advanced / alternative) | 70% / – / 64% | 70% / 72% / 64% |
+| mPAP < 20 mmHg | 54% (45–63) | 54.0% (45.1–62.8) |
+| mPAP 20–25 mmHg | 27% (19–35) | 27.4% (19.5–35.4) |
+| mPAP ≥ 25 mmHg | 19% (12–26) | 18.6% (11.5–25.7) |
+| mPAP ≥ 35 mmHg | 5% (2–10) | 5.3% (1.8–9.7) |
+| r(mPAP, DLCO) | −0.38 (−0.51 to −0.20) | −0.38 (−0.51 to −0.20) |
+| r(mPAP, FVC) | −0.08 (−0.25 to 0.10) | −0.08 (−0.25 to 0.10) |
+| DLCO ratio, PH / no PH | 0.81 (0.73–0.90) | 0.81 (0.73–0.90) |
+| DLCO ratio at the 21 mmHg threshold | 0.84 (0.76–0.92) | 0.84 (0.76–0.92) |
+| No vasculopathy: mPAP | 17.7 ± 0.6, max 19.2 | 17.7 ± 0.6, 19.2 |
+| Vasculopathy: mPAP, % PH | 23.7 ± 5.8, 28% | 23.7 ± 5.8, 28% |
+| PH with FVC < 50%, pooled (n = 147) | 48% (39–56) | 48% (39–56) |
+| Severe PH (mPAP > 40 mmHg), pooled | 8% (4–13) | 8% (4–13) |
+| FVC with / without PH, FVC < 50% | 35.7 / 39.1% | 35.7 / 39.1% |
+| 2022 precapillary PH, mild-to-moderate | 46% (37–55) | 46% (37–55) |
+| 2022 precapillary PH without vasculopathy | none | 0/39 |
+| PVR > 5 WU | 7% (3–12), only with vasculopathy | 7%; 8 with / 0 without |
+| ΔBIC, low-DLCO phenotype | 78.8 | 78.8 |
+| Low-DLCO component | 50; all with vasculopathy; 84% PH | same |
+| Sensitivity / specificity for PH | 71% / 94% | 71% (42/59) / 94% |
+| Mean AUC (FVC/DLCO, DLCO, FVC) | 0.75 / 0.74 / 0.65 | 0.745 / 0.738 / 0.654 |
+| Fibrosis alone | 17.6 ± 0.5; r −0.92 and −0.92 | same |
+| Variable vascular responses | SD 0.8, max 20.3; Spearman 0.47 and −0.15 | same |
+| Alternative mechanism | PH 4% (0–10); r(FVC) −0.27 (−0.50 to −0.02) | same |
+| Tree size (1,024 − 256 units), mPAP | −0.08 ± 0.41 mmHg | same |
 | Morphometry, arterial / venous error factor | 1.14 / 1.16 | 1.135 / 1.156 |
 | Healthy mPAP | 14.8 mmHg | 14.78 |
 
@@ -79,8 +81,8 @@ Every number in the manuscript is reproduced exactly from the stored simulations
 
 ### Findings and their impact
 
-1. **FVC plateau in advanced disease (model assumption).** FVC is computed from summed unit compliance; honeycomb units keep 60% of normal compliance (`hc_C = 0.60`), so FVC cannot fall much below 40%. This explains the overestimate of PH prevalence at FVC < 50%. A first-order correction to `hc_C = 0.15` extends FVC to 27% and brings PH prevalence at FVC < 50% to 47% (transplant candidates 46%), with little change in mild-to-moderate disease (table S10). **Recommended fix:** set `hc_C` to the value of fibrotic units, recalibrate the FVC decline and re-run the cohorts.
-2. **Phenotype definition used the vasculopathy labels (methodological).** The expected DLCO was fitted to cases without vasculopathy, information not available in patients. Fitting it to all cases (ordinary or trimmed least squares) keeps the mixture bimodal (ΔBIC 26–28) with sensitivity 59–61% and specificity 94–96% for PH (table S9). **Resolved:** the phenotype can be identified from FVC and DLCO alone.
+1. **FVC plateau in advanced disease (resolved in 0.3.0).** FVC is computed from summed unit compliance. With honeycomb units at 60% of normal compliance, FVC could not fall much below 40% and PH prevalence at FVC < 50% was overestimated. Version 0.3.0 sets honeycomb compliance to that of fibrotic units (15%) and recalibrates the vasculopathy prevalence (70%); FVC now reaches 24% and PH prevalence at FVC < 50% is 48% (transplant candidates 46%).
+2. **Phenotype definition used the vasculopathy labels (methodological).** The expected DLCO was fitted to cases without vasculopathy, information not available in patients. Fitting it to all cases (ordinary or trimmed least squares) keeps the mixture bimodal (ΔBIC 78–79) with sensitivity 70–73% and specificity 94% for PH (table S9). **Resolved:** the phenotype can be identified from FVC and DLCO alone.
 3. **Fixed left atrial pressure (8 mmHg).** Varying wedge pressure leaves PH ≥ 25 mmHg, the correlations and the DLCO ratio essentially unchanged, but a 1 mmHg shift moves many cases across 20 mmHg, because one third of cases lie between 18 and 20 mmHg (table S8). Relevant for the 2022 definition.
 4. **Measurement noise applied to correlations but not to pressure categories (methodological inconsistency).** Adding noise to mPAP moves the categories slightly closer to the benchmarks (table S11); conclusions unchanged.
 5. **Diffusing capacity.** The membrane and capillary components are given equal weight in a healthy unit (Roughton–Forster), and θ does not depend on haemoglobin or inspired oxygen. Adequate for relative changes at sea level; altitude or anaemia would require θ(PO₂, Hb).

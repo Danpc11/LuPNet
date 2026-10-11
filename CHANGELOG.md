@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.2.3 (unreleased)
+## 0.3.0 (2026-10)
+
+- Honeycomb units keep 15% of normal compliance (`hc_C = 0.15`, previously 0.60), so FVC keeps falling as honeycombing extends; this removes an artificial FVC plateau near 42% and the overestimate of PH prevalence at low FVC.
+- Vasculopathy prevalence recalibrated to 70% (`--p_vasc 0.7`); the other four vasculopathy parameters are unchanged. All seven mild-to-moderate targets are inside their 95% intervals; PH with FVC < 50% is 48% (transplant candidates 46%).
+- All five cohorts re-simulated with the final parameters; figures, tables and the calculator rebuilt. Figure 3 covers FVC down to 20%.
+- Supplementary table S10 is the prevalence of PH by FVC range.
+
+## 0.2.3
 
 - Mathematical invariants of the model as tests (`tests/test_invariants.py`): flow conservation, pressure identity, Wood-unit conversion, uniqueness of the shared-law radius, rest point and normalisation.
 - Audit sensitivity analyses in `src/make_supplement_figures.py`: wedge pressure (table S8), low-DLCO phenotype without vasculopathy labels (S9), honeycomb compliance and the FVC plateau (S10), pressure categories with measurement noise (S11).

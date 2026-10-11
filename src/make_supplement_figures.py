@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Supplementary figure S1 and tables S6-S11: range of lung function and sensitivity analyses of the audit.
+"""Supplementary figure S1 and tables S6-S9, S11: range of lung function and sensitivity analyses of the audit.
 
 a) FVC and DLCO (% of each case's healthy baseline) along the full trajectories of the calibrated cohort, against the
    fraction of healthy tissue; the shaded band is the window from which the single cross-sectional visit was drawn.
@@ -107,14 +107,6 @@ for lab, mk in masks.items():
     rows.append(dict(method=lab, dBIC=round(g1.bic(res) - g2.bic(res), 1), n_low=int(L.sum()), PH_in_low_pct=round(100 * ph[L].mean(), 1),
                      sensitivity_pct=round(100 * (L & ph).sum() / ph.sum(), 1), specificity_pct=round(100 * ((~L) & (~ph)).sum() / (~ph).sum(), 1)))
 pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS9_phenotype_without_labels.tsv"), sep="\t", index=False)
-# S10: compliance of honeycomb units (hc_C = 0.60 in the model) - first-order post hoc correction of FVC to hc_C = 0.15
-P = pd.concat([CAL, ADV], ignore_index=True); rows = []
-for lab, shift in (("Model (honeycomb compliance 0.60)", 0.0), ("Honeycomb compliance 0.15 (post hoc approximation)", 0.45)):
-    D = P.copy(); D["FVC"] = D.FVC - 100 * D.hc * shift; a = D[D.FVC < 50]
-    Cm = CAL.copy(); Cm["FVC"] = Cm.FVC - 100 * Cm.hc * shift; Mm = Cm[(Cm.FVC >= 50) & (Cm.FVC <= 90)].reset_index(drop=True); pm = point(Mm)
-    rows.append(dict(scenario=lab, FVC_min=round(D.FVC.min(), 1), n_FVC_lt50=len(a), PH_FVC_lt50_pct=round(100 * (a.mPAP >= 25).mean(), 1),
-                     severe_FVC_lt50_pct=round(100 * (a.mPAP > 40).mean(), 1), n_mild=len(Mm), **{f"mild_{k}": round(v, 3) for k, v in pm.items()}))
-pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS10_honeycomb_compliance.tsv"), sep="\t", index=False)
 # S11: mPAP categories with measurement noise added to mPAP (SD 2.5 mmHg), mean of 1,000 realisations
 g = np.random.default_rng(0); Pn = []
 for _ in range(1000):
@@ -123,4 +115,4 @@ pd.DataFrame([dict(version="Without noise (manuscript)", lt20=100 * (MILD.mPAP <
                    ge25=100 * (MILD.mPAP >= 25).mean(), ge35=100 * (MILD.mPAP >= 35).mean()),
               dict(version="With measurement noise", **dict(zip(["lt20", "b20_25", "ge25", "ge35"], np.mean(Pn, 0))))]).round(1).to_csv(
     os.path.join(OUT, "TableS11_categories_with_noise.tsv"), sep="\t", index=False)
-print("tables S8-S11 written")
+print("tables S8, S9 and S11 written")

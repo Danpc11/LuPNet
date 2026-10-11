@@ -58,32 +58,31 @@ $$R_\mathrm{les}=R_{ta,0}\,A\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right),\qquad 
 
 A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopathy before the start (`t_vasc0`), τ its time constant (`vasc_tau`), and c_cap multiplies the capillary bed of every unit (`cap_frac` = f_cap). With A = 0 the model is unchanged.
 
-**Simulated cases** (`src/ph_cohort.py`): with probability 0.5 a patient has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between patients (years per model unit × lognormal, σ = 0.5); one visit at a random stage.
+**Simulated cases** (`src/ph_cohort.py`): with probability 0.7 a simulated case has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between simulated cases (years per model unit × lognormal, σ = 0.5); one visit at a random stage.
 
 ## 4. Pulmonary hypertension in IPF
 
-**Without vasculopathy** (60 patients), mPAP in mild-to-moderate disease is 18.2 ± 1.1 mmHg, r(mPAP, FVC) = −0.88 and r(mPAP, DLCO) = −0.93, and no patient reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between patients does not change this.
+**Without vasculopathy** (60 simulated cases), mPAP in mild-to-moderate disease is 17.6 ± 0.5 mmHg, r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92, and no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by only 0.8 mmHg (maximum 20.3 mmHg).
 
-**With vasculopathy** (200 patients, 162 with FVC 50–90%): see the README table. All seven targets (ARTEMIS-IPF, Raghu et al. 2015; Zisman et al. 2007; the DLCO ratio of a Japanese cohort) lie inside the 95% bootstrap intervals; correlations include measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
+**With vasculopathy** (200 simulated cases, 113 with FVC 50–90%): see the README table. All seven targets (ARTEMIS-IPF, Raghu et al. 2015; Zisman et al. 2007; the DLCO ratio of a Japanese cohort) lie inside the 95% bootstrap intervals; correlations include measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
 
 **Not fitted:**
 
 | | Model | Reference |
 |---|---|---|
-| PH with FVC < 50% (calibrated cohort, n = 38) | 47% | 46% (Shorr et al. 2007, 2,525 transplant candidates) |
-| mPAP > 40 mmHg, FVC < 50%, pooled calibrated and advanced cohorts (n = 89) | 6% (1–11) | ≈ 9% |
-| FVC, PH vs no PH, advanced cohort | 47 vs 48% | 48.4 vs 51.4% |
-| PH, dedicated advanced cohort | 67% (55–78) | 46% (overestimated; see limitations) |
+| PH with FVC < 50%, pooled calibrated and advanced cohorts (n = 147) | 48% (39–56) | 46% (Shorr et al. 2007, 2,525 transplant candidates) |
+| mPAP > 40 mmHg, FVC < 50%, pooled (n = 147) | 8% (4–13) | ≈ 9% |
+| FVC, PH vs no PH, FVC < 50% | 35.7 vs 39.1% | 48.4 vs 51.4% |
 | AUC of FVC/DLCO for mPAP ≥ 25 (mean of 1,000 noise realisations) | 0.75 | 0.69–0.74 in ILD cohorts |
-| AUC of DLCO alone / FVC alone | 0.73 / 0.63 | ≈ 0.80 / no discrimination |
+| AUC of DLCO alone / FVC alone | 0.74 / 0.65 | ≈ 0.80 / no discrimination |
 
-**Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 17.6). The low-DLCO component has 27 of 200 patients, of whom 85% carry vasculopathy and 89% have PH; in the rest, 43% carry vasculopathy and 13% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO.
+**Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 78.8). The low-DLCO component has 50 of 200 simulated cases, all with vasculopathy, and 84% have PH; in the rest, 60% carry vasculopathy and 11% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO.
 
-**Robustness.** The same 12 patients with 256 and 1,024 units differ by +0.06 ± 0.41 mmHg in mPAP (r = 0.997), −0.03 ± 2.2 points in FVC and −0.3 ± 0.7 points in DLCO.
+**Robustness.** The same 12 simulated cases with 1,024 and 256 units differ by −0.08 ± 0.41 mmHg in mPAP (r = 0.997), −0.6 ± 1.7 points in FVC and −0.2 ± 0.8 points in DLCO.
 
 ## 5. Limitations
 
-- The simulated FVC flattens near 42% in advanced disease, which inflates the tissue component at low FVC.
+- Fibrotic and honeycomb units keep 15% of normal compliance; FVC is a linear approximation of the pressure–volume curve.
 - Five vasculopathy parameters were chosen against the mild-to-moderate targets; only the advanced-disease results and the phenotype analysis are out of sample.
 - The arterial morphometry is from one lung; b has no interval yet.
 - The pulmonary-artery pulsatility is an effective value; measured waveforms should replace it.

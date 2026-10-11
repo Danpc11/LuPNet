@@ -9,8 +9,10 @@ Each simulated case has
   - one cross-sectional visit at a random stage (fraction of healthy tissue in [lo, hi]).
 Model: shared target law (law="shared", b = 0.925), calibrated aged IPF parameters, 256-unit tree by default.
 
-Calibrated values (200-patient cohort, all seven targets of ARTEMIS-IPF / Zisman 2007 inside the 95% CI):
-  P_VASC = 0.5, A_MED = 1.5, A_SIG = 1.1, tau = 2 yr, cap_frac = 0.05.
+Calibrated values (v0.3.0, honeycomb compliance hc_C = 0.15; 200 simulated cases, all seven targets of mild-to-moderate IPF
+inside the 95% intervals):
+  P_VASC = 0.7, A_MED = 1.5, A_SIG = 1.1, tau = 2 yr, cap_frac = 0.05.
+(v0.2.x used hc_C = 0.60 and P_VASC = 0.5.)
 
     python3 src/ph_cohort.py run --tag big2 --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85
     python3 src/ph_cohort.py run --tag adv2 --n 60 --seed 6000 --pseed 30000 --lo 0.12 --hi 0.45
@@ -97,7 +99,7 @@ if __name__ == "__main__":
     r.add_argument("--tag", required=True); r.add_argument("--n", type=int, default=200); r.add_argument("--seed", type=int, default=5000)
     r.add_argument("--pseed", type=int, default=20000, help="fibrosis seed of patient i is pseed + i")
     r.add_argument("--lo", type=float, default=0.25); r.add_argument("--hi", type=float, default=0.85); r.add_argument("--G", type=int, default=8)
-    r.add_argument("--p_vasc", type=float, default=0.5); r.add_argument("--a_med", type=float, default=1.5); r.add_argument("--a_sig", type=float, default=1.1)
+    r.add_argument("--p_vasc", type=float, default=0.7); r.add_argument("--a_med", type=float, default=1.5); r.add_argument("--a_sig", type=float, default=1.1)
     r.add_argument("--tau", type=float, default=2.0); r.add_argument("--cap", type=float, default=0.05)
     r.add_argument("--vmode", default="independent", choices=["independent", "fibrosis"])
     z = sub.add_parser("analyze"); z.add_argument("--tag", default="")

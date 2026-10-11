@@ -307,7 +307,7 @@ save(fig, "Figure2")
 POOL = pd.concat([CAL, ADV], ignore_index=True)
 fig = plt.figure(figsize=(180 * MM, 60 * MM))
 gs = fig.add_gridspec(1, 3, wspace=0.48, left=0.07, right=0.98, top=0.86, bottom=0.2)
-bands = [(40, 45), (45, 50), (50, 55), (55, 60), (60, 70), (70, 85)]
+bands = [(20, 35), (35, 40), (40, 45), (45, 50), (50, 55), (55, 60), (60, 70), (70, 85)]
 def prev(D, f):
     v = f(D); B_ = [f(D.sample(len(D), replace=True, random_state=int(rng0.integers(1e9)))) for _ in range(1000)]
     return v, *np.percentile(B_, [2.5, 97.5])
@@ -323,7 +323,7 @@ for k, (f, lab, ref, letter) in enumerate(((lambda D: 100 * (D.mPAP >= 25).mean(
     ax.errorbar(49.6, ref, xerr=15.7, fmt="D", ms=4, mfc="white", mec=DARK, ecolor=DARK, elinewidth=0.6, capsize=1.5)
     ax.annotate("Transplant candidates\n(Shorr 2007, n = 2,525)", xy=(49.6, ref), xytext=(60, 72 if k == 0 else 22), fontsize=6,
                 arrowprops=dict(arrowstyle="-", lw=0.5, color=DARK))
-    ax.set(xlabel="FVC (% predicted)", ylabel=lab, xlim=(32, 88), ylim=(-9, 100) if k == 0 else (-1.5, 30))
+    ax.set(xlabel="FVC (% predicted)", ylabel=lab, xlim=(18, 88), ylim=(-9, 100) if k == 0 else (-1.5, 30))
     tag(ax, letter)
 ax = fig.add_subplot(gs[0, 2])
 A5 = POOL[POOL.FVC < 50]
@@ -332,7 +332,7 @@ for i, (m, c, lab) in enumerate(((~A5.PH, GREY, "No PH"), (A5.PH, RED, "PH"))):
                                boxprops=dict(lw=0.6), whiskerprops=dict(lw=0.6), capprops=dict(lw=0.6))
     ax.plot(np.full(len(v), i) + rng0.uniform(-0.12, 0.12, len(v)), v, "o", ms=2, color=c, mew=0, alpha=0.8)
 ax.plot([0, 1], [51.4, 48.4], "D", ms=4, mfc="white", mec=DARK, mew=0.9, label="Transplant candidates, mean")
-ax.set(xticks=[0, 1], xlim=(-0.6, 1.6), ylabel="FVC (% predicted)", ylim=(38, 56))
+ax.set(xticks=[0, 1], xlim=(-0.6, 1.6), ylabel="FVC (% predicted)", ylim=(18, 60))
 ax.set_xticklabels([f"No PH (n = {int((~A5.PH).sum())})", f"PH (n = {int(A5.PH.sum())})"]); ax.legend(loc="upper right", handlelength=0.8)
 tag(ax, "c")
 save(fig, "Figure3")

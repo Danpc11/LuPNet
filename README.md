@@ -23,19 +23,19 @@ $$\tau^* = \tau_0\, r^{\,b-1}\,\ell^{\,(b-1)/2}, \qquad S=\bar\tau\,[1+w_1\,\var
 
 With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and a normal mean pulmonary artery pressure of 14.8 mmHg as an output rather than an input.
 
-**2. Pulmonary hypertension needs a vasculopathy of its own.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 21 mmHg and ties it tightly to FVC (r = −0.88), unlike patients. Adding a structural small-artery vasculopathy in half of the simulated cases, with its own course and an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
+**2. Pulmonary hypertension needs a vasculopathy of its own.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a structural small-artery vasculopathy in 70% of the simulated cases, mostly mild, with its own course and an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
 
 | | Model | 95% CI | Patients |
 |---|---|---|---|
-| mPAP < 20 mmHg | 54% | 46–62 | 51% |
-| mPAP 20–25 | 29% | 22–36 | 30% |
-| mPAP ≥ 25 | 17% | 12–23 | 19% |
-| mPAP ≥ 35 | 4% | 1–7 | 4% |
-| r(mPAP, DLCO) | −0.35 | −0.47 to −0.22 | ≈ −0.30 |
-| r(mPAP, FVC) | −0.13 | −0.27 to 0.02 | ≈ 0 |
-| DLCO with / without PH | 0.78 | 0.68–0.88 | 0.73 |
+| mPAP < 20 mmHg | 54% | 45–63 | 51% |
+| mPAP 20–25 | 27% | 19–35 | 30% |
+| mPAP ≥ 25 | 19% | 12–26 | 19% |
+| mPAP ≥ 35 | 5% | 2–10 | 4% |
+| r(mPAP, DLCO) | −0.38 | −0.51 to −0.20 | ≈ −0.30 |
+| r(mPAP, FVC) | −0.08 | −0.25 to 0.10 | ≈ 0 |
+| DLCO with / without PH | 0.81 | 0.73–0.90 | 0.73 |
 
-These seven numbers were fitted with five vasculopathy parameters. Not fitted: the prevalence of PH in advanced disease (47% vs 46% in transplant candidates in the calibrated cohort), the share of severe PH there, the absence of an FVC difference between patients with and without PH, and a distinct low-DLCO phenotype that concentrates almost all PH.
+These seven numbers were fitted with five vasculopathy parameters. Not fitted: the prevalence of PH with FVC below 50% (48% vs 46% in transplant candidates) and of severe PH (8% vs about 9%), the small FVC difference between patients with and without PH, and a distinct low-DLCO phenotype that contains 71% of all PH.
 
 The derivation, the model and all numbers are in **[THEORY.md](THEORY.md)**.
 
@@ -117,13 +117,13 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## Limitations
 
-- In very advanced disease the simulated FVC does not fall below about 42%, so at a given low FVC the model carries more tissue loss than patients do; the overall PH prevalence in a dedicated advanced cohort is overestimated (67–71% vs 46%).
+- The five vasculopathy parameters were chosen against the mild-to-moderate targets; the advanced-disease results and the phenotype analysis are out of sample.
 - The arterial morphometry comes from the casts of one lung, so the pulmonary exponent b has no confidence interval yet.
 - The pulsatility of the pulmonary artery is an effective value, not a measured waveform.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.2.2). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.0). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
 
 ## License
 

@@ -92,7 +92,7 @@ class Params:
     fib_V: float = 0.40            # FRC volume factor
     fib_c: float = 0.25            # surviving capillary fraction
     fib_D: float = 0.20            # membrane diffusing factor
-    hc_C: float = 0.60
+    hc_C: float = 0.15            # honeycomb compliance (fraction of healthy); 0.60 before v0.3.0, which floored FVC near 42%
     hc_V: float = 1.00
     hc_c: float = 0.0
     hc_D: float = 0.0
