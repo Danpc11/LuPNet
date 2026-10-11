@@ -10,7 +10,7 @@ C = json.load(open(os.path.join(ROOT, "results", "ph_calculator.json")))
 V = pd.read_csv(os.path.join(ROOT, "data", "virtual_ph_cohort.tsv"), sep="\t")
 pts = [[round(r.FVC, 1), round(r.DLCO, 1), round(r.mPAP, 1), int(r.vasculopathy)] for r in V.itertuples()]
 t = open(os.path.join(ROOT, "src", "app_template.html")).read()
-rep = {"__COEF__": json.dumps(C), "__COHORT__": json.dumps(pts), "__NPAT__": str(len(pts)), "__AUC__": f"{C['logistic']['auc_with_noise']:.2f}",
+rep = {"__COEF__": json.dumps(C), "__COHORT__": json.dumps(pts), "__NPAT__": str(len(pts)), "__NREF__": f"{len(C['reference']):,}", "__AUC__": f"{C['logistic']['auc_with_noise']:.2f}",
        "__FMIN__": f"{C['fvc_range'][0]:.0f}", "__FMAX__": f"{C['fvc_range'][1]:.0f}", "__DMIN__": f"{C['dlco_range'][0]:.0f}", "__DMAX__": f"{C['dlco_range'][1]:.0f}"}
 for k, v in rep.items():
     t = t.replace(k, v)

@@ -7,7 +7,11 @@
    - tissue_curve: expected mPAP from tissue loss alone as a function of FVC (simulated cases without vasculopathy);
    - dlco_curve: expected log DLCO for a given FVC without vasculopathy, and its residual SD;
    - mixture: two-component Gaussian mixture of the DLCO residual (all patients with vasculopathy model);
-   - logistic: P(mPAP >= 25 | FVC, DLCO), fitted with measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
+   - logistic: P(mPAP >= 25 | FVC, DLCO), fitted with measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points);
+   - reference: simulated visits in established disease (calibrated and advanced cohorts; 25 per case) with FVC, DLCO,
+     mPAP, alveolar-arterial O2 gradient and relevant vasculopathy, used by the calculator to weight the visits by
+     their likelihood given the patient's FVC and DLCO and, optionally, echocardiographic systolic pressure and the
+     A-a gradient (measurement SDs 5 points, 5 points, 8 mmHg and 6 mmHg).
 
     python3 src/fit_calculator.py --cohorts results/ph_cohorts
 Cohort files are produced by src/ph_cohort.py.
@@ -56,5 +60,21 @@ out = dict(tissue_curve=tissue.round(6).tolist(), dlco_curve=dl.round(6).tolist(
            mixture=mix, logistic=dict(intercept=round(float(lr.intercept_[0]), 4), coef_FVC=round(float(lr.coef_[0][0]), 5),
                                       coef_log_ratio=round(float(lr.coef_[0][1]), 4), auc_with_noise=round(float(auc), 3)),
            n_patients=int(len(V)), fvc_range=[float(V.FVC.min()), float(V.FVC.max())], dlco_range=[float(V.DLCO.min()), float(V.DLCO.max())])
+# reference visits for the likelihood-weighted estimates (optional echocardiographic pressure and A-a gradient)
+from cohort_io import cases as _cases
+ref = []
+for tag in ("big2", "adv2"):
+    for i, d in _cases(a.cohorts, tag):
+        r0 = d.iloc[0]; A = float(d.vasc_A.iloc[0]); t0 = float(d.t_vasc0.iloc[0])
+        s_ = d[(d.converged == 1) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
+        if len(s_) == 0:
+            continue
+        s_ = s_.iloc[np.linspace(0, len(s_) - 1, min(25, len(s_))).round().astype(int)]
+        for _, x in s_.iterrows():
+            aeff = A * (1 - np.exp(-(x.years + t0) / 2.0)) if A > 0 else 0.0
+            ref.append([round(float(100 * x.FVC / r0.FVC), 1), round(float(100 * x.DLCO / r0.DLCO), 1), round(float(x.mPAP), 1),
+                        round(float(150 - x.PaCO2 / 0.8 - x.PaO2), 1), int(aeff >= 1.0)])
+out["reference"] = ref
+out["reference_sd"] = dict(FVC=5.0, DLCO=5.0, sPAP=8.0, AaDO2=6.0)
 json.dump(out, open(os.path.join(ROOT, "results", "ph_calculator.json"), "w"), indent=1)
-print(json.dumps(out, indent=1)); print(f"cohort table: {len(C)} rows")
+print({k: v for k, v in out.items() if k != "reference"}); print(f"cohort table: {len(C)} rows; reference visits: {len(ref)}")

@@ -81,6 +81,7 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 ```bash
 python src/make_figures_erj.py        # Figures 1-4 and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
+python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
 ```
 
 To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
@@ -107,6 +108,7 @@ Each simulated case is an independent run of the model, not a real patient.
 | `docs/AUDIT.md` | Reproducibility audit |
 | `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
+| `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
 | `src/fit_calculator.py`, `src/build_app.py`, `src/app_template.html` | Calculator inputs and page |
@@ -123,7 +125,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.0). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.1). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
 
 ## License
 

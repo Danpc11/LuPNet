@@ -55,7 +55,7 @@
 <body>
 <main>
   <h1>Is this patient's pulmonary hypertension more than fibrosis?</h1>
-  <p class="lede">Enter the lung function of a patient with idiopathic pulmonary fibrosis. LuPNet places them among __NPAT__ simulated cases simulated with and without a structural vasculopathy, and estimates how much of their expected pulmonary artery pressure fibrosis alone would explain. For research use only; it does not replace right heart catheterization.</p>
+  <p class="lede">Enter the lung function of a patient with idiopathic pulmonary fibrosis (required) and, if available, the echocardiographic systolic pulmonary artery pressure and the alveolar–arterial oxygen gradient. LuPNet compares the patient with __NREF__ visits of __NPAT__ simulated cases, with and without a structural vasculopathy, and estimates the pulmonary artery pressure and how much of it fibrosis alone would explain. For research use only; it does not replace right heart catheterization.</p>
 
   <div class="grid">
     <section class="inputs" aria-label="Patient data">
@@ -63,18 +63,20 @@
       <input id="fvc" type="number" min="20" max="120" step="1" value="55" inputmode="decimal">
       <label for="dlco">DLCO <small>(% predicted, haemoglobin-corrected)</small></label>
       <input id="dlco" type="number" min="5" max="120" step="1" value="30" inputmode="decimal">
-      <label for="spo2">Resting SpO₂ <small>(%, optional)</small></label>
-      <input id="spo2" type="number" min="70" max="100" step="1" placeholder="e.g. 93" inputmode="decimal">
+      <label for="spap">Echocardiographic systolic PAP <small>(mmHg, optional)</small></label>
+      <input id="spap" type="number" min="10" max="120" step="1" placeholder="e.g. 40" inputmode="decimal">
+      <label for="aa">Alveolar–arterial O₂ gradient <small>(mmHg, optional; resting arterial blood gas at sea level)</small></label>
+      <input id="aa" type="number" min="0" max="80" step="1" placeholder="e.g. 25" inputmode="decimal">
 
       <div class="results" aria-live="polite">
         <p class="verdict" id="verdict"></p>
+        <div class="row"><span>Estimated mPAP (90% interval)</span><b id="mpap"></b></div>
         <div class="row"><span>Probability of mPAP ≥ 25 mmHg</span><b id="pph"></b></div>
-        <div class="row"><span>Probability of the vascular phenotype</span><b id="pvasc"></b></div>
+        <div class="row"><span>Probability of relevant vasculopathy</span><b id="prel"></b></div>
         <div class="row"><span>mPAP expected from fibrosis alone</span><b id="tissue"></b></div>
+        <div class="row"><span>Probability of the low-DLCO phenotype</span><b id="pvasc"></b></div>
         <div class="row"><span>DLCO expected for this FVC without vasculopathy</span><b id="dlexp"></b></div>
-        <div class="row"><span>25 most similar simulated cases: mPAP</span><b id="twins"></b></div>
-        <div class="row"><span>… of whom with mPAP ≥ 25 mmHg</span><b id="twph"></b></div>
-        <div class="row" id="zrow" hidden><span>Zisman 2007 formula (with SpO₂)</span><b id="zis"></b></div>
+        <div class="row"><span>Information used</span><b id="used"></b></div>
         <p class="note" id="note" hidden></p>
       </div>
     </section>
@@ -96,7 +98,9 @@
     <ul>
       <li>The simulated cases come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Each simulated case is an independent run of the model, not a real patient. 70% of the cases carry a structural small-artery vasculopathy with its own course, mostly mild, and fibrosis progresses at a different speed in each case.</li>
       <li>The vasculopathy was calibrated so that the cohort reproduces the distribution of mPAP in mild-to-moderate IPF (ARTEMIS-IPF), the weak correlation of mPAP with DLCO and its absence with FVC. The prevalence of PH in advanced disease was not fitted.</li>
-      <li>The probability of PH is a logistic model of FVC and FVC/DLCO fitted to the in silico cohort with realistic measurement noise (AUC __AUC__). The vascular-phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve.</li>
+      <li>Each simulated visit is weighted by how likely it is to produce the patient's data, given measurement errors (SD 5 percentage points for FVC and DLCO, 8 mmHg for echocardiographic systolic pressure and 6 mmHg for the alveolar–arterial gradient). The estimated mPAP, its 90% interval and the probabilities of PH and of relevant vasculopathy (an effective lesion at least equal to the baseline arteriolar resistance) are weighted averages over the visits. Echocardiographic pressure is related to mPAP by mPAP = 0.61 × systolic pressure + 2 mmHg.</li>
+      <li>In simulated cases held out from the reference set, the area under the ROC curve for PH was 0.73 with FVC and DLCO, 0.84 with the alveolar–arterial gradient, 0.89 with echocardiographic pressure and 0.92 with both; for relevant vasculopathy, 0.71, 0.81, 0.87 and 0.90; the mean error of the estimated mPAP fell from 4.5 to 2.2 mmHg.</li>
+      <li>The low-DLCO phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve. The alveolar–arterial gradient assumes sea-level conditions and no other cause of hypoxaemia; at altitude it must be computed with the local inspired oxygen pressure.</li>
       <li>The in silico cohort spans FVC __FMIN__–__FMAX__% and DLCO __DMIN__–__DMAX__%. Estimates outside this range are extrapolations.</li>
     </ul>
   </details>
@@ -105,48 +109,56 @@
 <script>
 const COEF = __COEF__;
 const COH = __COHORT__;   // [FVC, DLCO, mPAP, vasculopathy]
+const REF = COEF.reference; // [FVC, DLCO, mPAP, A-a gradient, relevant vasculopathy]
+const SD = COEF.reference_sd;
 const $ = id => document.getElementById(id);
 const polyval = (c, x) => c.reduce((s, a) => s * x + a, 0);
 const npdf = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2) / s;
 const fmt = (x, d = 0) => Number.isFinite(x) ? x.toFixed(d) : '–';
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
-function estimate(fvc, dlco) {
+function estimate(fvc, dlco, spap, aa) {
   const tissue = polyval(COEF.tissue_curve, fvc);
   const dlexp = Math.exp(polyval(COEF.dlco_curve, fvc));
   const res = Math.log(dlco) - Math.log(dlexp);
   const M = COEF.mixture, v = M.vascular_component;
   const lik = M.weights.map((w, k) => w * npdf(res, M.means[k], M.sds[k]));
   const pvasc = lik[v] / (lik[0] + lik[1]);
-  const L = COEF.logistic;
-  const pph = 1 / (1 + Math.exp(-(L.intercept + L.coef_FVC * fvc + L.coef_log_ratio * Math.log(fvc / dlco))));
-  const sF = 12, sD = 0.45;
-  const near = COH.map(p => [((p[0] - fvc) / sF) ** 2 + ((Math.log(p[1]) - Math.log(dlco)) / sD) ** 2, p])
-                  .sort((a, b) => a[0] - b[0]).slice(0, 25).map(x => x[1]);
-  const m = near.map(p => p[2]).sort((a, b) => a - b);
-  const q = f => m[Math.min(m.length - 1, Math.floor(f * (m.length - 1)))];
-  return { tissue, dlexp, pvasc, pph, twin: [q(0.5), q(0.25), q(0.75)], twph: near.filter(p => p[2] >= 25).length / near.length };
+  const hasS = Number.isFinite(spap), hasA = Number.isFinite(aa);
+  const ll = REF.map(r => {
+    let q = ((r[0] - fvc) / SD.FVC) ** 2 + ((r[1] - dlco) / SD.DLCO) ** 2;
+    if (hasS) q += (((r[2] - 2) / 0.61 - spap) / SD.sPAP) ** 2;
+    if (hasA) q += ((r[3] - aa) / SD.AaDO2) ** 2;
+    return -0.5 * q;
+  });
+  const mx = Math.max(...ll); let w = ll.map(x => Math.exp(x - mx)); const sw = w.reduce((a, b) => a + b, 0); w = w.map(x => x / sw);
+  const ess = 1 / w.reduce((a, b) => a + b * b, 0);
+  let mean = 0, pph = 0, prel = 0;
+  REF.forEach((r, k) => { mean += w[k] * r[2]; pph += w[k] * (r[2] >= 25); prel += w[k] * r[4]; });
+  const ord = REF.map((r, k) => [r[2], w[k]]).sort((a, b) => a[0] - b[0]);
+  const wq = f => { let c = 0; for (const [m, x] of ord) { c += x; if (c >= f) return m; } return ord[ord.length - 1][0]; };
+  return { tissue, dlexp, pvasc, pph, prel, mean, lo: wq(0.05), hi: wq(0.95), ess, hasS, hasA };
 }
 
 function update() {
-  const fvc = parseFloat($('fvc').value), dlco = parseFloat($('dlco').value), spo2 = parseFloat($('spo2').value);
+  const fvc = parseFloat($('fvc').value), dlco = parseFloat($('dlco').value), spap = parseFloat($('spap').value), aa = parseFloat($('aa').value);
   const note = $('note');
   if (!(fvc > 0) || !(dlco > 0)) { $('verdict').textContent = 'Enter FVC and DLCO to see the estimates.'; return; }
-  const e = estimate(fvc, dlco);
+  const e = estimate(fvc, dlco, spap, aa);
+  $('mpap').textContent = `${fmt(e.mean, 1)} mmHg (${fmt(e.lo, 0)}–${fmt(e.hi, 0)})`;
   $('pph').textContent = fmt(100 * e.pph) + '%';
+  $('prel').textContent = fmt(100 * e.prel) + '%';
   $('pvasc').textContent = fmt(100 * e.pvasc) + '%';
   $('tissue').textContent = fmt(e.tissue, 1) + ' mmHg';
   $('dlexp').textContent = fmt(e.dlexp) + '%';
-  $('twins').textContent = `${fmt(e.twin[0], 1)} mmHg (IQR ${fmt(e.twin[1], 1)}–${fmt(e.twin[2], 1)})`;
-  $('twph').textContent = fmt(100 * e.twph) + '%';
-  $('verdict').textContent = e.pvasc > 0.5
-    ? 'DLCO is lower than fibrosis alone explains: this pattern points to a vascular component.'
-    : 'DLCO is in line with the extent of fibrosis: a large vascular component is less likely.';
-  if (spo2 > 0) {
-    $('zrow').hidden = false;
-    $('zis').textContent = fmt(-11.9 + 0.272 * spo2 + 0.0659 * (100 - spo2) ** 2 + 3.06 * (fvc / dlco), 1) + ' mmHg';
-  } else { $('zrow').hidden = true; }
+  $('used').textContent = 'FVC, DLCO' + (e.hasS ? ', echo systolic PAP' : '') + (e.hasA ? ', A–a gradient' : '');
+  $('verdict').textContent = e.prel > 0.5
+    ? 'The data point to a vascular component beyond what fibrosis explains.'
+    : (e.pvasc > 0.5 ? 'DLCO is lower than fibrosis alone explains: this pattern points to a vascular component.'
+                     : 'The data are in line with the extent of fibrosis: a large vascular component is less likely.');
   const msg = [];
+  if (e.ess < 20) msg.push('Few simulated visits resemble these data; the estimates are uncertain.');
+  if (!e.hasS && !e.hasA) msg.push('Adding echocardiographic systolic pressure or the A–a gradient improves the estimates.');
   if (fvc < COEF.fvc_range[0] || fvc > COEF.fvc_range[1]) msg.push(`FVC outside the simulated range (${fmt(COEF.fvc_range[0])}–${fmt(COEF.fvc_range[1])}%); estimates are extrapolated.`);
   if (dlco < COEF.dlco_range[0] || dlco > COEF.dlco_range[1]) msg.push(`DLCO outside the simulated range (${fmt(COEF.dlco_range[0])}–${fmt(COEF.dlco_range[1])}%).`);
   note.hidden = !msg.length; note.textContent = msg.join(' ');
@@ -180,7 +192,7 @@ function draw(fvc, dlco) {
   }
 }
 
-['fvc', 'dlco', 'spo2'].forEach(id => $(id).addEventListener('input', update));
+['fvc', 'dlco', 'spap', 'aa'].forEach(id => $(id).addEventListener('input', update));
 window.addEventListener('resize', () => update());
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', update);
 update();

@@ -90,3 +90,8 @@ A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopa
 ## References
 
 Feaver RE, Gelfand BD, Blackman BR (2013) Nat Commun 4:1525. · Huang W, Yen RT, McLaurine M, Bledsoe G (1996) J Appl Physiol 81:2123–2133. · Raghu G, et al. (2015) Eur Respir J 46:1370–1377 (ARTEMIS-IPF haemodynamics). · Shorr AF, et al. (2007) Eur Respir J 30:715–721. · Zisman DA, et al. (2007) Respir Med 101:2153–2159. · Womersley JR (1955) J Physiol 127:553–563.
+
+
+## Non-invasive markers and individual estimation
+
+The trajectories also give the resting arterial blood gases and the systolic pulmonary artery pressure that echocardiography would estimate (mPAP = 0.61 sPAP + 2 mmHg). At a given FVC and DLCO, PaO2 falls with the severity of the vasculopathy, because capillary loss limits oxygen diffusion. With measurement noise, the area under the ROC curve for relevant vasculopathy (effective lesion at least equal to the baseline arteriolar resistance) is 0.69 with FVC and DLCO, 0.77 with the alveolar-arterial gradient, 0.84 with echocardiographic pressure and 0.85 with both; for PH, 0.78, 0.87, 0.92 and 0.94. An emulator of the simulator (`src/noninvasive.py`) allows a posterior over each case's disease state; in held-out simulated cases the error of the estimated mPAP falls from 4.2 to 2.2 mmHg, with calibrated 90% intervals. The calculator uses the same principle with the simulated visits as reference.

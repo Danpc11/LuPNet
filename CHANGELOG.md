@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 (2026-10)
+
+- `src/noninvasive.py`: emulator of the simulator (gradient-boosted trees, ~4 µs per evaluation), identification of relevant vasculopathy and PH with echocardiographic systolic pressure and the alveolar-arterial O2 gradient, and individual Bayesian estimation of mPAP with 90% intervals (Figure 5, tables S13-S15).
+- Calculator: FVC and DLCO required; echocardiographic systolic pressure and A-a gradient optional. Estimates weight 5,036 simulated visits by their likelihood given the patient's data and report the estimated mPAP with its 90% interval and the probabilities of PH and of relevant vasculopathy.
+
 ## 0.3.0 (2026-10)
 
 - Honeycomb units keep 15% of normal compliance (`hc_C = 0.15`, previously 0.60), so FVC keeps falling as honeycombing extends; this removes an artificial FVC plateau near 42% and the overestimate of PH prevalence at low FVC.

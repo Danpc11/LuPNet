@@ -13,5 +13,6 @@ python3 src/pulmonary_veins_shared_law.py     # the same law vs the venous tree
 python3 src/make_figures_erj.py               # Figures 1-4 and Table 1
 python3 src/supplement_tables.py              # Tables S2, S4, S5 and the fibrosis-only cohorts
 python3 src/make_supplement_figures.py        # Figure S1 and tables S6-S11 (lung-function range, baseline variation, audit sensitivity analyses)
+python3 src/noninvasive.py                    # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
 python3 src/fit_calculator.py                 # data/virtual_ph_cohort.tsv and results/ph_calculator.json
 python3 src/build_app.py                      # index.html
