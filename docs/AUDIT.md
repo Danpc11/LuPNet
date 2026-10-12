@@ -1,7 +1,7 @@
 # Reproducibility audit
 
 Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
-Code: this repository, version 0.3.0.
+Code: this repository, version 0.3.3.
 
 ## Method
 
@@ -43,6 +43,19 @@ Every number in the manuscript is reproduced exactly from the stored simulations
 | Tree size (1,024 − 256 units), mPAP | −0.08 ± 0.41 mmHg | same |
 | Morphometry, arterial / venous error factor | 1.14 / 1.16 | 1.135 / 1.156 |
 | Healthy mPAP | 14.8 mmHg | 14.78 |
+
+## Non-invasive markers (Figure 5)
+
+| Quantity | Manuscript | Recomputed |
+|---|---|---|
+| AUC, relevant vasculopathy: FVC + DLCO / + SpO2 / + PaO2 / + A–a / + echo / + echo and A–a | 0.69 / 0.72 / 0.74 / 0.77 / 0.84 / 0.85 | 0.687 / 0.721 / 0.738 / 0.768 / 0.837 / 0.853 |
+| AUC, PH (same order) | 0.78 / 0.84 / 0.87 / 0.87 / 0.92 / 0.94 | 0.776 / 0.836 / 0.869 / 0.874 / 0.917 / 0.937 |
+| Partial r(PaO2, lesion severity given FVC and DLCO) | −0.38 | −0.38 |
+| Individual mPAP error: FVC + DLCO / + A–a / + echo | 4.2 / 3.0 / 2.2 mmHg | 4.21 / 3.03 / 2.21 |
+| Coverage of the 90% intervals | 89–92% | 89–92% |
+| PH by FVC range, 34–66% (table S10) | 31% (25–38) | 31% (25–38) |
+
+All figures and tables (Figures 1–5, S1; Table 1; tables S2, S4–S11, S13–S15) regenerated from a clean clone are pixel- and value-identical to those in the manuscript; `src/manuscript_numbers.py` recomputes every other number quoted in the text.
 
 ## Model checks
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.3 (2026-10)
+
+- Figure 5 and tables S13-S15 include resting SpO2; legends of Figure 5 placed below the panels; Figure 1a states the 70% prevalence of vasculopathy.
+- `src/manuscript_numbers.py`: every number quoted in the text of the manuscript and supplementary table S10 (PH by FVC range), recomputed from the stored cohorts.
+- `src/validate_calculator.py`: validation of the calculator on held-out simulated cases (the figures quoted in the calculator).
+- README calculator section, THEORY and the audit aligned with the manuscript.
+
 ## 0.3.2 (2026-10)
 
 - Calculator: resting SpO2 added as an optional input (with echocardiographic systolic pressure and the A-a gradient); responsive layout for phones, tablets and desktops; the pressure estimate is shown as a scale with its 90% interval and the pressure expected from fibrosis alone, and the probabilities as bars; the FVC-DLCO map is drawn as SVG at the size of the screen.

@@ -43,17 +43,15 @@ The derivation, the model and all numbers are in **[THEORY.md](THEORY.md)**.
 
 ## Calculator
 
-A browser-based research calculator is available at **https://danpc11.github.io/LuPNet/**. It runs locally in the browser.
+A browser-based research calculator is available at **https://danpc11.github.io/LuPNet/**. It runs locally in the browser and works on phones, tablets and desktops.
 
-Enter FVC and DLCO (and optionally resting SpO₂) of a patient with IPF. The calculator returns
+Enter FVC and DLCO (required) and, if available, the echocardiographic systolic pulmonary artery pressure, the alveolar–arterial O₂ gradient and resting SpO₂. The calculator weights 5,036 simulated visits by how likely they are to produce the patient's data and returns
 
-- the probability of mPAP ≥ 25 mmHg,
-- the probability of the vascular phenotype (a DLCO lower than fibrosis alone explains),
-- the mPAP expected from fibrosis alone and the DLCO expected for that FVC,
-- the mPAP of the 25 most similar simulated cases,
-- the Zisman 2007 formula, when SpO₂ is given, for comparison,
+- the estimated mPAP with its 90% interval, against the mPAP expected from fibrosis alone,
+- the probabilities of mPAP ≥ 25 mmHg and of relevant vasculopathy,
+- the probability of the low-DLCO phenotype and the DLCO expected for that FVC,
 
-and places the patient on a map of the 260 simulated cases. It is a research tool built on simulated cases and does not replace right heart catheterization.
+and places the patient on a map of the 260 simulated cases. In held-out simulated cases, the area under the ROC curve for PH rises from 0.77 with FVC and DLCO to 0.94 with all optional inputs (`src/validate_calculator.py`). It is a research tool built on simulated cases and does not replace right heart catheterization.
 
 ---
 
@@ -82,6 +80,8 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 python src/make_figures_erj.py        # Figures 1-4 and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
 python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
+python src/manuscript_numbers.py      # numbers quoted in the text and table S10
+python src/validate_calculator.py     # calculator validation
 ```
 
 To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
@@ -108,6 +108,8 @@ Each simulated case is an independent run of the model, not a real patient.
 | `docs/AUDIT.md` | Reproducibility audit |
 | `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
+| `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S10 |
+| `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
 | `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
@@ -125,7 +127,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.2). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.3). Zenodo, 2026. [DOI of v0.3.3 to be added on release; earlier versions: https://doi.org/10.5281/zenodo.23125038]
 
 ## License
 

@@ -141,7 +141,7 @@ def network_schematic(ax):
         ax.text(x0k + 0.35, y, t, va="center", fontsize=6); y -= dy * (0.9 if c is None else 1.0)
     ax.plot([x0k + 0.08, x0k + 0.17], [y, y], color=RED, lw=3.2, solid_capstyle="butt")
     ax.text(x0k + 0.35, y, "Vasculopathy: series lesion and capillary loss", va="center", fontsize=6); y -= dy
-    ax.text(x0k + 0.35, y, "(half of the simulated cases; equation 3)", va="center", fontsize=6, color=GREY)
+    ax.text(x0k + 0.35, y, "(70% of the simulated cases; equation 3)", va="center", fontsize=6, color=GREY)
     tag(ax, "a", x=-0.05, y=0.98)
 
 
