@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 (2026-10)
+
+- Calculator: resting SpO2 added as an optional input (with echocardiographic systolic pressure and the A-a gradient); responsive layout for phones, tablets and desktops; the pressure estimate is shown as a scale with its 90% interval and the pressure expected from fibrosis alone, and the probabilities as bars; the FVC-DLCO map is drawn as SVG at the size of the screen.
+
 ## 0.3.1 (2026-10)
 
 - `src/noninvasive.py`: emulator of the simulator (gradient-boosted trees, ~4 µs per evaluation), identification of relevant vasculopathy and PH with echocardiographic systolic pressure and the alveolar-arterial O2 gradient, and individual Bayesian estimation of mPAP with 90% intervals (Figure 5, tables S13-S15).

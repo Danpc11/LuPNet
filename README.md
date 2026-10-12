@@ -125,7 +125,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.1). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.2). Zenodo, 2026. https://doi.org/10.5281/zenodo.23125038
 
 ## License
 

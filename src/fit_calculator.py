@@ -9,9 +9,9 @@
    - mixture: two-component Gaussian mixture of the DLCO residual (all patients with vasculopathy model);
    - logistic: P(mPAP >= 25 | FVC, DLCO), fitted with measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points);
    - reference: simulated visits in established disease (calibrated and advanced cohorts; 25 per case) with FVC, DLCO,
-     mPAP, alveolar-arterial O2 gradient and relevant vasculopathy, used by the calculator to weight the visits by
+     mPAP, alveolar-arterial O2 gradient, relevant vasculopathy and resting SpO2, used by the calculator to weight the visits by
      their likelihood given the patient's FVC and DLCO and, optionally, echocardiographic systolic pressure and the
-     A-a gradient (measurement SDs 5 points, 5 points, 8 mmHg and 6 mmHg).
+     A-a gradient and resting SpO2 (measurement SDs 5 points, 5 points, 8 mmHg, 6 mmHg and 2 points).
 
     python3 src/fit_calculator.py --cohorts results/ph_cohorts
 Cohort files are produced by src/ph_cohort.py.
@@ -73,8 +73,8 @@ for tag in ("big2", "adv2"):
         for _, x in s_.iterrows():
             aeff = A * (1 - np.exp(-(x.years + t0) / 2.0)) if A > 0 else 0.0
             ref.append([round(float(100 * x.FVC / r0.FVC), 1), round(float(100 * x.DLCO / r0.DLCO), 1), round(float(x.mPAP), 1),
-                        round(float(150 - x.PaCO2 / 0.8 - x.PaO2), 1), int(aeff >= 1.0)])
+                        round(float(150 - x.PaCO2 / 0.8 - x.PaO2), 1), int(aeff >= 1.0), round(float(100 * x.SaO2), 1)])
 out["reference"] = ref
-out["reference_sd"] = dict(FVC=5.0, DLCO=5.0, sPAP=8.0, AaDO2=6.0)
+out["reference_sd"] = dict(FVC=5.0, DLCO=5.0, sPAP=8.0, AaDO2=6.0, SpO2=2.0)
 json.dump(out, open(os.path.join(ROOT, "results", "ph_calculator.json"), "w"), indent=1)
 print({k: v for k, v in out.items() if k != "reference"}); print(f"cohort table: {len(C)} rows; reference visits: {len(ref)}")
