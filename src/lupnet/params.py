@@ -104,8 +104,11 @@ class Params:
     vasc_A: float = 0.0           # bounded vasculopathy: maximum lesion resistance in units of the terminal-arteriole
                                   # resistance; R_les = R_ta0 vasc_A (1 - exp(-(t_yr + t_vasc0) / vasc_tau))
     vasc_mode: str = "independent"  # "independent" (own time course) | "fibrosis" (scales with fibrotic extent)
-    vasc_tau: float = 5.0         # time constant of the bounded vasculopathy (years)
-    cap_frac: float = 0.0         # capillary loss coupled to the vasculopathy: capillary factor 1/(1 + cap_frac (exp(k t) - 1))
+    vasc_tau: float = 5.0         # time constant of the bounded vasculopathy (years); the cohorts of the
+                                  # manuscript use 2.0, set by ph_cohort.py --tau (T_les of equation 2)
+    cap_frac: float = 0.0         # capillary loss coupled to the vasculopathy (f_cap of equation 2): capillary
+                                  # factor 1/(1 + cap_frac sv) for the bounded lesion, and
+                                  # 1/(1 + cap_frac (exp(k_vasc t) - 1)) for the unbounded k_vasc branch
     t_vasc0: float = 0.0          # years of vasculopathy already elapsed at the start (independent of fibrosis)
     k_vasc: float = 0.0           # structural small-artery vasculopathy, independent of fibrosis (1/yr):
                                   # a non-remodelable series lesion R_les = R_ta0 (exp(k_vasc t) - 1) in every unit

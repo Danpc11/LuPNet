@@ -1,0 +1,2 @@
+# Development and testing only; the model itself needs requirements.txt alone.
+pytest>=8.0

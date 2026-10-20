@@ -1,0 +1,7 @@
+# Exact versions that produced the published numbers (LuPNet 0.3.4, Python 3.12).
+# Use requirements.txt for general use and this file to reproduce the manuscript.
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.2
+matplotlib==3.10.8
+scikit-learn==1.8.0

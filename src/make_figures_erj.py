@@ -2,7 +2,8 @@
 """Figures 1-4 and Table 1 of the manuscript on pulmonary hypertension in IPF.
 
     python3 src/make_figures_erj.py --cohorts results/ph_cohorts --out results/figures
-Figure 1: the shared target law against human pulmonary morphometry. Figure 2: the calibrated virtual cohort.
+Figure 1: the shared target law against human pulmonary morphometry. Figure 2: the calibrated virtual cohort
+(a-e) and the two clocks of fibrosis and vasculopathy (f-h).
 Figure 3: advanced disease (out of sample). Figure 4: the vascular phenotype. Table 1: calibration targets.
 """
 import argparse, glob, os, sys
@@ -30,11 +31,15 @@ plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "D
                      "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False, "savefig.dpi": 600,
                      "lines.linewidth": 1.0, "pdf.fonttype": 42})
 BLUE, RED, GREEN, GREY, LGREY, DARK = "#2166AC", "#B2182B", "#1B7837", "#8C8C8C", "#D9D9D9", "#252525"
+ORANGE = "#E08214"          # lesion tied to the extent of fibrosis (alternative mechanism)
+PANEL_UPPER = False         # True for upper-case panel letters (Nature style)
+VASC_TAU = 2.0              # time constant of the lesion, years (ph_cohort.py --tau)
+MPAP_HEALTHY = 14.8         # mPAP of the healthy model lung, mmHg
 rng0 = np.random.default_rng(0)
 
 
 def tag(ax, s, x=-0.22, y=1.06):
-    ax.text(x, y, s, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom", ha="left")
+    ax.text(x, y, s.upper() if PANEL_UPPER else s, transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom", ha="left")
 
 
 def save(fig, name):
@@ -57,6 +62,22 @@ def cohort(tag_):
 
 CAL, ADV = cohort("big2"), cohort("adv2")
 MILD = CAL[(CAL.FVC >= 50) & (CAL.FVC <= 90)].reset_index(drop=True)
+ALT = cohort("altF")                       # lesion tied to the extent of fibrosis
+HOM = cohort("hom")                        # fibrosis alone, no vascular lesion
+_fib_co = np.polyfit(HOM.FVC, HOM.mPAP, 2)  # mPAP that fibrosis alone produces at a given FVC
+
+
+def mPAP_fibrosis_only(fvc):
+    """mPAP (mmHg) of the fibrosis-only cohort at this FVC, % predicted."""
+    return np.polyval(_fib_co, fvc)
+
+
+def trajectories(tag_, k=14, seed=1):
+    """k simulated cases of a cohort that carry a lesion, with their whole course."""
+    from cohort_io import cases
+    runs = [d for _, d in cases(a.cohorts, tag_) if float(d.iloc[-1].vasc_A) > 0]
+    pick = np.random.default_rng(seed).choice(len(runs), size=min(k, len(runs)), replace=False)
+    return [runs[i] for i in pick]
 
 
 def noise_avg_r(D, col, n=1000, seed=0):
@@ -244,8 +265,8 @@ tag(ax, "g")
 save(fig, "Figure1")
 
 # ------------------------------------------------------------------ Figure 2: calibrated cohort
-fig = plt.figure(figsize=(180 * MM, 118 * MM))
-gs = fig.add_gridspec(2, 3, hspace=0.62, wspace=0.48, left=0.07, right=0.98, top=0.92, bottom=0.10)
+fig = plt.figure(figsize=(180 * MM, 180 * MM))
+gs = fig.add_gridspec(3, 3, hspace=0.55, wspace=0.48, left=0.07, right=0.98, top=0.94, bottom=0.06)
 bins = [("<20", lambda m: m < 20, 51), ("20–25", lambda m: (m >= 20) & (m < 25), 30), ("25–35", lambda m: (m >= 25) & (m < 35), 15), ("≥35", lambda m: m >= 35, 4)]
 B = np.array([[100 * f(MILD.sample(len(MILD), replace=True, random_state=int(rng0.integers(1e9))).mPAP).mean() for _, f, _ in bins] for _ in range(2000)])
 pt = np.array([100 * f(MILD.mPAP).mean() for _, f, _ in bins]); lo, hi = np.percentile(B, [2.5, 97.5], axis=0)
@@ -301,6 +322,60 @@ axR.plot([], [], color=BLUE, lw=1.6, marker="o", ms=4, label="Model, estimate\na
 axR.plot([], [], "D", ms=4, mfc="white", mec=DARK, mew=0.9, label="Patients")
 axR.legend(loc="upper right", handlelength=1.4)
 tag(axL, "e", x=-0.42)
+
+# f: how far the lesion has run at each extent of fibrosis
+ax = fig.add_subplot(gs[2, 0])
+for tag_, c, lab in (("big2", RED, "Own clock"), ("altF", ORANGE, "Tied to fibrosis")):
+    for j, d in enumerate(trajectories(tag_)):
+        ext = 1.0 - d.healthy.to_numpy()
+        if tag_ == "big2":
+            s = 1.0 - np.exp(-(d.t.to_numpy() * d.ypu.to_numpy() + d.t_vasc0.to_numpy()) / VASC_TAU)
+        else:
+            s = np.clip(ext / 0.5, 0.0, 1.0)
+        ax.plot(100 * ext, 100 * s, color=c, lw=0.7, alpha=0.55, label=lab if j == 0 else None)
+ax.set(xlabel="Lung scarred (%)", ylabel="Lesion severity\n(% of its final value)", xlim=(0, 80), ylim=(0, 104))
+ax.legend(loc="lower right", handlelength=1.2)
+tag(ax, "f")
+
+# g: what each process contributes to pressure, by FVC band
+ax = fig.add_subplot(gs[2, 1])
+bands = [(50, 60), (60, 70), (70, 90)]
+xb = np.arange(len(bands))
+fib, vas, vsem, pts = [], [], [], []
+for i, (lo, hi) in enumerate(bands):
+    sel = MILD[(MILD.FVC >= lo) & (MILD.FVC <= hi if hi == 90 else MILD.FVC < hi)]
+    fib.append(float(np.mean(mPAP_fibrosis_only(sel.FVC)) - MPAP_HEALTHY))
+    v = sel.mPAP[sel.vasc] - mPAP_fibrosis_only(sel.FVC[sel.vasc])
+    vas.append(float(v.mean())); vsem.append(float(v.sem()))
+    pts.append((i, v.to_numpy()))
+ax.axhline(0, color=DARK, lw=0.6)
+ax.bar(xb - 0.19, fib, 0.36, color=GREY, label="Fibrosis")
+ax.bar(xb + 0.19, vas, 0.36, color=RED, label="Vasculopathy")
+ax.errorbar(xb + 0.19, vas, yerr=vsem, fmt="none", ecolor=DARK, elinewidth=0.7, capsize=1.5)
+for i, v in pts:
+    ax.plot(i + 0.19 + rng0.uniform(-0.1, 0.1, len(v)), v, "o", ms=1.6, color=DARK, mew=0, alpha=0.5)
+ax.set(xticks=xb, ylabel="Contribution to mPAP\n(mmHg above the healthy lung)", xlabel="FVC (% predicted)")
+ax.set_xticklabels([f"{lo}–{hi}" for lo, hi in bands]); ax.legend(loc="upper right", handlelength=1.2)
+tag(ax, "g")
+
+# h: a lesion tied to fibrosis puts pressure back under the control of lung function
+ax = fig.add_subplot(gs[2, 2])
+ALT_MILD = ALT[(ALT.FVC >= 50) & (ALT.FVC <= 90)].reset_index(drop=True)
+for v, c, lb in ((False, GREY, "No vasculopathy"), (True, ORANGE, "Lesion tied to fibrosis")):
+    m = ALT_MILD.vasc == v
+    ax.plot(ALT_MILD.FVC[m], ALT_MILD.mPAP[m], "o", ms=2.6, color=c, alpha=0.75, mew=0, label=lb)
+fv = np.linspace(ALT_MILD.FVC.min(), ALT_MILD.FVC.max(), 100)
+ax.plot(fv, mPAP_fibrosis_only(fv), color=DARK, lw=1.0, label="Fibrosis alone")
+ax.axhline(25, color=DARK, lw=0.5, ls=":")
+ax.text(0.97, 0.95, ("model r = %.2f" % noise_avg_r(ALT_MILD, "FVC")).replace("-", "\u2212"), transform=ax.transAxes,
+        ha="right", va="top", fontsize=6)
+ax.set(xlabel="FVC (% predicted)", ylabel="mPAP (mmHg)", ylim=(12, 50))
+ax.legend(loc="upper left", handlelength=0.8, markerscale=1.3)
+tag(ax, "h")
+
+print("Figure 2g, contribution to mPAP by FVC band (mmHg above the healthy lung):")
+for (_lo, _hi), _f, _v, _s in zip(bands, fib, vas, vsem):
+    print(f"  FVC {_lo}-{_hi}: fibrosis {_f:.2f}; vasculopathy {_v:.2f} +- {_s:.2f}")
 save(fig, "Figure2")
 
 # ------------------------------------------------------------------ Figure 3: advanced disease

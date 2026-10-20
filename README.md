@@ -58,7 +58,7 @@ and places the patient on a map of the 260 simulated cases. In held-out simulate
 ## Quick start
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest tests -q                       # fast checks
 python src/pulmonary_shared_law.py              # the shared law against human arterial morphometry
 python src/ph_cohort.py analyze --table data/virtual_ph_cohort.tsv --tag calibrated   # the shipped calibrated cohort
@@ -77,7 +77,7 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
 
 ```bash
-python src/make_figures_erj.py        # Figures 1-4 and Table 1 -> results/figures/
+python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the two clocks) and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
 python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
 python src/manuscript_numbers.py      # numbers quoted in the text and table S10
@@ -111,6 +111,7 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S10 |
 | `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
 | `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
+| `tests/` | Mathematical invariants of the model and a regression test of every number published in the manuscript |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
 | `src/fit_calculator.py`, `src/build_app.py`, `src/app_template.html` | Calculator inputs and page |

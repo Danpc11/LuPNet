@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.4 (2026-10)
+
+- `src/make_figures_erj.py`: Figure 2 gains panels f, g and h, the two clocks of fibrosis and vasculopathy. f) how far the lesion has run at each extent of fibrosis, along the trajectories of 14 simulated cases with an independent lesion and 14 with a lesion tied to fibrosis; g) what each process contributes to mPAP by FVC band, with the contribution of every case shown; h) mPAP against FVC in the alternative mechanism, with the pressure that fibrosis alone produces. The panel prints its own numbers so that the text can be checked against them.
+- `mPAP_fibrosis_only()`: the pressure of the fibrosis-only cohort as a function of FVC, now the single baseline behind panels g and h.
+- `tests/test_manuscript_numbers.py`: regression test of the published quantities (the seven calibration targets, the fibrosis-only and variable-response cohorts with their subset sizes, advanced disease out of sample, and the alternative mechanism). A change to the model that moves a number in the paper now fails the tests instead of passing unnoticed.
+- `PANEL_UPPER` switches every panel letter to upper case for journals that require it.
+- Tests run on Python 3.10 and 3.12; `requirements-dev.txt` and `requirements-lock.txt` added, the latter pinning the versions that produced the published numbers.
+- `params.py`: comments on `vasc_tau` and `cap_frac` corrected; they described a time constant and a functional form the cohorts do not use.
+
 ## 0.3.3 (2026-10)
 
 - Figure 5 and tables S13-S15 include resting SpO2; legends of Figure 5 placed below the panels; Figure 1a states the 70% prevalence of vasculopathy.

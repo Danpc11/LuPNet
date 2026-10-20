@@ -1,11 +1,11 @@
 # Reproducibility audit
 
 Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
-Code: this repository, version 0.3.3.
+Code: this repository, version 0.3.4.
 
 ## Method
 
-1. The repository was cloned into a clean environment. The tests (4/4) and `run_all.sh` were run in full: arterial and venous morphometry, Figures 1–4, Table 1, supplementary tables, supplementary figure S1 and the analysis of the five cohorts.
+1. The repository was cloned into a clean environment. The tests (16/16, including the regression test of the published numbers) and `run_all.sh` were run in full: arterial and venous morphometry, Figures 1–4 (Figure 2 including panels f–h), Table 1, supplementary tables, supplementary figure S1 and the analysis of the five cohorts.
 2. An independent script, separate from the repository code, recomputed every number quoted in the manuscript from the stored simulations (`results/ph_cohorts/*.tsv.gz`).
 3. Model physics and units were checked against the baseline values of individual simulated cases.
 
