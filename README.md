@@ -21,6 +21,8 @@ Two results answer it.
 
 $$\tau^* = \tau_0\, r^{\,b-1}\,\ell^{\,(b-1)/2}, \qquad S=\bar\tau\,[1+w_1\,\varphi_1\,G(\alpha)]$$
 
+The law, its exponent and the weight of the pulsatile term are derived and tested across species in [Pérez-Calixto et al., bioRxiv 2026](https://doi.org/10.64898/2026.09.29.755319) ([InFlow](https://github.com/Danpc11/InFlow)).
+
 With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and a normal mean pulmonary artery pressure of 14.8 mmHg as an output rather than an input.
 
 **2. Pulmonary hypertension needs a vasculopathy of its own.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a structural small-artery vasculopathy in 70% of the simulated cases, mostly mild, with its own course and an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
@@ -111,6 +113,8 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S10 |
 | `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
 | `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
+| `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S16 and Figure S2 |
+| `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S16, Figure S2) |
 | `tests/` | Mathematical invariants of the model and a regression test of every number published in the manuscript |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
@@ -128,7 +132,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.3). Zenodo, 2026. [DOI of v0.3.3 to be added on release; earlier versions: https://doi.org/10.5281/zenodo.23125038]
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.7). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
 
 ## License
 

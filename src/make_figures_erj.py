@@ -341,11 +341,15 @@ tag(ax, "f")
 ax = fig.add_subplot(gs[2, 1])
 bands = [(50, 60), (60, 70), (70, 90)]
 xb = np.arange(len(bands))
+# Reference within each band: the cases of this same cohort that carry no lesion.
+# Those cases are the same fibrosis with no vasculopathy, so the difference is what
+# the lesion adds, and their excess over the healthy lung is what fibrosis adds.
 fib, vas, vsem, pts = [], [], [], []
 for i, (lo, hi) in enumerate(bands):
     sel = MILD[(MILD.FVC >= lo) & (MILD.FVC <= hi if hi == 90 else MILD.FVC < hi)]
-    fib.append(float(np.mean(mPAP_fibrosis_only(sel.FVC)) - MPAP_HEALTHY))
-    v = sel.mPAP[sel.vasc] - mPAP_fibrosis_only(sel.FVC[sel.vasc])
+    base = float(sel.mPAP[~sel.vasc].mean())
+    fib.append(base - MPAP_HEALTHY)
+    v = sel.mPAP[sel.vasc] - base
     vas.append(float(v.mean())); vsem.append(float(v.sem()))
     pts.append((i, v.to_numpy()))
 ax.axhline(0, color=DARK, lw=0.6)

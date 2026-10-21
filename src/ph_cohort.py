@@ -53,15 +53,19 @@ def draws(n, seed, lo, hi, p_vasc, a_med, a_sig):
 
 def cmd_run(a):
     os.makedirs(OUT, exist_ok=True)
+    # The draws depend only on --n and --seed, so a shard computes exactly the cases the
+    # whole run would have computed: several shards of one cohort can run side by side.
     stop, A, t0, ypu = draws(a.n, a.seed, a.lo, a.hi, a.p_vasc, a.a_med, a.a_sig)
-    for i in range(a.n):
+    i1 = a.n if a.i1 < 0 else min(a.i1, a.n)
+    for i in range(max(a.i0, 0), i1):
         f = os.path.join(OUT, f"{a.tag}_{i:03d}.tsv")
         if os.path.exists(f):
             continue
         p = make_params(a.pseed + i, a.G, float(stop[i]), float(A[i]), float(t0[i]), float(ypu[i]), a.tau, a.cap, a.vmode)
         t = time.time(); rows, _, _ = run(p, do_exercise=False)
         df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G
-        df.to_csv(f, sep="\t", index=False)
+        tmp = f + f".tmp{os.getpid()}"
+        df.to_csv(tmp, sep="\t", index=False); os.replace(tmp, f)
         print(a.tag, i, round(time.time() - t), "s", flush=True)
 
 
@@ -102,6 +106,8 @@ if __name__ == "__main__":
     r.add_argument("--p_vasc", type=float, default=0.7); r.add_argument("--a_med", type=float, default=1.5); r.add_argument("--a_sig", type=float, default=1.1)
     r.add_argument("--tau", type=float, default=2.0); r.add_argument("--cap", type=float, default=0.05)
     r.add_argument("--vmode", default="independent", choices=["independent", "fibrosis"])
+    r.add_argument("--i0", type=int, default=0, help="first case of this shard")
+    r.add_argument("--i1", type=int, default=-1, help="one past the last case of this shard; -1 means --n")
     z = sub.add_parser("analyze"); z.add_argument("--tag", default="")
     z.add_argument("--table", default="", help="summary table (data/virtual_ph_cohort.tsv); --tag selects its cohort column")
     a = ap.parse_args()

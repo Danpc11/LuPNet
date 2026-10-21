@@ -110,3 +110,22 @@ def test_lesion_tied_to_fibrosis_fails():
     M = M[(M.FVC >= 50) & (M.FVC <= 90)]
     assert 100 * M.PH.mean() == pytest.approx(4, abs=2)
     assert ph_stats.noise_avg_r(M, "FVC") == pytest.approx(-0.27, abs=0.03)
+
+
+def test_contributions_by_fvc_band(mild):
+    """Figure 2g: what fibrosis and the vasculopathy each add to mPAP, by FVC band.
+
+    The reference inside a band is the cases of the same cohort with no lesion:
+    same fibrosis, no vasculopathy. Published values: fibrosis 3.5 -> 2.1 mmHg,
+    vasculopathy 6.1 +- 1.0, 5.3 +- 1.2 and 6.7 +- 1.5 mmHg.
+    """
+    MPAP_HEALTHY = 14.8
+    expect = {(50, 60): (3.5, 6.1, 1.0), (60, 70): (2.7, 5.3, 1.2), (70, 90): (2.2, 6.7, 1.5)}
+    for (lo, hi), (f_exp, v_exp, s_exp) in expect.items():
+        sel = mild[(mild.FVC >= lo) & (mild.FVC <= hi if hi == 90 else mild.FVC < hi)]
+        base = sel.mPAP[~sel.vasc].mean()
+        v = sel.mPAP[sel.vasc] - base
+        assert base - MPAP_HEALTHY == pytest.approx(f_exp, abs=0.1)
+        assert v.mean() == pytest.approx(v_exp, abs=0.1)
+        assert v.sem() == pytest.approx(s_exp, abs=0.1)
+        assert v.mean() > base - MPAP_HEALTHY, "the lesion should outweigh fibrosis in every band"

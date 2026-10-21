@@ -22,7 +22,7 @@ For a tree that minimizes viscous dissipation at a fixed maintenance cost, with 
 
 $$\tau^*=\tau_0\,r^{\,b-1}\,\ell^{\,(b-1)/2}$$
 
-where r is the lumen radius and ℓ the segment length. b = 1 is Murray's law (uniform shear). The local rule
+where r is the lumen radius and ℓ the segment length. b = 1 is Murray's law (uniform shear). The law, the exponent b and the weight w₁ are derived and tested across species in Pérez-Calixto et al., *An invariant endothelial flow signal across species*, bioRxiv 2026 (https://doi.org/10.64898/2026.09.29.755319; code at https://github.com/Danpc11/InFlow). The local rule
 
 $$\frac{d\ln r}{dt}=\kappa\left(\frac{S}{\tau^*}-1\right)$$
 

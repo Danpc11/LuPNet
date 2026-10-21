@@ -1,7 +1,7 @@
 {
   "title": "LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation",
   "upload_type": "software",
-  "version": "0.3.4",
+  "version": "0.3.7",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "Physics-based network model of the fibrotic lung and its pulmonary circulation, with a shared shear-stress remodelling law for the pulmonary vessels, in silico cohorts of pulmonary hypertension in idiopathic pulmonary fibrosis, and a browser-based research calculator. Code, data and simulations accompanying the manuscript 'A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis'.",
   "creators": [
@@ -55,6 +55,11 @@
       "identifier": "https://danpc11.github.io/LuPNet/",
       "relation": "isDocumentedBy",
       "resource_type": "software"
+    },
+    {
+      "identifier": "https://doi.org/10.64898/2026.09.29.755319",
+      "relation": "isSupplementedBy",
+      "resource_type": "publication-preprint"
     }
   ],
   "access_right": "open"

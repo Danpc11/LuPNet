@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.7 (2026-10)
+
+- `ph_cohort.py run` takes `--i0` and `--i1`, so one cohort can be split across cores or cluster tasks. The draws depend only on `--n` and `--seed`, so a shard computes exactly the cases the whole run would have computed; a shard was checked to be identical, row by row, to the serial run of the same case.
+- Each case is written atomically (`.tmp` then rename), so a task killed mid-write cannot leave a truncated file that the resume logic would accept as finished.
+- `scripts/sensitivity_parallel.sh` runs the four sensitivity cohorts on every available core and then builds Table S16 and Figure S2; `scripts/sensitivity.slurm` does the same as a SLURM array. Both pin numpy to one thread per worker and are resumable.
+- `sensitivity.py` reports a cohort with too few cases in the FVC 50-90% band instead of failing inside the statistics.
+- The README citation gave v0.3.3 while the repository was at v0.3.4; it now gives the current version and the concept DOI.
+
+## 0.3.6 (2026-10)
+
+- `src/sensitivity.py`: the seven benchmarks recomputed across cohorts generated at other values of the lesion time constant (T_les) and of the proportion of cases that carry a lesion, with the generating commands in `run_all.sh`. Writes `TableS16_sensitivity.tsv` and `FigureS2`. Keeping the seeds fixed means a difference between rows comes from the parameter and not from a different draw of cases. The script reads cohorts and does not simulate; the four runs take about 5 h of one core.
+
+## 0.3.5 (2026-10)
+
+- Figure 2g: inside each FVC band the reference is now the cases of the same cohort that carry no lesion, instead of a fit to the fibrosis-only cohort. Those cases are the same fibrosis without vasculopathy, so the difference is what the lesion adds. The published values follow: fibrosis 3.5 to 2.1 mmHg, vasculopathy 6.1, 5.3 and 6.7 mmHg.
+- `tests/test_manuscript_numbers.py`: the contributions of Figure 2g are now part of the regression test.
+- The shear law is cited to its preprint (Pérez-Calixto et al., bioRxiv 2026, doi:10.64898/2026.09.29.755319; code at github.com/Danpc11/InFlow) in README, THEORY and `.zenodo.json`, instead of an unpublished manuscript.
+
 ## 0.3.4 (2026-10)
 
 - `src/make_figures_erj.py`: Figure 2 gains panels f, g and h, the two clocks of fibrosis and vasculopathy. f) how far the lesion has run at each extent of fibrosis, along the trajectories of 14 simulated cases with an independent lesion and 14 with a lesion tied to fibrosis; g) what each process contributes to mPAP by FVC band, with the contribution of every case shown; h) mPAP against FVC in the alternative mechanism, with the pressure that fibrosis alone produces. The panel prints its own numbers so that the text can be checked against them.
