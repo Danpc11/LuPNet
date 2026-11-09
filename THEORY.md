@@ -8,11 +8,11 @@ The lung is a set of N gas-exchange units (1,024 by default, `G = 10` generation
 
 **Breathing and mechanics.** Ventilation is distributed by unit compliance; healthy units can lose surfactant function, collapse and recruit cyclically. The forced vital capacity is computed from the volume–pressure behaviour of all units.
 
-**Gas exchange.** Each unit has a diffusing capacity composed in series of a membrane conductance and a capillary component (Roughton–Forster), DLCO and DLNO follow from the sum over units, and arterial oxygen saturation from ventilation–perfusion matching.
+**Gas exchange.** Each unit has a membrane conductance and a capillary volume; its diffusing capacity is their product (`rf = False`, the setting of every cohort of the manuscript; `rf = True` gives the Roughton–Forster series form, which the cohorts do not use), DLCO is the sum over ventilated units, and arterial oxygen saturation follows from ventilation–perfusion matching. Alveolar ventilation is held at 4.2 L/min; PaCO₂ is a readout (0.863 VCO₂ / effective VA), not a regulated variable, so cases with large alveolar dead space are hypercapnic (49 of 200 calibrated cases above 45 mmHg, 14 above 50).
 
 **Perfusion.** Arterial and venous conduits follow Poiseuille's law with viscosity μ; the capillary sheet follows sheet-flow mechanics with gravity, alveolar and vascular pressures; hypoxic pulmonary vasoconstriction acts on the terminal arterioles.
 
-**Disease.** Fibrosis spreads between units with a hazard that depends on injury, neighbourhood and age; time is in model units (6.71 years per unit in the calibrated set, `years_per_unit`). The right ventricle adapts to afterload; exacerbations flood units transiently.
+**Disease.** Fibrosis spreads between units with a hazard that depends on surfactant loss, collapse and neighbourhood (`beta = 0` in the calibrated set: no strain feedback); the vessels age after the healthy baseline (`age_M = 0.3`, `age_sigma = 0.3`: rest point of the remodelling rule at 1.3 times the target shear), which by itself raises mPAP from 14.3 to 16.5 mmHg in the 256-unit lung with no fibrosis (table S18); time is in model units (6.71 years per unit in the calibrated set, `years_per_unit`). The right ventricle adapts to afterload; exacerbations flood units transiently.
 
 ## 2. The shared target law for the pulmonary vessels
 
@@ -48,7 +48,7 @@ Huang et al. (1996) give, for 15 orders of human pulmonary arteries, the number 
 | Mean shear only | 0.825 | factor 1.14 |
 | Murray (b = 1, mean only) | – | factor 1.26 |
 
-With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90), the explicit arterial generations match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg (calibrated value of the previous, per-vessel law: 14.0).
+With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). In these morphometric tests τ₀ is a free scale fitted by least squares in log D over the 16 orders, with the apparent viscosity of each order. Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90) τ₀ is instead fixed by the radius of the main pulmonary artery and μ = 3.5 mPa s; the explicit arterial generations then match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg (14.6 with the 256-unit tree of the cohorts; calibrated value of the previous, per-vessel law: 14.0). The law sets the arterial conduits, the venous conduits and the terminal sub-tree, 47% of the healthy pressure drop (0.32 + 0.67 + 2.13 mmHg of 6.6); the capillary sheet (2.10) and the venules (1.39) keep the resistances of the reference calibration, `dP0` × `split` (table S17). The healthy mPAP is therefore an output of the law for its arterial half and an input for the rest.
 
 ## 3. Structural vasculopathy
 
@@ -58,11 +58,11 @@ $$R_\mathrm{les}=R_{ta,0}\,A\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right),\qquad 
 
 A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopathy before the start (`t_vasc0`), τ its time constant (`vasc_tau`), and c_cap multiplies the capillary bed of every unit (`cap_frac` = f_cap). With A = 0 the model is unchanged.
 
-**Simulated cases** (`src/ph_cohort.py`): with probability 0.7 a simulated case has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between simulated cases (years per model unit × lognormal, σ = 0.5); one visit at a random stage.
+**Simulated cases** (`src/ph_cohort.py`): with probability 0.7 a simulated case has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between simulated cases (years per model unit × lognormal, σ = 0.5); one visit at a random stage. With these values the lesion has reached its final severity A at the visit in almost every case (saturation 1 − e^{−(t+t₀)/τ}: minimum 0.60, 5th percentile 0.96, median 1.00 in the calibrated cohort; minimum 0.96 in advanced disease; table S19). The cohort results therefore identify the prevalence and the distribution of A, not τ or t₀, and the independence of the lesion from fibrosis is an assumption of the design, tested against the alternative `vasc_mode="fibrosis"`, not a quantity inferred from the cohorts.
 
 ## 4. Pulmonary hypertension in IPF
 
-**Without vasculopathy** (60 simulated cases), mPAP in mild-to-moderate disease is 17.6 ± 0.5 mmHg, r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92, and no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by only 0.8 mmHg (maximum 20.3 mmHg).
+**Without vasculopathy** (60 simulated cases), mPAP in mild-to-moderate disease is 17.6 ± 0.5 mmHg (of which 16.5 is the aged lung before any fibrosis, table S18), r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92, and no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by only 0.8 mmHg (maximum 20.3 mmHg).
 
 **With vasculopathy** (200 simulated cases, 113 with FVC 50–90%): see the README table. All seven targets (ARTEMIS-IPF, Raghu et al. 2015; Zisman et al. 2007; the DLCO ratio of a Japanese cohort) lie inside the 95% bootstrap intervals; correlations include measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
 
@@ -76,7 +76,7 @@ A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopa
 | AUC of FVC/DLCO for mPAP ≥ 25 (mean of 1,000 noise realisations) | 0.75 | 0.69–0.74 in ILD cohorts |
 | AUC of DLCO alone / FVC alone | 0.74 / 0.65 | ≈ 0.80 / no discrimination |
 
-**Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 78.8). The low-DLCO component has 50 of 200 simulated cases, all with vasculopathy, and 84% have PH; in the rest, 60% carry vasculopathy and 11% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO.
+**Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 78.8). The low-DLCO component has 50 of 200 simulated cases, all with vasculopathy, and 84% have PH; in the rest, 60% carry vasculopathy and 11% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO. The separation rests on the near-deterministic DLCO–FVC relation of the model (r = 0.97 at the visit, against about 0.5–0.7 in patients): with the inter-individual spread of the healthy baseline of table S6 plus measurement noise, ΔBIC falls to a median of 7 (range −12 to 46 over 20 replicates), a second component is preferred in 40% of replicates, and the sensitivity for PH falls from 71% to 34% (table S20). The phenotype is a prediction to be tested in patients, not a result that the simulated cohorts establish.
 
 **Robustness.** The same 12 simulated cases with 1,024 and 256 units differ by −0.08 ± 0.41 mmHg in mPAP (r = 0.997), −0.6 ± 1.7 points in FVC and −0.2 ± 0.8 points in DLCO.
 
@@ -86,6 +86,9 @@ A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopa
 - Five vasculopathy parameters were chosen against the mild-to-moderate targets; only the advanced-disease results and the phenotype analysis are out of sample.
 - The arterial morphometry is from one lung; b has no interval yet.
 - The pulmonary-artery pulsatility is an effective value; measured waveforms should replace it.
+- Alveolar ventilation is fixed; the breathing pattern (16 breaths/min, 0.41 L) does not change with restriction and a quarter of the calibrated cases are hypercapnic, which lowers their PaO₂ and A–a gradient (Figure 5).
+- The vessel ageing offset (`age_M = 0.3`) has no measured anchor; it adds 2.2 mmHg to every case.
+- Conduit arteries inside scar remodel freely to their shear target (`remodel_conduits = True`); the opposite setting has not been run as a sensitivity arm.
 
 ## References
 

@@ -1,7 +1,7 @@
 # Reproducibility audit
 
 Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
-Code: this repository, version 0.3.7.
+Code: this repository, version 0.3.8 (audit of 0.3.7; the numbers below are unchanged).
 
 ## Method
 
@@ -55,7 +55,7 @@ Every number in the manuscript is reproduced exactly from the stored simulations
 | Coverage of the 90% intervals | 89–92% | 89–92% |
 | PH by FVC range, 34–66% (table S10) | 31% (25–38) | 31% (25–38) |
 
-All figures and tables (Figures 1–5, S1; Table 1; tables S2, S4–S11, S13–S15) regenerated from a clean clone are pixel- and value-identical to those in the manuscript; `src/manuscript_numbers.py` recomputes every other number quoted in the text.
+All figures and tables (Figures 1–5, S1; Table 1; tables S2, S4–S11, S13–S15) regenerated from a clean clone are value-identical to those in the manuscript (Figure 2f and 2g differ visually since 0.3.8, findings 9 and 10 below); `src/manuscript_numbers.py` recomputes every other number quoted in the text.
 
 ## Model checks
 
@@ -98,7 +98,18 @@ All figures and tables (Figures 1–5, S1; Table 1; tables S2, S4–S11, S13–S
 2. **Phenotype definition used the vasculopathy labels (methodological).** The expected DLCO was fitted to cases without vasculopathy, information not available in patients. Fitting it to all cases (ordinary or trimmed least squares) keeps the mixture bimodal (ΔBIC 78–79) with sensitivity 70–73% and specificity 94% for PH (table S9). **Resolved:** the phenotype can be identified from FVC and DLCO alone.
 3. **Fixed left atrial pressure (8 mmHg).** Varying wedge pressure leaves PH ≥ 25 mmHg, the correlations and the DLCO ratio essentially unchanged, but a 1 mmHg shift moves many cases across 20 mmHg, because one third of cases lie between 18 and 20 mmHg (table S8). Relevant for the 2022 definition.
 4. **Measurement noise applied to correlations but not to pressure categories (methodological inconsistency).** Adding noise to mPAP moves the categories slightly closer to the benchmarks (table S11); conclusions unchanged.
-5. **Diffusing capacity.** The membrane and capillary components are given equal weight in a healthy unit (Roughton–Forster), and θ does not depend on haemoglobin or inspired oxygen. Adequate for relative changes at sea level; altitude or anaemia would require θ(PO₂, Hb).
+5. **Diffusing capacity.** The cohorts use the product of membrane conductance and capillary volume (`rf = False`); the Roughton–Forster series form exists in the code (`rf = True`) but was not used. Capillary loss from the lesion (`cap_frac`) therefore enters DLCO linearly. θ does not depend on haemoglobin or inspired oxygen; altitude or anaemia would require θ(PO₂, Hb). (Corrected in 0.3.8: earlier versions of this audit described the cohorts as Roughton–Forster.)
 6. **Vital capacity as summed compliance.** A linear simplification of the pressure–volume curve; it reproduces relative FVC decline but not absolute volumes in severe restriction.
 7. **Calibration and validation.** The five vasculopathy parameters were chosen against the mild-to-moderate targets; bootstrap intervals reflect sampling of simulated cases, not parameter uncertainty.
-8. **Morphometry.** Flow per order assumes equal division among elements (Q/N); supernumerary branches and the single-lung source are not represented.
+8. **Morphometry.** Flow per order assumes equal division among elements (Q/N); supernumerary branches and the single-lung source are not represented. The morphometric fits use a free τ₀ (least squares over 16 orders, viscosity per order); the lung model fixes τ₀ on the main pulmonary artery with μ = 3.5 mPa s.
+
+### Findings of the 0.3.7 audit (v0.3.8; `src/audit_extra.py`, tables S17–S20, `tests/test_audit_extra.py`)
+
+9. **Figure 2f used the wrong clock (bug, fixed).** The lesion severity along the trajectories was computed from `t × ypu`, which omits the 6.71 years per model unit; the curves ran 6.7 times too slowly. The stored `years` column is now used. No number quoted in the text changes; the panel does: the independent lesion is within a few percent of its final value before 20% of the lung is scarred.
+10. **Ageing inside the "fibrosis" contribution.** The calibrated parameters age the vessels after the healthy baseline (`age_M = 0.3`). The aged lung with no fibrosis has an mPAP of 16.5 mmHg (healthy 14.3, G = 8; table S18). Of the published contributions of fibrosis in Figure 2g (3.5, 2.7, 2.2 mmHg above 14.8), 1.7 mmHg is ageing; fibrosis alone adds 1.8, 1.0 and 0.4 mmHg. Figure 2g now draws the ageing offset as a reference line and the script prints both decompositions. The manuscript text (abstract and "separate clocks") should state the contributions above the aged lung.
+11. **Lesion saturated at the visit.** With τ = 2 years and t₀ ~ U(0, 10), the lesion is at its final severity in nearly all cases at the visit (table S19), so τ and t₀ are not identified by the cohorts; the sensitivity rows for τ (table S16) move little for this reason.
+12. **Phenotype fragile to baseline spread.** The low-DLCO phenotype (ΔBIC 78.8, sensitivity 71%) depends on the model's DLCO–FVC correlation of 0.97. Under the baseline spread of table S6 plus measurement noise, ΔBIC has a median of 7, a second component is preferred in 40% of replicates, and sensitivity is 34% (table S20).
+13. **Healthy pressure as output.** 47% of the healthy pressure drop is set by the law; the capillary and venular shares (3.5 of 6.6 mmHg) come from `dP0 × split` (table S17).
+14. **Fixed ventilation.** VA = 4.2 L/min in every state; 49 of 200 calibrated cases have PaCO₂ > 45 mmHg at the visit. Relevant for PaO₂ and the A–a gradient of Figure 5.
+15. **Runs ending before the drawn stage.** 7 of 60 cases of the advanced cohort reach `t_max = 3.0` before the drawn fraction of healthy tissue; `ph_cohort.py run` now reports such cases and takes `--t_max`.
+16. **Shared `Params` object.** `Lung._baseline` and the exacerbation branch of `sim.run` alter fields of the `Params` instance and restore them; both restores are now in `finally` blocks.

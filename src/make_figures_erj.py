@@ -329,7 +329,8 @@ for tag_, c, lab in (("big2", RED, "Own clock"), ("altF", ORANGE, "Tied to fibro
     for j, d in enumerate(trajectories(tag_)):
         ext = 1.0 - d.healthy.to_numpy()
         if tag_ == "big2":
-            s = 1.0 - np.exp(-(d.t.to_numpy() * d.ypu.to_numpy() + d.t_vasc0.to_numpy()) / VASC_TAU)
+            # d.years = t x years_per_unit (6.71 x ypu); v0.3.7 used t x ypu and ran the lesion 6.7x too slowly
+            s = 1.0 - np.exp(-(d.years.to_numpy() + d.t_vasc0.to_numpy()) / VASC_TAU)
         else:
             s = np.clip(ext / 0.5, 0.0, 1.0)
         ax.plot(100 * ext, 100 * s, color=c, lw=0.7, alpha=0.55, label=lab if j == 0 else None)
@@ -353,7 +354,12 @@ for i, (lo, hi) in enumerate(bands):
     vas.append(float(v.mean())); vsem.append(float(v.sem()))
     pts.append((i, v.to_numpy()))
 ax.axhline(0, color=DARK, lw=0.6)
-ax.bar(xb - 0.19, fib, 0.36, color=GREY, label="Fibrosis")
+# The calibrated parameters age the vessels (age_M, age_sigma): the aged lung with no fibrosis already sits above
+# the young healthy lung (MPAP_HEALTHY). The dashed line is that offset; the part of the grey bar above it is fibrosis.
+from audit_extra import aged_baseline
+MPAP_AGED = aged_baseline()["mPAP"]
+ax.axhline(MPAP_AGED - MPAP_HEALTHY, color=DARK, lw=0.7, ls="--", label="Ageing, no fibrosis")
+ax.bar(xb - 0.19, fib, 0.36, color=GREY, label="Fibrosis (incl. ageing)")
 ax.bar(xb + 0.19, vas, 0.36, color=RED, label="Vasculopathy")
 ax.errorbar(xb + 0.19, vas, yerr=vsem, fmt="none", ecolor=DARK, elinewidth=0.7, capsize=1.5)
 for i, v in pts:
@@ -377,9 +383,10 @@ ax.set(xlabel="FVC (% predicted)", ylabel="mPAP (mmHg)", ylim=(12, 50))
 ax.legend(loc="upper left", handlelength=0.8, markerscale=1.3)
 tag(ax, "h")
 
-print("Figure 2g, contribution to mPAP by FVC band (mmHg above the healthy lung):")
+print(f"Figure 2g, contribution to mPAP by FVC band (mmHg above the healthy lung, {MPAP_HEALTHY} mmHg):")
+print(f"  aged lung, no fibrosis: {MPAP_AGED - MPAP_HEALTHY:.2f} (mPAP {MPAP_AGED:.2f})")
 for (_lo, _hi), _f, _v, _s in zip(bands, fib, vas, vsem):
-    print(f"  FVC {_lo}-{_hi}: fibrosis {_f:.2f}; vasculopathy {_v:.2f} +- {_s:.2f}")
+    print(f"  FVC {_lo}-{_hi}: fibrosis+ageing {_f:.2f} (fibrosis alone {_f - (MPAP_AGED - MPAP_HEALTHY):.2f}); vasculopathy {_v:.2f} +- {_s:.2f}")
 save(fig, "Figure2")
 
 # ------------------------------------------------------------------ Figure 3: advanced disease

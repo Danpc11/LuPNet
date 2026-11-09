@@ -639,11 +639,13 @@ class Lung:
         # solve with the reference radii held fixed (alpha applied to r_u = r_ref)
         a = p.alpha
         p.alpha = 0.0
-        if p.perf_grav:
-            self._calibrate_west(zeros)
-        self._P_base = zeros
-        vs = self.solve_vessels(self.r_ref, self.r_ref_v, np.full(N, self.r_ta_ref), np.ones(N), np.ones(N), p.Q)
-        p.alpha = a
+        try:
+            if p.perf_grav:
+                self._calibrate_west(zeros)
+            self._P_base = zeros
+            vs = self.solve_vessels(self.r_ref, self.r_ref_v, np.full(N, self.r_ta_ref), np.ones(N), np.ones(N), p.Q)
+        finally:
+            p.alpha = a                  # the Params object may be shared; never leave it altered
         self._Pcap0 = vs["Pcap"].copy()
         Pb = vs["P"]
         self._P_base = Pb

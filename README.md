@@ -23,7 +23,7 @@ $$\tau^* = \tau_0\, r^{\,b-1}\,\ell^{\,(b-1)/2}, \qquad S=\bar\tau\,[1+w_1\,\var
 
 The law, its exponent and the weight of the pulsatile term are derived and tested across species in [Pérez-Calixto et al., bioRxiv 2026](https://doi.org/10.64898/2026.09.29.755319) ([InFlow](https://github.com/Danpc11/InFlow)).
 
-With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and a normal mean pulmonary artery pressure of 14.8 mmHg as an output rather than an input.
+With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and, with the capillary and venular resistances of the reference calibration, a normal mean pulmonary artery pressure of 14.8 mmHg (the law sets about half of the pressure drop; [THEORY.md](THEORY.md) §2.4).
 
 **2. Pulmonary hypertension needs a vasculopathy of its own.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a structural small-artery vasculopathy in 70% of the simulated cases, mostly mild, with its own course and an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
 
@@ -116,6 +116,7 @@ Each simulated case is an independent run of the model, not a real patient.
 | `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S16 and Figure S2 |
 | `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S16, Figure S2) |
 | `tests/` | Mathematical invariants of the model and a regression test of every number published in the manuscript |
+| `src/audit_extra.py` | Checks of the 0.3.7 audit: where the healthy pressure drop comes from, the aged lung without fibrosis, lesion saturation at the visit, the low-DLCO phenotype under baseline spread (tables S17–S20) |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
 | `src/fit_calculator.py`, `src/build_app.py`, `src/app_template.html` | Calculator inputs and page |
@@ -129,10 +130,11 @@ Each simulated case is an independent run of the model, not a real patient.
 - The five vasculopathy parameters were chosen against the mild-to-moderate targets; the advanced-disease results and the phenotype analysis are out of sample.
 - The arterial morphometry comes from the casts of one lung, so the pulmonary exponent b has no confidence interval yet.
 - The pulsatility of the pulmonary artery is an effective value, not a measured waveform.
+- The calibrated parameters age the vessels: the lung without fibrosis sits at 16.5 mmHg, and the lesion is at its final severity in nearly every simulated visit, so its time constant is not identified by the cohorts (`docs/AUDIT.md`, findings 10–11).
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.7). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.8). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
 
 ## License
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.8 (2026-11)
+
+Audit of 0.3.7 before the comparison with clinical data. No published number changes; the regression tests pass unchanged.
+
+- Fix: Figure 2f computed the lesion clock from `t x ypu`, without the 6.71 years per model unit, so the lesion ran 6.7 times too slowly along the trajectories. The stored `years` column is now used.
+- Figure 2g draws the mPAP of the aged lung without fibrosis (16.5 mmHg, `age_M = 0.3`) as a reference line, and the script prints the contribution of fibrosis above it (1.8, 1.0 and 0.4 mmHg by band) alongside the published values above the healthy lung (3.5, 2.7, 2.2).
+- `src/audit_extra.py` and tables S17-S20: decomposition of the healthy pressure drop (47% set by the law), the aged baseline, the saturation of the lesion at the visit (median 1.00), and the low-DLCO phenotype under the baseline spread of table S6 (delta BIC median 7, bimodal in 40% of replicates). `tests/test_audit_extra.py` guards them.
+- `ph_cohort.py run` takes `--t_max` and reports cases that stop before the drawn stage (7 of 60 in adv2).
+- `Lung._baseline` and `sim.run` restore the fields of `Params` they alter in `finally` blocks.
+- THEORY.md, docs/AUDIT.md and README corrected: the cohorts use the product form of the unit diffusing capacity (`rf = False`), not Roughton-Forster; DLNO is not computed; the morphometric fits use a free tau0 while the lung fixes it on the main pulmonary artery; healthy mPAP is an output of the law for its arterial half; ventilation is fixed and a quarter of the calibrated cases are hypercapnic; `beta = 0` (no strain feedback) in the calibrated set.
+
 ## 0.3.7 (2026-10)
 
 - `ph_cohort.py run` takes `--i0` and `--i1`, so one cohort can be split across cores or cluster tasks. The draws depend only on `--n` and `--seed`, so a shard computes exactly the cases the whole run would have computed; a shard was checked to be identical, row by row, to the serial run of the same case.

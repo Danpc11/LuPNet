@@ -236,8 +236,10 @@ def run(p: Params, snapshots=(0.1, 0.3, 0.5), do_exercise=True, verbose=False):
                 bud = L._rem_budget; L._rem_budget = None
                 hmax, fio2 = p.hpv_max, p.FIO2
                 p.hpv_max, p.FIO2 = hmax * p.ae_hpv, p.ae_FIO2         # inflammation blunts HPV; supplemental O2
-                acute = L.equilibrate(remodel=False)                        # no time to remodel
-                p.hpv_max, p.FIO2 = hmax, fio2
+                try:
+                    acute = L.equilibrate(remodel=False)                    # no time to remodel
+                finally:
+                    p.hpv_max, p.FIO2 = hmax, fio2
                 ra = record(L, acute, t, None); ra["ae"] = 1; ra["flood_frac"] = float(L.flood.mean())
                 rows.append(ra)
                 if ra["SaO2"] < p.ae_death_SaO2:
