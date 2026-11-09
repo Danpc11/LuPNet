@@ -32,14 +32,14 @@ BASE = os.path.join(ROOT, "data", "calibrated_ipf_params.json")
 TARGETS = dict(lt20=51, b20_25=30, ge25=19, ge35=4, rDLCO=-0.30, rFVC=0.0, ratio=0.73)
 
 
-def make_params(seed, G, stop, A, t0, ypu, tau, cap, vmode="independent", t_max=3.0):
+def make_params(seed, G, stop, A, t0, ypu, tau, cap, vmode="independent", t_max=3.0, PB=760.0):
     d = json.load(open(BASE)); p = Params()
     for k, v in d.items():
         if hasattr(p, k):
             setattr(p, k, tuple(v) if isinstance(getattr(p, k), tuple) else v)
     p.law, p.b, p.G, p.seed, p.stop_healthy = "shared", 0.925, G, seed, stop
     p.vasc_A, p.vasc_tau, p.t_vasc0, p.cap_frac, p.vasc_mode = A, tau, t0, cap, vmode
-    p.years_per_unit *= ypu; p.stop_mPAP = 1e9; p.t_max = t_max
+    p.years_per_unit *= ypu; p.stop_mPAP = 1e9; p.t_max = t_max; p.PB = PB
     return p
 
 
@@ -61,13 +61,13 @@ def cmd_run(a):
         f = os.path.join(OUT, f"{a.tag}_{i:03d}.tsv")
         if os.path.exists(f):
             continue
-        p = make_params(a.pseed + i, a.G, float(stop[i]), float(A[i]), float(t0[i]), float(ypu[i]), a.tau, a.cap, a.vmode, a.t_max)
+        p = make_params(a.pseed + i, a.G, float(stop[i]), float(A[i]), float(t0[i]), float(ypu[i]), a.tau, a.cap, a.vmode, a.t_max, a.PB)
         t = time.time(); rows, _, _ = run(p, do_exercise=False)
         if rows[-1]["healthy"] > stop[i] + 0.01:
             # the run ended before the drawn stage (t_max reached, or a stop criterion of sim.run);
             # 7 of 60 cases of the adv2 cohort of the manuscript end this way (t_max = 3.0)
             print(f"  warning: case {i} stopped at healthy = {rows[-1]['healthy']:.3f}, drawn stage {stop[i]:.3f}", flush=True)
-        df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G
+        df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G; df["PB"] = a.PB
         tmp = f + f".tmp{os.getpid()}"
         df.to_csv(tmp, sep="\t", index=False); os.replace(tmp, f)
         print(a.tag, i, round(time.time() - t), "s", flush=True)
@@ -111,6 +111,7 @@ if __name__ == "__main__":
     r.add_argument("--tau", type=float, default=2.0); r.add_argument("--cap", type=float, default=0.05)
     r.add_argument("--vmode", default="independent", choices=["independent", "fibrosis"])
     r.add_argument("--t_max", type=float, default=3.0, help="model time limit of a run (years = t_max x years_per_unit x ypu); 3.0 in the manuscript cohorts")
+    r.add_argument("--PB", type=float, default=760.0, help="barometric pressure, mmHg (760 sea level, the manuscript cohorts; 585 Mexico City, 2,240 m)")
     r.add_argument("--i0", type=int, default=0, help="first case of this shard")
     r.add_argument("--i1", type=int, default=-1, help="one past the last case of this shard; -1 means --n")
     z = sub.add_parser("analyze"); z.add_argument("--tag", default="")
