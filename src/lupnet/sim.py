@@ -19,6 +19,12 @@ from .septal import make_lung
 from .params import Params
 
 
+def subpleural_factor(L):
+    """Multiplier on surfactant decline and direct fibrosis hazard: 1 + sub_gain in the subpleural ring
+    (pleural_dist <= 1), weighted 1.5 at the base to 0.5 at the apex. Equals 1 everywhere when sub_gain = 0."""
+    return 1.0 + L.p.sub_gain * (L.pleural_dist <= 1) * (1.5 - L.y)
+
+
 def hazards(L: Lung, st):
     p = L.p
     s = st["air"]["strain"]
@@ -29,7 +35,8 @@ def hazards(L: Lung, st):
         h = L.state == 0
         # constant injury flux: per-unit rates scale as healthy_fraction^(-flux_gamma)
         fx = min(max(float(h.mean()), 1e-3) ** (-p.flux_gamma), 50.0)
-        lam_f = np.where(h, fx * p.lam0_direct * np.exp(x) * (1 + p.kn * nfrac), 0.0)
+        sub = subpleural_factor(L)                                # subpleural, basal-weighted stress concentration (UIP); 1 when sub_gain = 0
+        lam_f = np.where(h, fx * p.lam0_direct * np.exp(x) * (1 + p.kn * nfrac) * sub, 0.0)
         lam_f = lam_f + np.where(h & (L.rd == 2), p.lam_ci, 0.0) + np.where(h & (L.rd == 1), p.lam_ci_cyc, 0.0)
         if "events" in st["air"]:
             lam_f = lam_f + np.where(h, p.lam_ae * st["air"]["events"], 0.0)
@@ -55,7 +62,7 @@ def surfactant_step(L, st, dt):
     fx = min(max(float((L.state == 0).mean()), 1e-3) ** (-p.flux_gamma), 50.0)
     if p.epi_bio:
         s = s * (1 + p.pleural_stress * (L.pleural_dist <= 1))     # stress concentration under the pleura
-    rate = fx * p.lam_s * L.at2_rate * (1 + p.beta_s * np.maximum(s / L.s_ref - 1, 0) + p.kn_s * nb)
+    rate = fx * p.lam_s * L.at2_rate * (1 + p.beta_s * np.maximum(s / L.s_ref - 1, 0) + p.kn_s * nb) * subpleural_factor(L)
     if p.epi_bio:
         epi_step(L, s, dt, rate)
         rate = rate * (1 + p.g_sen * L.sen)                        # senescent AT2 cells renew surfactant poorly

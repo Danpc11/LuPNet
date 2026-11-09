@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.10 (2026-11)
+
+- `src/noninvasive_tool.py`: individual estimate of PH without catheterisation. FVC and DLCO required; echocardiographic sPAP, pulmonary artery diameter on CT, BNP, RV fractional area change and right atrial area optional in any combination. Prior from the simulated visits of the manuscript cohorts (5,036 visits), measurement models and prevalence fitted on catheterised patients, repeated 5-fold cross-validation, comparison with logistic regression on the same inputs (tables S21-S23). The clinical file is passed with `--clinical` and is not part of the repository.
+- Partial dependence: in the simulations mPAP is a surface of two variables, lung lost and effective lesion (R2 0.998). The tool reports for each patient the pressure of the aged lung, what the lost lung adds and what the lesion adds.
+
+## 0.3.9 (2026-11)
+
+- Histological patterns. `ph_cohort.py run --pattern {calibrated,uip,nsip}` (default `calibrated`, the manuscript cohorts, unchanged). UIP: subpleural, basal-weighted seed (`sub_gain = 3`), spread by contiguity (`kn = 1.5`, `kn_s = 3`), heterogeneous vulnerability, honeycombing. Fibrotic NSIP: no seed and no contiguity, near-uniform vulnerability (`at2_sigma = 0.3`), almost no honeycombing (`lam_hc = 0.05`), softer scar (`fib_C = 0.30`). The calibrated set is patchy without subpleural predominance (lost units 0.46 subpleural vs 0.44 core).
+- New parameter `sub_gain` and `sim.subpleural_factor`: multiplier on surfactant decline and on the direct fibrosis hazard in the subpleural ring, weighted 1.5 at the base to 0.5 at the apex; 1 everywhere at the default `sub_gain = 0`.
+- `ph_cohort.py run --PB` (barometric pressure; 585 mmHg for Mexico City) and `scripts/altitude_cdmx.slurm`, `scripts/patterns.slurm`.
+- In 12 paired cases (same seeds and lesions), mPAP differs by +0.3 mmHg between NSIP and UIP (Wilcoxon P = 1.00): the pattern sets where tissue is lost and the DLCO-FVC relation, not the pressure.
+
 ## 0.3.8 (2026-11)
 
 Audit of 0.3.7 before the comparison with clinical data. No published number changes; the regression tests pass unchanged.

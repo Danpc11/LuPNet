@@ -204,6 +204,9 @@ class Params:
     senolytic_year: float = -1.0   # >= 0: clear a fraction of senescent cells once at this year
     senolytic_frac: float = 0.5
     antifib: float = 1.0           # multiplier on fibroblast-driven conversion hazards (antifibrotic)
+    # ---- histological pattern (v0.3.9): subpleural stress concentration outside epi_bio, 0 = published cohorts
+    sub_gain: float = 0.0          # surfactant decline and direct fibrosis hazard x (1 + sub_gain) in the subpleural ring (pleural_dist <= 1)
+    pattern: str = "calibrated"    # label only: "calibrated" (manuscript), "uip", "nsip" (ph_cohort.py --pattern sets the parameters)
     # ---- progression
     lam0: float = 1.0              # background hazard per healthy unit (sets the time unit)
     beta: float = 3.0              # strain feedback: hazard ~ exp(beta (s/s_ref - 1))
