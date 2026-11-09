@@ -1,13 +1,15 @@
 """Read in silico cohorts stored either as one file per simulated case (tag_000.tsv, ... written by ph_cohort.py)
 or as one compressed file per cohort (tag.tsv.gz, with a 'case' column), which is how the cohorts of the manuscript
 are distributed."""
-import glob, os
+import glob, os, re
 import pandas as pd
 
 
 def cases(folder, tag):
     """Yield (case_index, DataFrame of the run) for every simulated case of a cohort."""
-    files = sorted(glob.glob(os.path.join(folder, f"{tag}_*.tsv")))
+    # exactly tag_<digits>.tsv: "big2_*.tsv" would also pick up the cases of big2_uip, big2_nsip or big2_cdmx
+    pat = re.compile(re.escape(tag) + r"_\d+\.tsv$")
+    files = sorted(f for f in glob.glob(os.path.join(folder, f"{tag}_*.tsv")) if pat.fullmatch(os.path.basename(f)))
     if files:
         for f in files:
             yield int(os.path.basename(f).rsplit("_", 1)[1].split(".")[0]), pd.read_csv(f, sep="\t")
