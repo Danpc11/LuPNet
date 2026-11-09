@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.12 (2026-11)
+
+- Advanced-disease cohorts by pattern (`adv2_uip`, `adv2_nsip`, 60 cases each): PH with FVC < 50% is 45% with the UIP pattern and 35% with NSIP (transplant candidates with IPF: 46%).
+- `noninvasive_tool.py --prior severity` (default): the reference visits take the distribution of mPAP of the catheterised population, in five classes estimated in the training folds, instead of matching only the share with PH. It halves the underestimate of the pressure (bias -6.2 to -3.5 mmHg with FVC and DLCO, -4.3 to -2.6 with every optional input) and leaves discrimination unchanged.
+
 ## 0.3.11 (2026-11)
 
 - Cohorts of 200 cases with the UIP and the fibrotic NSIP pattern (`big2_uip`, `big2_nsip`) and the three manuscript cohorts at the barometric pressure of Mexico City (`big2_cdmx`, `adv2_cdmx`, `altF_cdmx`), same seeds as the manuscript. PH (mPAP >= 25, FVC 50-90%) is 17% in both patterns (19% calibrated); UIP meets the seven targets, NSIP six (DLCO ratio 0.85, a target measured in IPF).

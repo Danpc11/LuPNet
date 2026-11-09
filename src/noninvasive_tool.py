@@ -81,7 +81,19 @@ def fit_obs(train):
     return M
 
 
-def posterior(R, row, use, M, prevalence=None):
+EDGES = np.array([-np.inf, 20, 25, 35, 45, np.inf])       # mPAP classes of the severity prior, mmHg
+
+
+def severity_weights(R, mpap_population, pseudo=0.5):
+    """Prior weights that give the reference visits the distribution of mPAP of the population the tool is used in
+    (five classes; `pseudo` counts per class keep an empty class from being excluded)."""
+    cp = np.histogram(mpap_population, EDGES)[0] + pseudo; cp = cp / cp.sum()
+    cr = np.histogram(R.mPAP.values, EDGES)[0] / len(R)
+    k = np.digitize(R.mPAP.values, EDGES[1:-1])
+    return cp[k] / np.maximum(cr[k], 1e-9)
+
+
+def posterior(R, row, use, M, prevalence=None, prior_w=None):
     """Weights of the reference visits given a patient's data. `use`: optional inputs to include."""
     ll = np.zeros(len(R))
     for k in ("FVC", "DLCO"):
@@ -91,7 +103,9 @@ def posterior(R, row, use, M, prevalence=None):
         if k in M and not pd.isna(row[k]):
             a, b, sd = M[k]; ll += -0.5 * ((a + b * R.mPAP.values - row[k]) / sd) ** 2
     w = np.exp(ll - ll.max())
-    if prevalence is not None:
+    if prior_w is not None:
+        w = w * prior_w
+    elif prevalence is not None:
         ph = R.mPAP.values >= 25; p0 = ph.mean()
         w = w * np.where(ph, prevalence / p0, (1 - prevalence) / (1 - p0))
     return w / w.sum()
@@ -129,7 +143,7 @@ def references_by_pattern(T):
     return out
 
 
-def cross_validate(P, R, sets, n_rep=20, k=5, seed=0):
+def cross_validate(P, R, sets, n_rep=20, k=5, seed=0, prior="prevalence"):
     """Repeated k-fold: measurement models and prevalence from the training folds; scores on the held-out patients.
     Returns one row per input set and the out-of-fold estimates of every patient (mean over repeats)."""
     from sklearn.metrics import roc_auc_score
@@ -146,9 +160,10 @@ def cross_validate(P, R, sets, n_rep=20, k=5, seed=0):
             for f in range(k):
                 tr, te = np.where(fold != f)[0], np.where(fold == f)[0]
                 M = fit_obs(V.iloc[tr]); prev = float(y[tr].mean())
+                PW = {g: severity_weights(Rg, V.mPAP.values[tr]) for g, Rg in R.items()} if prior == "severity" else None
                 for j in te:
-                    Rj = R[V.group.iloc[j]] if isinstance(R, dict) else R        # reference of the patient's pattern
-                    s = summarise(Rj, posterior(Rj, V.iloc[j], use, M, prev))
+                    g = V.group.iloc[j]; Rj = R[g]                                  # reference of the patient's pattern
+                    s = summarise(Rj, posterior(Rj, V.iloc[j], use, M, prev, PW[g] if PW else None))
                     est[r, j], pph[r, j], lo[r, j], hi[r, j] = s["mPAP"], s["pPH"], s["lo"], s["hi"]
                 trc = tr[cc[tr]]; tec = te[cc[te]]
                 if len(tec) and len(np.unique(y[trc])) == 2:
@@ -172,7 +187,11 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--clinical", required=True); ap.add_argument("--reps", type=int, default=20)
     ap.add_argument("--reference", default="pattern", choices=["pattern", "calibrated"],
                     help="pattern: UIP and NSIP patients use the cohort of their pattern; calibrated: every patient uses the manuscript cohorts")
-    a = ap.parse_args(); os.makedirs(OUT, exist_ok=True); suf = "" if a.reference == "pattern" else "_calibrated"
+    ap.add_argument("--prior", default="severity", choices=["severity", "prevalence"],
+                    help="severity: the reference takes the mPAP distribution of the catheterised population (training folds); "
+                         "prevalence: only the share of visits with PH is matched")
+    a = ap.parse_args(); os.makedirs(OUT, exist_ok=True)
+    suf = ("" if a.reference == "pattern" else "_calibrated") + ("" if a.prior == "severity" else "_prevalence")
     T = trajectory_points()
     RP = references_by_pattern(T) if a.reference == "pattern" else {g: reference(T) for g in REFERENCE_TAGS}
     have = set(T.tag.unique())
@@ -181,14 +200,15 @@ if __name__ == "__main__":
     for g in RP:
         print(f"reference {g}: {len(RP[g])} simulated visits of {RP[g].case.nunique()} cases" + (f"; surface R2 {FP[g][1]:.3f}" if g in FP else ""))
     P = load_clinical(a.clinical)
-    S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps)
+    S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps, prior=a.prior)
     S.round(3).to_csv(os.path.join(OUT, f"TableS21_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
     M = fit_obs(V); prev = float((V.mPAP >= 25).mean())
     pd.DataFrame([dict(input=k, intercept=v[0], slope_per_mmHg=v[1], sd=v[2]) for k, v in M.items()]).round(3).to_csv(os.path.join(OUT, "TableS22_measurement_models.tsv"), sep="\t", index=False)
     rep = []
     for _, row in V.iterrows():
         g = row.group; F = FP.get(g, FP["other"])[0]
-        s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, M, prev), F)
+        pw = severity_weights(RP[g], V.mPAP.values) if a.prior == "severity" else None
+        s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, M, prev, pw), F)
         rep.append(dict(ID=row.ID, group=g, FVC=row.FVC, DLCO=row.DLCO, mPAP_RHC=row.mPAP, PVR_RHC=row.PVR, **s))
     pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS23_individual_report{suf}.tsv"), sep="\t", index=False)
     for name, df in per.items():
