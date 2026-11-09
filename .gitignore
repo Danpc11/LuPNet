@@ -6,3 +6,6 @@ results/runs/
 results/figures/
 results/*.tsv
 manuscript/
+
+.venv/
+logs/
