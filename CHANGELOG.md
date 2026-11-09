@@ -9,7 +9,7 @@
 
 - Histological patterns. `ph_cohort.py run --pattern {calibrated,uip,nsip}` (default `calibrated`, the manuscript cohorts, unchanged). UIP: subpleural, basal-weighted seed (`sub_gain = 3`), spread by contiguity (`kn = 1.5`, `kn_s = 3`), heterogeneous vulnerability, honeycombing. Fibrotic NSIP: no seed and no contiguity, near-uniform vulnerability (`at2_sigma = 0.3`), almost no honeycombing (`lam_hc = 0.05`), softer scar (`fib_C = 0.30`). The calibrated set is patchy without subpleural predominance (lost units 0.46 subpleural vs 0.44 core).
 - New parameter `sub_gain` and `sim.subpleural_factor`: multiplier on surfactant decline and on the direct fibrosis hazard in the subpleural ring, weighted 1.5 at the base to 0.5 at the apex; 1 everywhere at the default `sub_gain = 0`.
-- `ph_cohort.py run --PB` (barometric pressure; 585 mmHg for Mexico City) and `scripts/altitude_cdmx.slurm`, `scripts/patterns.slurm`.
+- `ph_cohort.py run --PB` (barometric pressure; 585 mmHg for Mexico City) and `scripts/cohorts_local.sh`, which generates the pattern and altitude cohorts on the cores of one machine without a scheduler.
 - In 12 paired cases (same seeds and lesions), mPAP differs by +0.3 mmHg between NSIP and UIP (Wilcoxon P = 1.00): the pattern sets where tissue is lost and the DLCO-FVC relation, not the pressure.
 
 ## 0.3.8 (2026-11)
