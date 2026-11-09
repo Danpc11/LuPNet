@@ -39,6 +39,20 @@ With one constant fixed on the main pulmonary artery, the law predicts the diame
 
 These seven numbers were fitted with five vasculopathy parameters. Not fitted: the prevalence of PH with FVC below 50% (48% vs 46% in transplant candidates) and of severe PH (8% vs about 9%), the small FVC difference between patients with and without PH, and a distinct low-DLCO phenotype that contains 71% of all PH.
 
+**3. The lesion that matters sits in preserved lung, and only part of it can follow the scar.** Fibrosis thickens the vessels it surrounds, so the vasculopathy cannot be assumed independent of the fibrosis. LuPNet separates the possibilities by where the lesion sits (same fibrosis and same lesion draws in every cohort):
+
+| Lesion | Benchmarks met | r(mPAP, FVC) | PH, FVC < 50% | mPAP > 40, FVC < 50% | PH, FVC ≥ 70% |
+|---|---|---|---|---|---|
+| Diffuse (manuscript) | 7 of 7 | −0.08 | 48% | 8% | 23% |
+| Half diffuse, half spreading from the scar | 7 of 7 | −0.17 | 54% | 16% | 14% |
+| Spreading from the scar into adjacent lung | 4 of 7 | −0.34 | 68% | 31% | 0% |
+| Inside the scar only | 1 of 7 | −0.19 | 0% | 0% | 0% |
+| Patients | | ≈ 0 | 46% | ≈ 9% | |
+
+A lesion confined to the scar produces no PH in 200 simulated cases (blood bypasses the scar). A lesion that spreads from the scar produces PH that follows lung function and triples severe PH in advanced disease. A minor share of the lesion can therefore be a local consequence of fibrosis; the rest sits in preserved lung and is not proportional to the extent of fibrosis.
+
+**4. The same holds for the UIP and the fibrotic NSIP pattern, and at altitude.** With a subpleural, basal, honeycombing pattern (UIP) or a homogeneous one without honeycombing (NSIP), PH in mild-to-moderate disease is 17% in both and the pressure of a given lesion differs by 1 mmHg or less. At the barometric pressure of Mexico City (585 mmHg) pressures change by less than 1 mmHg; blood gases do change.
+
 The derivation, the model and all numbers are in **[THEORY.md](THEORY.md)**.
 
 ---
@@ -57,9 +71,21 @@ and places the patient on a map of the 260 simulated cases. In held-out simulate
 
 ---
 
+## Non-invasive individual estimate
+
+`src/noninvasive_tool.py` estimates PH for one patient without right heart catheterisation. FVC and DLCO are required; echocardiographic systolic pressure, pulmonary artery diameter on CT, BNP, right ventricular fractional area change and right atrial area are optional, in any combination. The simulated visits are the prior; catheterised patients are used only to fit how each measurement relates to pressure and to score the tool. In 43 catheterised patients with fibrosing interstitial lung disease (cross-validated), the area under the ROC curve for mPAP ≥ 25 mmHg is 0.71 with FVC and DLCO and 0.87 with every optional input (logistic regression on the same inputs: 0.64 and 0.89, the latter on the 34 patients with complete data), and the estimate of mPAP has a mean error of 8.5 mmHg. The tool also returns the pressure of the aged lung, what the lost lung adds and what the lesion adds, from the surface mPAP = F(lung lost, lesion) of the simulations (R² 0.998). The clinical file is not part of the repository:
+
+```bash
+python src/noninvasive_tool.py --clinical patients.xlsx      # tables S21-S23
+python src/lesion_location.py --clinical patients.xlsx       # tables S24-S25
+```
+
+It is a research tool; the thresholds have not been validated in a second cohort.
+
 ## Quick start
 
 ```bash
+conda env create -f environment.yml && conda activate lupnet      # or: pip install -r requirements.txt -r requirements-dev.txt
 pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest tests -q                       # fast checks
 python src/pulmonary_shared_law.py              # the shared law against human arterial morphometry
@@ -76,7 +102,7 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 
 ## Reproducing the manuscript
 
-*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The three cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
+*A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
 
 ```bash
 python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the two clocks) and Table 1 -> results/figures/
@@ -98,6 +124,24 @@ python src/fibrosis_only_cohorts.py --arm het --n 38
 
 Each simulated case is an independent run of the model, not a real patient.
 
+## Cohorts in `results/ph_cohorts/`
+
+All cohorts use a 256-unit tree and, within a family, the same seeds, so a difference between two cohorts comes from the one setting that differs. `big2*`: 200 cases, visit at 25–85% of healthy tissue; `adv2*`: 60 cases, 12–45%; `altF*`: 100 cases.
+
+| Cohort | What differs from the manuscript cohort | Extra arguments of `ph_cohort.py run` |
+|---|---|---|
+| `big2`, `adv2` | Manuscript: calibrated pattern, diffuse lesion, sea level | none |
+| `altF` | Lesion severity scaled by the extent of fibrosis | `--vmode fibrosis` |
+| `hom`, `het` | No vasculopathy; variable vascular responses | `fibrosis_only_cohorts.py` |
+| `big2_uip`, `adv2_uip` | UIP pattern | `--pattern uip` |
+| `big2_nsip`, `adv2_nsip` | Fibrotic NSIP pattern | `--pattern nsip` |
+| `big2_cdmx`, `adv2_cdmx`, `altF_cdmx` | Barometric pressure of Mexico City | `--PB 585` |
+| `big2_scar` | Lesion in fibrotic and honeycomb units only | `--where scar` |
+| `big2_field`, `adv2_field` | Lesion in the scar and the healthy units next to it | `--where field --a_scale 5.8` |
+| `big2_mix50`, `adv2_mix50` | Half of the lesion diffuse, half following the field | `--where mixed --mix 0.25 --a_scale 2.0` |
+
+`scripts/cohorts_local.sh` regenerates the last four families on the cores of one machine without a scheduler (`WHAT=patterns`, `advanced`, `altitude` or `location`; about 25 to 60 s of one core per case, resumable).
+
 ## Repository
 
 | Path | Content |
@@ -108,13 +152,17 @@ Each simulated case is an independent run of the model, not a real patient.
 | `src/ph_cohort.py` | In silico PH cohorts (run and analyse; `--vmode fibrosis` for the alternative mechanism) |
 | `src/make_figures_erj.py`, `src/supplement_tables.py`, `src/make_supplement_figures.py` | Figures and tables of the manuscript and its supplement |
 | `docs/AUDIT.md` | Reproducibility audit |
-| `results/ph_cohorts/*.tsv.gz` | Simulations of the three cohorts used in the manuscript (one compressed file per cohort) |
+| `results/ph_cohorts/*.tsv.gz` | Simulated cohorts, one compressed file each (see "Cohorts") |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
 | `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S10 |
 | `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
 | `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
 | `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S16 and Figure S2 |
 | `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S16, Figure S2) |
+| `src/noninvasive_tool.py` | Individual estimate of PH without catheterisation: prior from the simulated visits, measurement models from catheterised patients, cross-validation (tables S21–S23) |
+| `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S24–S25) |
+| `scripts/cohorts_local.sh` | Pattern, altitude and lesion-location cohorts on the cores of one machine |
+| `environment.yml` | Conda environment with the locked versions |
 | `tests/` | Mathematical invariants of the model and a regression test of every number published in the manuscript |
 | `src/audit_extra.py` | Checks of the 0.3.7 audit: where the healthy pressure drop comes from, the aged lung without fibrosis, lesion saturation at the visit, the low-DLCO phenotype under baseline spread (tables S17–S20) |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
@@ -134,7 +182,7 @@ Each simulated case is an independent run of the model, not a real patient.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.13). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.14). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
 
 ## License
 

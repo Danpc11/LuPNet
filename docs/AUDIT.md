@@ -1,7 +1,7 @@
 # Reproducibility audit
 
 Manuscript: *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation; not part of this repository).
-Code: this repository, version 0.3.8 (audit of 0.3.7; the numbers below are unchanged).
+Code: this repository, version 0.3.14 (audit of 0.3.7 and of the additions up to 0.3.14; the numbers below are unchanged).
 
 ## Method
 
@@ -113,3 +113,7 @@ All figures and tables (Figures 1–5, S1; Table 1; tables S2, S4–S11, S13–S
 14. **Fixed ventilation.** VA = 4.2 L/min in every state; 49 of 200 calibrated cases have PaCO₂ > 45 mmHg at the visit. Relevant for PaO₂ and the A–a gradient of Figure 5.
 15. **Runs ending before the drawn stage.** 7 of 60 cases of the advanced cohort reach `t_max = 3.0` before the drawn fraction of healthy tissue; `ph_cohort.py run` now reports such cases and takes `--t_max`.
 16. **Shared `Params` object.** `Lung._baseline` and the exacerbation branch of `sim.run` alter fields of the `Params` instance and restore them; both restores are now in `finally` blocks.
+17. **Tag prefixes (bug, fixed in 0.3.11).** `cohort_io.cases("big2")` matched `big2_*.tsv` and would have read the per-case files of `big2_uip` or `big2_cdmx` as the manuscript cohort. It now reads only `tag_<digits>.tsv`; guarded by `tests/test_cohort_io.py`.
+18. **Non-viable visits (0.3.14).** Five runs of the field cohorts end with the oxygen demand not met (SaO₂ down to 0.27). `cohort_io.viable` and `final_visits` use the last viable visit and count the run as a death; the manuscript cohorts have none, so their numbers are unchanged.
+19. **Severity as applied (0.3.14).** `vasc_A` is the drawn severity; with `--a_scale` the applied one is `vasc_A_scaled`, and each visit now records the lesion in place (`lesion_mean`, `lesion_healthy`). The tool uses the applied severity.
+20. **Two-threshold rule of the tool.** With probabilities ≥ 0.7 and < 0.3 the tool classifies about two thirds of the 43 patients with about 90% correct, but the counts move between cross-validation partitions and references (25 of 27, 26 of 30). The rule is not stable at this sample size and is not proposed for use.

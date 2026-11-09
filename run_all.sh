@@ -22,6 +22,8 @@ python3 src/supplement_tables.py              # Tables S2, S4, S5 and the fibros
 python3 src/make_supplement_figures.py        # Figure S1 and tables S6-S11 (lung-function range, baseline variation, audit sensitivity analyses)
 python3 src/noninvasive.py                    # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
 python3 src/manuscript_numbers.py            # numbers quoted in the text and table S10
+python3 src/lesion_location.py                # tables S24-S25: where the lesion sits (add --clinical FILE for the patients row)
+# python3 src/noninvasive_tool.py --clinical FILE   # tables S21-S23: individual estimate; needs the clinical file, not in the repository
 python3 src/audit_extra.py                    # tables S17-S20: pressure decomposition, aged baseline, lesion saturation, phenotype robustness
 python3 src/fit_calculator.py                 # data/virtual_ph_cohort.tsv and results/ph_calculator.json
 python3 src/build_app.py

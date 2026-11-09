@@ -24,7 +24,7 @@ import argparse, os, sys, warnings
 import numpy as np, pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases
+from cohort_io import cases, viable
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "figures")
@@ -45,8 +45,9 @@ def trajectory_points(tags=("big2", "adv2", "hom", "big2_uip", "big2_nsip", "adv
     rows = []
     for tag in tags:
         for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-            A = float(d.vasc_A.iloc[0]); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0; r0 = d.iloc[0]
-            for _, x in d.iloc[1:].iterrows():
+            A = float(d.vasc_A.iloc[0]) * (float(d["a_scale"].iloc[0]) if "a_scale" in d else 1.0)     # severity as applied
+            t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0; r0 = d.iloc[0]
+            for _, x in d.iloc[1:][viable(d).iloc[1:].values].iterrows():
                 rows.append(dict(case=f"{tag}{i}", tag=tag, lost=1 - x.healthy, Aeff=A * (1 - np.exp(-(x.years + t0) / TAU)) if A > 0 else 0.0,
                                  mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, SpO2=100 * x.SaO2))
     return pd.DataFrame(rows)

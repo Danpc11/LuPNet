@@ -21,6 +21,27 @@ def cases(folder, tag):
             yield int(i), d.drop(columns="case").reset_index(drop=True)
 
 
+def viable(d):
+    """Boolean mask of the visits of a run that a living patient could have: oxygen demand met (gas_ok) and resting
+    output above the stop threshold. Runs that end in a state that fails this are reported as deaths, not as visits."""
+    ok = d.gas_ok.astype(bool) if "gas_ok" in d else pd.Series(True, index=d.index)
+    if "Q" in d:
+        ok = ok & (d.Q > 2.5)
+    return ok
+
+
+def final_visits(folder, tag):
+    """One row per simulated case: the last viable visit, as % of the case's own baseline, and whether the run
+    ended in a non-viable state (died)."""
+    rows = []
+    for i, d in cases(folder, tag):
+        r0 = d.iloc[0]; v = viable(d); x = d[v].iloc[-1] if v.any() else d.iloc[-1]
+        sc = float(d["a_scale"].iloc[0]) if "a_scale" in d else 1.0
+        rows.append(dict(case=i, mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO,
+                         vasc_A=float(x.vasc_A), vasc_A_scaled=float(x.vasc_A) * sc, died=bool(not v.iloc[-1])))
+    return pd.DataFrame(rows)
+
+
 def pack(folder, tag):
     """Combine tag_*.tsv into tag.tsv.gz."""
     parts = [d.assign(case=i) for i, d in cases(folder, tag)]

@@ -82,7 +82,7 @@ def cmd_run(a):
             # the run ended before the drawn stage (t_max reached, or a stop criterion of sim.run);
             # 7 of 60 cases of the adv2 cohort of the manuscript end this way (t_max = 3.0)
             print(f"  warning: case {i} stopped at healthy = {rows[-1]['healthy']:.3f}, drawn stage {stop[i]:.3f}", flush=True)
-        df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G; df["PB"] = a.PB; df["pattern"] = a.pattern; df["where"] = a.where; df["mix"] = a.mix; df["a_scale"] = a.a_scale
+        df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G; df["PB"] = a.PB; df["pattern"] = a.pattern; df["where"] = a.where; df["mix"] = a.mix; df["a_scale"] = a.a_scale; df["vasc_A_scaled"] = A[i] * a.a_scale
         tmp = f + f".tmp{os.getpid()}"
         df.to_csv(tmp, sep="\t", index=False); os.replace(tmp, f)
         print(a.tag, i, round(time.time() - t), "s", flush=True)
@@ -94,12 +94,11 @@ def cmd_analyze(a):
         T = pd.read_csv(a.table, sep="\t")
         R = T[T.cohort == a.tag][["mPAP", "FVC", "DLCO"]].reset_index(drop=True) if a.tag else T[["mPAP", "FVC", "DLCO"]]
     else:
-        from cohort_io import cases
-        rows = []
-        for _, d in cases(OUT, a.tag):
-            r0, x = d.iloc[0], d.iloc[-1]
-            rows.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO))
-        R = pd.DataFrame(rows)
+        from cohort_io import final_visits
+        R = final_visits(OUT, a.tag)
+        if len(R) and R.died.any():
+            print(f"  {int(R.died.sum())} of {len(R)} runs ended in a non-viable state (oxygen demand not met or output "
+                  f"below 2.5 L/min); their last viable visit is used")
     if len(R) == 0:
         raise SystemExit("no patients found: run the cohort first, or pass --table data/virtual_ph_cohort.tsv")
     Rm = R[(R.FVC >= 50) & (R.FVC <= 90)].reset_index(drop=True)

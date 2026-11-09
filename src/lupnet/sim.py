@@ -153,7 +153,11 @@ def record(L: Lung, st, t, ex=None):
              lost_base=frac(base), lost_apex=frac(apex), lost_sub=frac(sub), lost_core=frac(core),
              eq_it=st["it"], zerr=st["zerr"], converged=bool(st["zerr"] < 1e-3),
              tether_mean=float(np.mean(st["Pt"])) if np.ndim(st["Pt"]) else 0.0,
-             PVR=vs["dP"] / Qn, Q=Qn)
+             PVR=vs["dP"] / Qn, Q=Qn,
+             # lesion actually in place, in units of the baseline arteriolar resistance: mean over all units and over
+             # healthy units (a field or scar lesion differs between the two; a diffuse one does not)
+             lesion_mean=float(np.mean(L.R_lesion) / L._Rta0) if hasattr(L, "_Rta0") else 0.0,
+             lesion_healthy=float(np.mean(L.R_lesion[s == 0]) / L._Rta0) if hasattr(L, "_Rta0") and (s == 0).any() else 0.0)
     # field effect: healthy units next to scar vs healthy units with no stiff neighbour
     hl = s == 0
     adj = hl & (L.stiff_nbr_frac() > 0); far = hl & ~adj

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.14 (2026-11)
+
+- Lesion-location cohorts simulated in full (`big2_scar`, `big2_field`, `big2_mix50`, `adv2_field`, `adv2_mix50`) and `src/lesion_location.py` (tables S24-S25). They confirm the surface estimates of 0.3.13 within 2 to 4 points: no PH with the lesion inside the scar; 4 of 7 benchmarks, r(mPAP, FVC) -0.34 and severe PH 31% in advanced disease with the field lesion; 7 of 7 with half field, but severe PH 16% (11-22) in advanced disease against about 9% in patients.
+- `cohort_io.viable` and `final_visits`: runs that end with the oxygen demand not met or output below 2.5 L/min contribute their last viable visit and are counted as deaths (5 runs of the field cohorts, none in the manuscript cohorts). `ph_cohort.py analyze` and the tool use them.
+- Each visit records the lesion in place (`lesion_mean`, `lesion_healthy`) and each run the applied severity (`vasc_A_scaled`); the tool uses the applied severity.
+- README, THEORY.md and docs/AUDIT.md brought up to date: table of every cohort with the command that generates it, sections on pattern, altitude, lesion location and the non-invasive tool, audit findings 17-20.
+
 ## 0.3.13 (2026-11)
 
 - Where the lesion sits. `ph_cohort.py run --where {diffuse,scar,field,mixed}` (default `diffuse`, the manuscript cohorts, reproduced exactly): `scar` puts the lesion only in fibrotic and honeycomb units, `field` in the scar and in healthy units in proportion to the fraction of their neighbours that are scar, `mixed` combines a diffuse share (`--mix`) with the field; `--a_scale` multiplies the drawn severity. `sim.lesion_weights`, `sim.apply_lesion`, `scripts/cohorts_local.sh` with `WHAT=location`.
