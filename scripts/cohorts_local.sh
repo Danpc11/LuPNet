@@ -6,6 +6,7 @@
 #   JOBS=96 bash scripts/cohorts_local.sh               # leave some cores free
 #   WHAT=patterns bash scripts/cohorts_local.sh         # only big2_uip and big2_nsip
 #   WHAT=altitude bash scripts/cohorts_local.sh         # only big2_cdmx, adv2_cdmx and altF_cdmx
+#   WHAT=advanced bash scripts/cohorts_local.sh         # only adv2_uip and adv2_nsip (advanced disease by pattern)
 #   PB=585 WHAT=patterns bash scripts/cohorts_local.sh  # pattern cohorts at Mexico City altitude
 #   LIMIT=4 bash scripts/cohorts_local.sh               # pilot: the first 4 cases of each cohort
 #   nohup bash scripts/cohorts_local.sh > logs/cohorts.log 2>&1 &     # detached; follow with tail -f
@@ -39,7 +40,11 @@ if [ "$WHAT" = all ] || [ "$WHAT" = altitude ]; then
     SPECS+="adv2_cdmx"$'\t'"60"$'\t'"$ADV --PB 585"$'\n'
     SPECS+="altF_cdmx"$'\t'"100"$'\t'"$ALT --PB 585"$'\n'
 fi
-[ -n "$SPECS" ] || { echo "WHAT must be all, patterns or altitude" >&2; exit 1; }
+if [ "$WHAT" = all ] || [ "$WHAT" = advanced ]; then
+    SPECS+="adv2_uip$SUF"$'\t'"60"$'\t'"$ADV --pattern uip --PB $PB"$'\n'
+    SPECS+="adv2_nsip$SUF"$'\t'"60"$'\t'"$ADV --pattern nsip --PB $PB"$'\n'
+fi
+[ -n "$SPECS" ] || { echo "WHAT must be all, patterns, altitude or advanced" >&2; exit 1; }
 
 TASKS=$(mktemp); trap 'rm -f "$TASKS"' EXIT
 while IFS=$'\t' read -r tag n args; do

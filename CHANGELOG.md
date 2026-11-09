@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.11 (2026-11)
+
+- Cohorts of 200 cases with the UIP and the fibrotic NSIP pattern (`big2_uip`, `big2_nsip`) and the three manuscript cohorts at the barometric pressure of Mexico City (`big2_cdmx`, `adv2_cdmx`, `altF_cdmx`), same seeds as the manuscript. PH (mPAP >= 25, FVC 50-90%) is 17% in both patterns (19% calibrated); UIP meets the seven targets, NSIP six (DLCO ratio 0.85, a target measured in IPF).
+- `noninvasive_tool.py --reference pattern` (default): UIP and NSIP patients are scored against the cohort of their pattern; the partial dependence surface is fitted per pattern.
+- `cohort_io.cases` reads only `tag_<digits>.tsv`; `ph_cohort.py analyze` no longer fails on cohorts without cases in the FVC 50-90% band; `scripts/cohorts_local.sh` gains `WHAT=advanced` (adv2_uip, adv2_nsip).
+
 ## 0.3.10 (2026-11)
 
 - `src/noninvasive_tool.py`: individual estimate of PH without catheterisation. FVC and DLCO required; echocardiographic sPAP, pulmonary artery diameter on CT, BNP, RV fractional area change and right atrial area optional in any combination. Prior from the simulated visits of the manuscript cohorts (5,036 visits), measurement models and prevalence fitted on catheterised patients, repeated 5-fold cross-validation, comparison with logistic regression on the same inputs (tables S21-S23). The clinical file is passed with `--clinical` and is not part of the repository.

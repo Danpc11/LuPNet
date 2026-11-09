@@ -103,11 +103,14 @@ def cmd_analyze(a):
     Rm = R[(R.FVC >= 50) & (R.FVC <= 90)].reset_index(drop=True)
 
     from ph_stats import bootstrap, point, TARGETS as T_
-    ci, pt = bootstrap(Rm), point(Rm)
     print(f"{a.tag}: {len(R)} simulated cases, {len(Rm)} with FVC 50-90%")
-    for k, v in T_.items():
-        lo, hi = ci[k]
-        print(f"  {k:7s} {pt[k]:7.2f}  (95% CI {lo:.2f} to {hi:.2f})  target {v}  {'inside' if lo <= v <= hi else 'OUTSIDE'}")
+    if len(Rm) >= 10:
+        ci, pt = bootstrap(Rm), point(Rm)
+        for k, v in T_.items():
+            lo, hi = ci[k]
+            print(f"  {k:7s} {pt[k]:7.2f}  (95% CI {lo:.2f} to {hi:.2f})  target {v}  {'inside' if lo <= v <= hi else 'OUTSIDE'}")
+    else:
+        print("  fewer than 10 cases in the FVC 50-90% band (advanced disease): the seven mild-to-moderate targets do not apply")
     adv = R[R.FVC < 50]
     if len(adv):
         print(f"  FVC < 50%: n = {len(adv)}, PH {100 * (adv.mPAP >= 25).mean():.0f}%, mPAP >= 40 {100 * (adv.mPAP >= 40).mean():.0f}%"

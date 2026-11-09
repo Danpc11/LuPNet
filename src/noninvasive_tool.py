@@ -37,7 +37,11 @@ COLS = {"FVC": "FVC (%)", "DLCO": "DLCO aj (%)", "mPAP": "PmAP", "PVR": "RVP (UW
 
 
 # ------------------------------------------------------------------ reference (prior) and partial dependence surface
-def trajectory_points(tags=("big2", "adv2", "hom")):
+# reference cohorts of each tomographic pattern; "other" and any pattern without its own cohort use the calibrated set
+REFERENCE_TAGS = {"UIP": ("big2_uip", "adv2_uip"), "NSIP": ("big2_nsip", "adv2_nsip"), "other": ("big2", "adv2")}
+
+
+def trajectory_points(tags=("big2", "adv2", "hom", "big2_uip", "big2_nsip", "adv2_uip", "adv2_nsip")):
     rows = []
     for tag in tags:
         for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
@@ -55,9 +59,9 @@ def surface(T):
     return em, float(em.score(T[["lost", "Aeff"]], T.mPAP))
 
 
-def reference(T, per_case=25):
+def reference(T, per_case=25, tags=("big2", "adv2")):
     """Visits in established disease of the cohorts with vasculopathy prior (as the published calculator)."""
-    R = T[T.tag.isin(["big2", "adv2"]) & (T.lost >= 0.15) & (T.lost <= 0.88)]
+    R = T[T.tag.isin(list(tags)) & (T.lost >= 0.15) & (T.lost <= 0.88)]
     keep = []
     for _, g in R.groupby("case", sort=False):
         keep.extend(g.index[np.linspace(0, len(g) - 1, min(per_case, len(g))).round().astype(int)])
@@ -116,6 +120,15 @@ def load_clinical(path):
     return P
 
 
+def references_by_pattern(T):
+    """One reference per tomographic pattern; falls back to the calibrated set when a pattern cohort is absent."""
+    have = set(T.tag.unique()); out = {}
+    for g, tags in REFERENCE_TAGS.items():
+        present = tuple(t for t in tags if t in have)          # the advanced cohort of a pattern is used when it exists
+        out[g] = reference(T, tags=present if present else REFERENCE_TAGS["other"])
+    return out
+
+
 def cross_validate(P, R, sets, n_rep=20, k=5, seed=0):
     """Repeated k-fold: measurement models and prevalence from the training folds; scores on the held-out patients.
     Returns one row per input set and the out-of-fold estimates of every patient (mean over repeats)."""
@@ -134,7 +147,8 @@ def cross_validate(P, R, sets, n_rep=20, k=5, seed=0):
                 tr, te = np.where(fold != f)[0], np.where(fold == f)[0]
                 M = fit_obs(V.iloc[tr]); prev = float(y[tr].mean())
                 for j in te:
-                    s = summarise(R, posterior(R, V.iloc[j], use, M, prev))
+                    Rj = R[V.group.iloc[j]] if isinstance(R, dict) else R        # reference of the patient's pattern
+                    s = summarise(Rj, posterior(Rj, V.iloc[j], use, M, prev))
                     est[r, j], pph[r, j], lo[r, j], hi[r, j] = s["mPAP"], s["pPH"], s["lo"], s["hi"]
                 trc = tr[cc[tr]]; tec = te[cc[te]]
                 if len(tec) and len(np.unique(y[trc])) == 2:
@@ -147,7 +161,7 @@ def cross_validate(P, R, sets, n_rep=20, k=5, seed=0):
         res.append(dict(inputs=name, n=len(V), AUC_LuPNet=np.mean(auc), AUC_min=np.min(auc), AUC_max=np.max(auc),
                         MAE_mPAP=np.mean(np.abs(est - m)), bias=np.mean(est - m), coverage90=np.mean((m >= lo) & (m <= hi)),
                         n_complete=int(cc.sum()), AUC_LuPNet_complete=np.mean(auc_cc), AUC_logistic_complete=np.mean(auc_lr)))
-        per[name] = pd.DataFrame(dict(ID=V.ID, mPAP=m, est=est.mean(0), lo=lo.mean(0), hi=hi.mean(0), pPH=pph.mean(0)))
+        per[name] = pd.DataFrame(dict(ID=V.ID, group=V.group, mPAP=m, est=est.mean(0), lo=lo.mean(0), hi=hi.mean(0), pPH=pph.mean(0)))
     return pd.DataFrame(res), per, V
 
 
@@ -156,20 +170,27 @@ SETS = {"FVC + DLCO": [], "+ echo sPAP": ["sPAP_echo"], "+ PA diameter": ["PA_di
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--clinical", required=True); ap.add_argument("--reps", type=int, default=20)
-    a = ap.parse_args(); os.makedirs(OUT, exist_ok=True)
-    T = trajectory_points(); F, r2 = surface(T); R = reference(T)
-    print(f"reference: {len(R)} simulated visits of {R.case.nunique()} cases; surface mPAP = F(lung lost, lesion): R2 {r2:.3f}")
+    ap.add_argument("--reference", default="pattern", choices=["pattern", "calibrated"],
+                    help="pattern: UIP and NSIP patients use the cohort of their pattern; calibrated: every patient uses the manuscript cohorts")
+    a = ap.parse_args(); os.makedirs(OUT, exist_ok=True); suf = "" if a.reference == "pattern" else "_calibrated"
+    T = trajectory_points()
+    RP = references_by_pattern(T) if a.reference == "pattern" else {g: reference(T) for g in REFERENCE_TAGS}
+    have = set(T.tag.unique())
+    FP = {g: surface(T[T.tag.isin([t for t in tags if t in have] + (["hom"] if g == "other" else []))])
+          for g, tags in REFERENCE_TAGS.items() if any(t in have for t in tags)}
+    for g in RP:
+        print(f"reference {g}: {len(RP[g])} simulated visits of {RP[g].case.nunique()} cases" + (f"; surface R2 {FP[g][1]:.3f}" if g in FP else ""))
     P = load_clinical(a.clinical)
-    S, per, V = cross_validate(P, R, SETS, n_rep=a.reps)
-    S.round(3).to_csv(os.path.join(OUT, "TableS21_noninvasive_tool_cv.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
-    # final models on all patients: measurement models, and the individual report with the split of the pressure
+    S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps)
+    S.round(3).to_csv(os.path.join(OUT, f"TableS21_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
     M = fit_obs(V); prev = float((V.mPAP >= 25).mean())
     pd.DataFrame([dict(input=k, intercept=v[0], slope_per_mmHg=v[1], sd=v[2]) for k, v in M.items()]).round(3).to_csv(os.path.join(OUT, "TableS22_measurement_models.tsv"), sep="\t", index=False)
     rep = []
     for _, row in V.iterrows():
-        s = summarise(R, posterior(R, row, OPTIONAL, M, prev), F)
-        rep.append(dict(ID=row.ID, group=row.group, FVC=row.FVC, DLCO=row.DLCO, mPAP_RHC=row.mPAP, PVR_RHC=row.PVR, **s))
-    pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, "TableS23_individual_report.tsv"), sep="\t", index=False)
+        g = row.group; F = FP.get(g, FP["other"])[0]
+        s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, M, prev), F)
+        rep.append(dict(ID=row.ID, group=g, FVC=row.FVC, DLCO=row.DLCO, mPAP_RHC=row.mPAP, PVR_RHC=row.PVR, **s))
+    pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS23_individual_report{suf}.tsv"), sep="\t", index=False)
     for name, df in per.items():
-        df.round(2).to_csv(os.path.join(OUT, "cv_" + name.replace("+", "plus").replace(" ", "_") + ".tsv"), sep="\t", index=False)
+        df.round(2).to_csv(os.path.join(OUT, f"cv{suf}_" + name.replace("+", "plus").replace(" ", "_") + ".tsv"), sep="\t", index=False)
     print("tables S21-S23 written to results/figures/")
