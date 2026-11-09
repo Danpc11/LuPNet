@@ -25,6 +25,32 @@ def subpleural_factor(L):
     return 1.0 + L.p.sub_gain * (L.pleural_dist <= 1) * (1.5 - L.y)
 
 
+def lesion_weights(L, where="diffuse", mix=0.5):
+    """Per-unit weight of the vascular lesion, in [0, 1].
+    diffuse: 1 in every unit. scar: 1 in fibrotic and honeycomb units, 0 in healthy ones. field: 1 in scar and, in a
+    healthy unit, the fraction of its grid neighbours that are scar (a lesion spreading from the scar into the
+    adjacent preserved lung). mixed: mix x diffuse + (1 - mix) x field."""
+    if where == "diffuse":
+        return np.ones(L.N)
+    scar = (L.state > 0).astype(float)
+    if where == "scar":
+        return scar
+    field = np.where(L.state > 0, 1.0, L.stiff_nbr_frac())
+    if where == "field":
+        return field
+    if where == "mixed":
+        return mix + (1.0 - mix) * field
+    raise ValueError(f"vasc_where must be diffuse, scar, field or mixed, not {where!r}")
+
+
+def apply_lesion(L, sv):
+    """Set the series lesion (and its capillary loss) of every unit for a lesion of severity sv."""
+    p = L.p; w = lesion_weights(L, p.vasc_where, p.vasc_mix)
+    L.R_lesion = L._Rta0 * sv * w
+    if p.cap_frac > 0:
+        L.cap_vasc = 1.0 / (1.0 + p.cap_frac * sv * w) if p.vasc_where != "diffuse" else 1.0 / (1.0 + p.cap_frac * sv)
+
+
 def hazards(L: Lung, st):
     p = L.p
     s = st["air"]["strain"]
@@ -217,9 +243,7 @@ def run(p: Params, snapshots=(0.1, 0.3, 0.5), do_exercise=True, verbose=False):
                 sv = p.vasc_A * (1.0 - rows[-1]["healthy"]) / 0.5
             else:
                 sv = p.vasc_A * (1.0 - np.exp(-(t * p.years_per_unit + p.t_vasc0) / p.vasc_tau))
-            L.R_lesion = np.full(L.N, L._Rta0 * sv)
-            if p.cap_frac > 0:
-                L.cap_vasc = 1.0 / (1.0 + p.cap_frac * sv)
+            apply_lesion(L, sv)                # diffuse by default: identical to the manuscript cohorts
         if p.k_vasc > 0:
             L.R_lesion = np.full(L.N, L._Rta0 * (np.exp(p.k_vasc * (t * p.years_per_unit + p.t_vasc0)) - 1.0))
             if p.cap_frac > 0:

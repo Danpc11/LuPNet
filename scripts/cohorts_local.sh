@@ -7,6 +7,7 @@
 #   WHAT=patterns bash scripts/cohorts_local.sh         # only big2_uip and big2_nsip
 #   WHAT=altitude bash scripts/cohorts_local.sh         # only big2_cdmx, adv2_cdmx and altF_cdmx
 #   WHAT=advanced bash scripts/cohorts_local.sh         # only adv2_uip and adv2_nsip (advanced disease by pattern)
+#   WHAT=location bash scripts/cohorts_local.sh         # where the lesion sits: scar only, field, half field (big2 and adv2)
 #   PB=585 WHAT=patterns bash scripts/cohorts_local.sh  # pattern cohorts at Mexico City altitude
 #   LIMIT=4 bash scripts/cohorts_local.sh               # pilot: the first 4 cases of each cohort
 #   nohup bash scripts/cohorts_local.sh > logs/cohorts.log 2>&1 &     # detached; follow with tail -f
@@ -44,7 +45,16 @@ if [ "$WHAT" = all ] || [ "$WHAT" = advanced ]; then
     SPECS+="adv2_uip$SUF"$'\t'"60"$'\t'"$ADV --pattern uip --PB $PB"$'\n'
     SPECS+="adv2_nsip$SUF"$'\t'"60"$'\t'"$ADV --pattern nsip --PB $PB"$'\n'
 fi
-[ -n "$SPECS" ] || { echo "WHAT must be all, patterns, altitude or advanced" >&2; exit 1; }
+if [ "$WHAT" = location ]; then
+    # same lesion draws as big2 / adv2; a_scale gives each mechanism the PH prevalence of the diffuse cohort in
+    # mild-to-moderate disease (src notes in CHANGELOG 0.3.13). Half field: diffuse A/2 plus field 3 x A/2.
+    SPECS+="big2_scar"$'\t'"200"$'\t'"$BIG --where scar"$'\n'
+    SPECS+="big2_field"$'\t'"200"$'\t'"$BIG --where field --a_scale 5.8"$'\n'
+    SPECS+="big2_mix50"$'\t'"200"$'\t'"$BIG --where mixed --mix 0.25 --a_scale 2.0"$'\n'
+    SPECS+="adv2_field"$'\t'"60"$'\t'"$ADV --where field --a_scale 5.8"$'\n'
+    SPECS+="adv2_mix50"$'\t'"60"$'\t'"$ADV --where mixed --mix 0.25 --a_scale 2.0"$'\n'
+fi
+[ -n "$SPECS" ] || { echo "WHAT must be all, patterns, altitude, advanced or location" >&2; exit 1; }
 
 TASKS=$(mktemp); trap 'rm -f "$TASKS"' EXIT
 while IFS=$'\t' read -r tag n args; do

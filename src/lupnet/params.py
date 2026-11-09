@@ -104,6 +104,10 @@ class Params:
     vasc_A: float = 0.0           # bounded vasculopathy: maximum lesion resistance in units of the terminal-arteriole
                                   # resistance; R_les = R_ta0 vasc_A (1 - exp(-(t_yr + t_vasc0) / vasc_tau))
     vasc_mode: str = "independent"  # "independent" (own time course) | "fibrosis" (scales with fibrotic extent)
+    vasc_where: str = "diffuse"   # where the lesion sits (v0.3.13): "diffuse" (every unit, the manuscript cohorts) |
+                                  # "scar" (fibrotic and honeycomb units only) | "field" (scar, and healthy units in
+                                  # proportion to the fraction of their neighbours that are scar) | "mixed"
+    vasc_mix: float = 0.5         # "mixed": share of the lesion that is diffuse; the rest follows the field
     vasc_tau: float = 5.0         # time constant of the bounded vasculopathy (years); the cohorts of the
                                   # manuscript use 2.0, set by ph_cohort.py --tau (T_les of equation 2)
     cap_frac: float = 0.0         # capillary loss coupled to the vasculopathy (f_cap of equation 2): capillary

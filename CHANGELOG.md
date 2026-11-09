@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.13 (2026-11)
+
+- Where the lesion sits. `ph_cohort.py run --where {diffuse,scar,field,mixed}` (default `diffuse`, the manuscript cohorts, reproduced exactly): `scar` puts the lesion only in fibrotic and honeycomb units, `field` in the scar and in healthy units in proportion to the fraction of their neighbours that are scar, `mixed` combines a diffuse share (`--mix`) with the field; `--a_scale` multiplies the drawn severity. `sim.lesion_weights`, `sim.apply_lesion`, `scripts/cohorts_local.sh` with `WHAT=location`.
+- First results (surfaces from 12 lungs, applied to the manuscript cohorts): a lesion confined to the scar does not reach 25 mmHg until 80% of the lung is lost; a field lesion produces PH that follows the extent of fibrosis. Up to half of the lesion can follow the field and still meet the seven benchmarks; with three quarters or more, pressure follows FVC (r -0.22 to -0.32) and severe PH in advanced disease is two to three times the clinical figure.
+
 ## 0.3.12 (2026-11)
 
 - Advanced-disease cohorts by pattern (`adv2_uip`, `adv2_nsip`, 60 cases each): PH with FVC < 50% is 45% with the UIP pattern and 35% with NSIP (transplant candidates with IPF: 46%).
