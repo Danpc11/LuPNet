@@ -119,8 +119,8 @@ def cmd_analyze(a):
     co = np.polyfit(D.mPAP_rest, D.slope, 1); xx = np.linspace(D.mPAP_rest.min(), D.mPAP_rest.max(), 20); ax.plot(xx, np.polyval(co, xx), color=DARK, lw=0.9)
     ax.axhline(3, color=DARK, lw=0.5, ls=":"); ax.set(xlabel="Resting mPAP (mmHg)", ylabel="mPAP / cardiac output slope\n(mmHg per L/min)"); tag(ax, "C")
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(FIG, f"Figure6.{ext}"), bbox_inches="tight", pad_inches=0.04)
-    print(f"{len(D)} cases; {CASES}, TableS16_pressure_flow.tsv and Figure6 written")
+        fig.savefig(os.path.join(FIG, f"V21_Figure6.{ext}"), bbox_inches="tight", pad_inches=0.04)
+    print(f"{len(D)} cases; {CASES}, TableS16_pressure_flow.tsv and V21_Figure6 written")
 
 
 if __name__ == "__main__":

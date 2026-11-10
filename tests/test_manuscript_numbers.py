@@ -5,8 +5,8 @@ The invariant tests check that the model is self-consistent; these check that th
 statistics routine that shifts a published quantity makes this test fail, which
 is the point: a number in the paper should never change silently.
 
-Values are those of LuPNet 0.3.3-0.3.4, recomputed from the cohorts shipped in
-results/ph_cohorts/. Tolerances are the last digit the manuscript quotes.
+Values are recomputed from the cohorts shipped in results/ph_cohorts/ with LuPNet 0.4.0.
+Tolerances are the last digit quoted.
 """
 import os
 import sys
@@ -17,6 +17,7 @@ from scipy.stats import pearsonr
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, os.path.join(ROOT, "src"))
+from cohort_io import last_visit
 COHORTS = os.path.join(ROOT, "results", "ph_cohorts")
 
 from cohort_io import cases  # noqa: E402
@@ -27,8 +28,8 @@ def final_visits(tag):
     """One row per simulated case: its last visit, lung function as % of its own healthy lung."""
     rows = []
     for _, d in cases(COHORTS, tag):
-        r0, x = d.iloc[0], d.iloc[-1]
-        rows.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO,
+        r0, x = last_visit(d)
+        rows.append(dict(mPAP=x.mPAP, mPAP0=r0.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO,
                          A=float(x.vasc_A)))
     R = pd.DataFrame(rows)
     assert len(R), f"cohort {tag} not found in {COHORTS}"
@@ -113,19 +114,22 @@ def test_lesion_tied_to_fibrosis_fails():
 
 
 def test_contributions_by_fvc_band(mild):
-    """Figure 2g: what fibrosis and the vasculopathy each add to mPAP, by FVC band.
+    """What ageing, fibrosis and the lesion each add to mPAP, by FVC band (figure 2g of manuscript v21).
 
-    The reference inside a band is the cases of the same cohort with no lesion:
-    same fibrosis, no vasculopathy. Published values: fibrosis 3.5 -> 2.1 mmHg,
-    vasculopathy 6.1 +- 1.0, 5.3 +- 1.2 and 6.7 +- 1.5 mmHg.
+    Reference: the healthy lung of the cohort itself (first visit of its cases, 14.28 mmHg). Inside a band, the
+    cases with no lesion give fibrosis plus ageing; the aged lung without fibrosis sits 2.26 mmHg above the healthy
+    one; the cases with a lesion, minus those without, give the lesion.
     """
-    MPAP_HEALTHY = 14.8
-    expect = {(50, 60): (3.5, 6.1, 1.0), (60, 70): (2.7, 5.3, 1.2), (70, 90): (2.2, 6.7, 1.5)}
-    for (lo, hi), (f_exp, v_exp, s_exp) in expect.items():
+    healthy = mild.mPAP0.mean()
+    assert healthy == pytest.approx(14.28, abs=0.02)
+    AGEING = 2.26
+    expect = {(50, 60): (4.0, 1.8, 6.1, 1.0), (60, 70): (3.2, 1.0, 5.3, 1.2), (70, 90): (2.7, 0.4, 6.7, 1.5)}
+    for (lo, hi), (fa_exp, f_exp, v_exp, s_exp) in expect.items():
         sel = mild[(mild.FVC >= lo) & (mild.FVC <= hi if hi == 90 else mild.FVC < hi)]
         base = sel.mPAP[~sel.vasc].mean()
         v = sel.mPAP[sel.vasc] - base
-        assert base - MPAP_HEALTHY == pytest.approx(f_exp, abs=0.1)
+        assert base - healthy == pytest.approx(fa_exp, abs=0.1)
+        assert base - healthy - AGEING == pytest.approx(f_exp, abs=0.1)
         assert v.mean() == pytest.approx(v_exp, abs=0.1)
         assert v.sem() == pytest.approx(s_exp, abs=0.1)
-        assert v.mean() > base - MPAP_HEALTHY, "the lesion should outweigh fibrosis in every band"
+        assert v.mean() > base - healthy, "the lesion should outweigh fibrosis and ageing in every band"

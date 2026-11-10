@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Figures of the storyline "pulmonary hypertension in fibrosing lung disease arises from vascular disease in
-preserved lung, not from the scar" (Story1-Story6 in results/figures/).
+preserved lung, not from the scar": the figures of the article, Figure1-Figure6 in results/figures/.
 
-  Story1  one shear-stress rule builds the normal pulmonary circulation (as Figure 1 of make_figures_erj.py)
+  Figure 1  one shear-stress rule builds the normal pulmonary circulation (as Figure 1 of make_figures_erj.py)
 
-  Story2  fibrosis alone does not produce PH, and it multiplies the effect of a lesion
-  Story3  where the lesion sits: scar, field, half field, diffuse
-  Story4  the diffuse lesion reproduces the disease with the UIP and the NSIP pattern
-  Story5  catheterised patients                                     (needs --clinical)
-  Story6  clinical consequence: flow unmasks the lesion; estimate without catheterisation  (needs --clinical and
+  Figure 2  fibrosis alone does not produce PH, and it multiplies the effect of a lesion
+  Figure 3  where the lesion sits: scar, field, half field, diffuse
+  Figure 4  the diffuse lesion reproduces the disease with the UIP and the NSIP pattern
+  Figure 5  catheterised patients                                     (needs --clinical)
+  Figure 6  clinical consequence: flow unmasks the lesion; estimate without catheterisation  (needs --clinical and
           the tables of `noninvasive_tool.py --clinical`)
 
     python3 src/make_figures_story.py [--clinical patients.xlsx]
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from scipy.stats import pearsonr, linregress
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import final_visits, cases
+from cohort_io import final_visits, cases, last_visit
 from ph_stats import bootstrap, point, prevalence_ci
 import noninvasive_tool as nt
 
@@ -40,7 +40,7 @@ PATTERN = {"calibrated": "#8C8C8C", "uip": "#0072B2", "nsip": "#009E73"}        
 TISSUE = ["#F2F2F2", "#B0B0B0", "#4D4D4D"]                   # preserved, fibrotic, honeycomb: tissue is always grey
 SEV = matplotlib.colors.LinearSegmentedColormap.from_list("sev", ["#FDE3CF", "#D55E00", "#6B2A00"])   # lesion severity
 MECH = {"scar": ("Scar only", LOC["scar"], ("big2_scar",)), "field": ("Spreading", LOC["field"], ("big2_field", "adv2_field")),
-        "mix50": ("Half and half", LOC["mix50"], ("big2_mix50", "adv2_mix50")), "diffuse": ("Diffuse", LOC["diffuse"], ("big2", "adv2"))}
+        "mix50": ("Mixed", LOC["mix50"], ("big2_mix50", "adv2_mix50")), "diffuse": ("Diffuse", LOC["diffuse"], ("big2", "adv2"))}
 PAT = {"calibrated": ("Calibrated", PATTERN["calibrated"], ("big2", "adv2")), "uip": ("UIP", PATTERN["uip"], ("big2_uip", "adv2_uip")),
        "nsip": ("NSIP", PATTERN["nsip"], ("big2_nsip", "adv2_nsip"))}
 
@@ -72,8 +72,8 @@ class Grid:
         return ax
 
     def save(self, name):
-        for ext in ("pdf", "png"):
-            self.fig.savefig(os.path.join(OUT, f"{name}.{ext}"))
+        self.fig.savefig(os.path.join(OUT, f"{name}.pdf"), metadata={"CreationDate": None})     # same bytes on every run
+        self.fig.savefig(os.path.join(OUT, f"{name}.png"))
         plt.close(self.fig); print(name, "written")
 
 
@@ -129,7 +129,7 @@ def visits(tags, with_lost=True):
     for t in tags:
         D = final_visits(F, t); D["tag"] = t
         if with_lost:
-            lost = {i: 1 - d.healthy.iloc[-1] for i, d in cases(F, t)}; D["lost"] = D.case.map(lost)
+            lost = {i: 1 - last_visit(d)[1].healthy for i, d in cases(F, t)}; D["lost"] = D.case.map(lost)
         out.append(D)
     return pd.concat(out, ignore_index=True)
 
@@ -242,7 +242,7 @@ def story1(clinical):
     ax.set(xlabel="Generation of the explicit tree", ylabel="Diameter (mm)", xticks=[0, 2, 4, 6, 8, 10]); ax.set_yticks([2, 5, 10, 20, 30]); ax.set_yticklabels(["2", "5", "10", "20", "30"]); ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter()); ax.legend(loc="lower left", fontsize=5.8, handlelength=1.6)
     ax = g.cell(2, 2, "G"); dp = 8 * ART[3] * ART[2] * ART[1] / (np.pi * (D_best / 2) ** 4) / 133.322; ax.bar(o, dp, color=MODEL, width=0.7)
     ax.set(xlabel="Strahler order", ylabel="Pressure drop per order (mmHg)", xticks=[1, 4, 8, 12, 16]); ax.text(0.97, 0.97, f"arterial total {dp.sum():.2f} mmHg", transform=ax.transAxes, ha="right", va="top", fontsize=5.8)
-    g.save("Story1"); print(f"  b {b_best}; arteries x{e_art:.3f}, veins x{e_ven:.3f}; healthy mPAP {vs['PPA']:.2f} (per-vessel law {Ll.base_state['vs']['PPA']:.2f})")
+    g.save("Figure1"); print(f"  b {b_best}; arteries x{e_art:.3f}, veins x{e_ven:.3f}; healthy mPAP {vs['PPA']:.2f} (per-vessel law {Ll.base_state['vs']['PPA']:.2f})")
 
 
 # ---------------------------------------------------------------- Story2: fibrosis alone, and the partial dependence
@@ -286,7 +286,7 @@ def story2(clinical):
         ax.bar(np.arange(3) + (j - 0.5) * w * 1.08, d, w, color=SEV(0.15 + 0.1 * a), label=f"Lesion {a}")
     ax.set_xticks(range(3)); ax.set_xticklabels(["5", "30", "60"]); ax.set(xlabel="Lung lost (%)", ylabel="mPAP added by the lesion (mmHg)", ylim=(0, 14))
     ax.legend(loc="upper left", fontsize=5.8, handlelength=1)
-    g.save("Story2"); print(f"  surface R2 {r2:.3f}; no lesion: {Fs.predict(np.array([[0.05, 0]]))[0]:.1f} mmHg at 5% lost, {Fs.predict(np.array([[0.60, 0]]))[0]:.1f} at 60%")
+    g.save("Figure2"); print(f"  surface R2 {r2:.3f}; no lesion: {Fs.predict(np.array([[0.05, 0]]))[0]:.1f} mmHg at 5% lost, {Fs.predict(np.array([[0.60, 0]]))[0]:.1f} at 60%")
 
 
 # ---------------------------------------------------------------- Story3: where the lesion sits
@@ -296,7 +296,7 @@ def story3(clinical):
     S = [0, 0, 1, 1, 0, 0]; lo = 0.15
     D = {"scar": ([0, 0, 1, 1, 0, 0], [1, 1, lo, lo, 1, 1]), "field": ([0, 1, 1, 1, 1, 0], [1.7, 0.45, lo, lo, 0.45, 1.7]),
          "mix50": ([0.5, 1, 1, 1, 1, 0.5], [1.1, 0.75, lo, lo, 0.75, 1.1]), "diffuse": ([1, 1, 1, 1, 1, 1], [1, 1, lo, lo, 1, 1])}
-    names = {"scar": "Scar only", "field": "Spreading from the scar", "mix50": "Half spreading, half diffuse", "diffuse": "Diffuse, in preserved lung"}
+    names = {"scar": "Scar only", "field": "Spreading from the scar", "mix50": "Mixed: diffuse plus spreading", "diffuse": "Diffuse, in preserved lung"}
     for j, k in enumerate(MECH):
         ax = g.cell(0, j, "A" if j == 0 else None, pad=(3, 3, 3, 9), axis=False); ax.set(xlim=(0, 100), ylim=(0, 100))
         lung_diagram(ax, 2, 4, 96, 92, S, D[k][0], D[k][1]); g.fig.text((g.x0[j] + g.x1[j]) / 2 / g.W, (g.y1[0] - 2.2) / g.H, names[k], ha="center", va="top", fontsize=6.4, color=MECH[k][1], fontweight="bold")
@@ -344,7 +344,7 @@ def story3(clinical):
     if clinical is not None:
         V = clinical.dropna(subset=["FVC", "mPAP"]); V = V[V.FVC >= 70]; extra = (100 * (V.mPAP >= 25).mean(), f"{int((V.mPAP >= 25).sum())} of {len(V)}")
     ax = g.cell(2, 3, "F", pad=PADB); bars(ax, pres, "mPAP ≥ 25 mmHg, FVC ≥ 70% (%)", None, None, (0, 82), extra)
-    g.save("Story3")
+    g.save("Figure3")
     for k, a, b, c in zip(keys, rf, sev, pres):
         print(f"  {k:8s} rFVC {a[0]:.2f} ({a[1]:.2f} to {a[2]:.2f}) | >40 mmHg advanced {b[0]:.0f}% ({b[1]:.0f}-{b[2]:.0f}) | PH with FVC>=70: {c[0]:.0f}% (n = {c[3]})")
 
@@ -392,16 +392,16 @@ def story4(clinical):
     ax.set(xlabel="FVC (% of baseline)", ylabel="DLCO (% of baseline)", xlim=(20, 90), ylim=(0, 75)); ax.legend(loc="upper left", fontsize=5.8, handlelength=1)
     ax = g.cell(1, 2, "F"); rng = np.random.default_rng(0)
     for j, pat in enumerate(("uip", "nsip")):
-        y = np.array([d.years.iloc[-1] for _, d in cases(F, PAT[pat][2][0])]); ax.plot(j + rng.uniform(-0.18, 0.18, len(y)), y, "o", ms=1.6, color=PAT[pat][1], mew=0, alpha=0.5)
+        y = np.array([last_visit(d)[1].years for _, d in cases(F, PAT[pat][2][0])]); ax.plot(j + rng.uniform(-0.18, 0.18, len(y)), y, "o", ms=1.6, color=PAT[pat][1], mew=0, alpha=0.5)
         ax.plot([j - 0.27, j + 0.27], [np.median(y)] * 2, color=DARK, lw=1.2)
     ax.set_xticks([0, 1]); ax.set_xticklabels(["UIP", "NSIP"]); ax.set(ylabel="Years from healthy lung to the visit", xlim=(-0.5, 1.5), yscale="log"); ax.set_yticks([1, 2, 5, 10, 20, 50]); ax.set_yticklabels(["1", "2", "5", "10", "20", "50"])
-    g.save("Story4")
+    g.save("Figure4")
 
 
 # ---------------------------------------------------------------- Story5: catheterised patients
 def story5(clinical):
     if clinical is None:
-        print("Story5 skipped: needs --clinical"); return
+        print("Figure 5 skipped: needs --clinical"); return
     V = clinical.dropna(subset=["FVC", "mPAP"]).reset_index(drop=True); GC = {"UIP": (PATTERN["uip"], "o"), "NSIP": (PATTERN["nsip"], "s"), "other": (NEUTRAL, "^")}
     g = Grid(180, 130, heights=[1, 1], widths=[1, 1])
     for c_, col, lab, letter in ((0, "FVC", "FVC (% predicted)", "A"), (1, "DLCO", "DLCO (% predicted)", "B")):
@@ -424,7 +424,7 @@ def story5(clinical):
         ax.bar(x, J.baseline, color=LIGHT, width=0.85, label="Aged lung"); ax.bar(x, J.from_lung_lost, bottom=J.baseline, color=NEUTRAL, width=0.85, label="Lung lost")
         ax.bar(x, J.from_lesion, bottom=J.baseline + J.from_lung_lost, color=LESION, width=0.85, label="Vascular lesion"); ax.plot(x, J.mPAP_RHC, "o", ms=2.3, mfc="white", mec=DARK, mew=0.6, label="Catheterisation")
         ax.axhline(25, color=DARK, lw=0.5, ls=":"); ax.set(xlabel=f"Patients, ranked by measured mPAP (n = {len(J)})", ylabel="mPAP (mmHg)", xticks=[], ylim=(0, 72)); legend_below(ax, dy=-0.14, ncol=2)
-    g.save("Story5")
+    g.save("Figure5")
 
 
 # ---------------------------------------------------------------- Story6: clinical consequence
@@ -452,7 +452,7 @@ def story6(clinical):
     arrow(ax, 42, 83, 52, 80); arrow(ax, 42, 50, 52, 66); arrow(ax, 75, 60, 75, 46)
     f = os.path.join(OUT, "TableS22_noninvasive_tool_cv.tsv")
     if clinical is None or not os.path.exists(f):
-        print("Story6, panels D-F skipped: need --clinical and the tables of noninvasive_tool.py"); g.save("Story6"); return
+        print("Figure 6, panels D-F skipped: need --clinical and the tables of noninvasive_tool.py"); g.save("Figure6"); return
     S = pd.read_csv(f, sep="\t"); S = S[S.inputs.isin(["FVC + DLCO", "+ echo sPAP", "+ BNP", "+ PA diameter", "+ PA diameter + BNP", "+ all optional"])].reset_index(drop=True)
     ax = g.cell(1, 0, "D", pad=(27, 18, 2.5, 6)); y = np.arange(len(S))[::-1]
     ax.errorbar(S.AUC_LuPNet, y, xerr=[S.AUC_LuPNet - S.AUC_min, S.AUC_max - S.AUC_LuPNet], fmt="o", ms=3.5, color=MODEL, elinewidth=0.6, capsize=0, label=f"Model-based estimate (n = {int(S.n.iloc[0])})")
@@ -474,7 +474,7 @@ def story6(clinical):
     ax.plot([8, 76], [8, 76], color=DARK, lw=0.6, ls=":"); trend(ax, cv1.mPAP, cv1.est); r, p = pearsonr(cv1.mPAP, cv1.est)
     ax.text(0.03, 0.97, f"r = {r:.2f}, {ptxt(p)}, n = {len(cv1)}\nmean error {e.abs().mean():.1f} mmHg", transform=ax.transAxes, va="top", fontsize=5.8)
     ax.set(xlabel="mPAP, catheterisation (mmHg)", ylabel="mPAP, estimated (mmHg)", xlim=(8, 76), ylim=(8, 76))
-    g.save("Story6")
+    g.save("Figure6")
 
 
 if __name__ == "__main__":

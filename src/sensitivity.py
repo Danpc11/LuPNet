@@ -32,7 +32,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from cohort_io import cases
+from cohort_io import cases, last_visit
 import ph_stats
 
 MM = 1 / 25.4
@@ -43,7 +43,7 @@ def mild(tag, cohorts):
     """One row per simulated case, last visit, restricted to FVC 50-90% predicted."""
     rows = []
     for _, d in cases(cohorts, tag):
-        r0, x = d.iloc[0], d.iloc[-1]
+        r0, x = last_visit(d)
         rows.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO,
                          A=float(x.vasc_A)))
     R = pd.DataFrame(rows)

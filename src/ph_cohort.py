@@ -30,7 +30,6 @@ from lupnet.sim import run
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "ph_cohorts")
 BASE = os.path.join(ROOT, "data", "calibrated_ipf_params.json")
-TARGETS = dict(lt20=51, b20_25=30, ge25=19, ge35=4, rDLCO=-0.30, rFVC=0.0, ratio=0.73)
 
 
 PATTERNS = {

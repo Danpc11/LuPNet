@@ -24,10 +24,10 @@ ap = argparse.ArgumentParser(); ap.add_argument("--cohorts", default=os.path.joi
 
 
 def load(tag, group):
-    from cohort_io import cases
+    from cohort_io import cases, last_visit
     rows = []
     for _, d in cases(a.cohorts, tag):
-        r0, x = d.iloc[0], d.iloc[-1]
+        r0, x = last_visit(d)
         A = float(x["vasc_A"]) if "vasc_A" in d else 0.0
         rows.append(dict(cohort=group, mPAP=round(float(x.mPAP), 2), FVC=round(float(100 * x.FVC / r0.FVC), 3),
                          DLCO=round(float(100 * x.DLCO / r0.DLCO), 3), vasculopathy=int(A > 0), vasc_A=round(A, 3)))
@@ -61,12 +61,12 @@ out = dict(tissue_curve=tissue.round(6).tolist(), dlco_curve=dl.round(6).tolist(
                                       coef_log_ratio=round(float(lr.coef_[0][1]), 4), auc_with_noise=round(float(auc), 3)),
            n_patients=int(len(V)), fvc_range=[float(V.FVC.min()), float(V.FVC.max())], dlco_range=[float(V.DLCO.min()), float(V.DLCO.max())])
 # reference visits for the likelihood-weighted estimates (optional echocardiographic pressure and A-a gradient)
-from cohort_io import cases as _cases, lesion_tau
+from cohort_io import cases as _cases, lesion_tau, applied_severity, usable
 ref = []
 for tag in ("big2", "adv2"):
     for i, d in _cases(a.cohorts, tag):
-        r0 = d.iloc[0]; A = float(d.vasc_A.iloc[0]); t0 = float(d.t_vasc0.iloc[0])
-        s_ = d[(d.converged == 1) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
+        r0 = d.iloc[0]; A = applied_severity(d); t0 = float(d.t_vasc0.iloc[0])
+        s_ = d[usable(d) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
         if len(s_) == 0:
             continue
         s_ = s_.iloc[np.linspace(0, len(s_) - 1, min(25, len(s_))).round().astype(int)]

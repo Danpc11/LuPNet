@@ -23,7 +23,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, roc_curve
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, lesion_tau
+from cohort_io import cases, lesion_tau, applied_severity, usable, MANUSCRIPT as MS
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 F = os.path.join(ROOT, "results", "ph_cohorts"); OUT = os.path.join(ROOT, "results", "figures"); os.makedirs(OUT, exist_ok=True)
@@ -35,10 +35,8 @@ def trajectory_points():
     rows = []
     for tag in ("big2", "adv2", "hom", "het"):
         for i, d in cases(F, tag):
-            r0 = d.iloc[0]; A = float(d.vasc_A.iloc[0]); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
-            for _, x in d.iterrows():
-                if not x.converged:
-                    continue
+            r0 = d.iloc[0]; A = applied_severity(d); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
+            for _, x in d[usable(d)].iterrows():
                 rows.append(dict(case=f"{tag}{i}", healthy=x.healthy, fibrotic=x.fibrotic, honeycomb=x.honeycomb, years=x.years,
                                  Aeff=A * (1 - np.exp(-(x.years + t0) / lesion_tau(d))) if A > 0 else 0.0,
                                  eta=float(x.get("eta_p", 0.0)) if tag == "het" else 0.0, hpv=float(x.get("hpv_max", 3.0)) if tag == "het" else 3.0,
@@ -106,8 +104,8 @@ for y in EM:                                                    # emulator error
 emu_sd["sPAP"] = emu_sd["mPAP"] / 0.61
 # prior: disease states of the training trajectories, with lesion severity and onset re-drawn from their priors
 P = TR[TR.case.str.match(r"^(big2|adv2)") & (TR.healthy >= 0.1)][LAT].sample(200000, replace=True, random_state=1).reset_index(drop=True)
-g = np.random.default_rng(2); A = np.exp(np.log(1.5) + 1.1 * g.normal(size=len(P))) * (g.uniform(size=len(P)) < 0.7)
-P["Aeff"] = A * (1 - np.exp(-(P.years.values + g.uniform(0, 10, len(P))) / 2))
+g = np.random.default_rng(2); A = np.exp(np.log(MS["a_med"]) + MS["a_sig"] * g.normal(size=len(P))) * (g.uniform(size=len(P)) < MS["p_vasc"])
+P["Aeff"] = A * (1 - np.exp(-(P.years.values + g.uniform(0, MS["t0_max"], len(P))) / MS["tau"]))
 PR = {y: EM[y].predict(P[LAT]) for y in EM}; PR["sPAP"] = (PR["mPAP"] - 2) / 0.61
 T = D[D.case.isin(test) & (D.healthy >= 0.12) & (D.healthy <= 0.85)].groupby("case").sample(3, random_state=3, replace=True).reset_index(drop=True)
 INF, keep = [], {}
@@ -155,6 +153,6 @@ ax.errorbar(tm, est, yerr=[est - lo, hi - est], fmt="o", ms=2.6, color=BLUE, eco
 ax.plot([12, 45], [12, 45], color=DARK, lw=0.6, ls=":"); ax.set(xlabel="Simulated mPAP (mmHg)", ylabel="Estimated mPAP (mmHg)", xlim=(12, 45), ylim=(10, 50))
 ax.legend(loc="upper center", bbox_to_anchor=(0.45, -0.22), fontsize=5.6, handlelength=1.2); ax.text(-0.25, 1.03, "c", transform=ax.transAxes, fontsize=9, fontweight="bold")
 for ext in ("pdf", "png"):
-    fig.savefig(os.path.join(OUT, f"Figure5.{ext}"), bbox_inches="tight", pad_inches=0.04)
-fig.savefig(os.path.join(OUT, "Figure5.tif"), bbox_inches="tight", pad_inches=0.04, dpi=600, pil_kwargs={"compression": "tiff_lzw"})
+    fig.savefig(os.path.join(OUT, f"V21_Figure5.{ext}"), bbox_inches="tight", pad_inches=0.04)
+fig.savefig(os.path.join(OUT, "V21_Figure5.tif"), bbox_inches="tight", pad_inches=0.04, dpi=600, pil_kwargs={"compression": "tiff_lzw"})
 print("Figure 5 and tables S13-S15 written")

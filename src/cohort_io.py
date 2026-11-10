@@ -42,7 +42,7 @@ def lesion_tau(d):
 
 def effective_lesion(d, years=None):
     """Severity of the lesion in place along a run: A x a_scale x (1 - exp(-(years + t0) / tau)); 0 without lesion."""
-    A = float(d.vasc_A.iloc[0]) * meta(d, "a_scale", 1.0); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
+    A = applied_severity(d); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
     y = d.years.to_numpy() if years is None else years
     return A * (1.0 - np.exp(-(y + t0) / lesion_tau(d))) if A > 0 else np.zeros(np.shape(y))
 
@@ -56,13 +56,33 @@ def viable(d):
     return ok
 
 
+MANUSCRIPT = dict(p_vasc=0.7, a_med=1.5, a_sig=1.1, tau=2.0, t0_max=10.0, cap=0.05)   # lesion priors of the manuscript cohorts
+
+
+def usable(d):
+    """Visits that are viable and whose equilibration converged."""
+    ok = viable(d)
+    return ok & d.converged.astype(bool) if "converged" in d else ok
+
+
+def last_visit(d):
+    """(baseline row, last viable visit) of a run: the visit every script reports."""
+    v = viable(d)
+    return d.iloc[0], (d[v].iloc[-1] if v.any() else d.iloc[-1])
+
+
+def applied_severity(d):
+    """Severity of the lesion as applied: drawn severity x a_scale."""
+    return float(d.vasc_A.iloc[0]) * meta(d, "a_scale", 1.0)
+
+
 def final_visits(folder, tag):
     """One row per simulated case: the last viable visit, as % of the case's own baseline, and whether the run
     ended in a non-viable state (died)."""
     rows = []
     for i, d in cases(folder, tag):
-        r0 = d.iloc[0]; v = viable(d); x = d[v].iloc[-1] if v.any() else d.iloc[-1]
-        sc = float(d["a_scale"].iloc[0]) if "a_scale" in d else 1.0
+        (r0, x), v = last_visit(d), viable(d)
+        sc = meta(d, "a_scale", 1.0)
         rows.append(dict(case=i, mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO,
                          vasc_A=float(x.vasc_A), vasc_A_scaled=float(x.vasc_A) * sc, died=bool(not v.iloc[-1])))
     return pd.DataFrame(rows)

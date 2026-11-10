@@ -1,7 +1,7 @@
-name: Tests
+name: tests
 on: [push, pull_request]
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -9,8 +9,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '${{ matrix.python-version }}' }
+        with:
+          python-version: ${{ matrix.python-version }}
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: python -m pytest tests -q
+      - run: python src/cohort_manifest.py --check
       - run: python src/lesion_location.py
       - run: python src/audit_extra.py
+  reproduce:
+    # the whole pipeline on the locked environment; the derived files under version control must come out unchanged
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-lock.txt
+      - run: bash run_all.sh
+      - run: git diff --exit-code -- data results/ph_calculator.json index.html
+      - run: python src/noninvasive_tool.py --clinical data/synthetic_patients.tsv --reps 1
+      - run: python src/make_figures_story.py --clinical data/synthetic_patients.tsv --only 5 6

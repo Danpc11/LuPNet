@@ -4,7 +4,7 @@
 The cohorts share the fibrosis course and the lesion draws of big2 and adv2 and differ only in the location of the
 lesion (`ph_cohort.py run --where`):
   diffuse  big2, adv2              every unit (the manuscript cohorts)
-  mix50    big2_mix50, adv2_mix50  half of the lesion diffuse, half following the field (--where mixed --mix 0.25 --a_scale 2.0)
+  mix50    big2_mix50, adv2_mix50  mixed: 0.5 A in every unit plus 1.5 A x field weight (--where mixed --mix 0.25 --a_scale 2.0)
   field    big2_field, adv2_field  scar and the healthy units next to it (--where field --a_scale 5.8)
   scar     big2_scar               fibrotic and honeycomb units only
 `a_scale` gives each mechanism the PH prevalence of the diffuse cohort in mild-to-moderate disease, so that the
@@ -14,7 +14,7 @@ counted as deaths.
 S25  the seven mild-to-moderate benchmarks, advanced disease (FVC < 50%, pooled) and deaths, by mechanism.
 S26  PH (mPAP >= 25 mmHg) by FVC band, by mechanism, and in catheterised patients when --clinical is given.
 
-    python3 src/lesion_location.py [--clinical Base_HP_con_Cate.xlsx]
+    python3 src/lesion_location.py [--clinical patients.xlsx]
 """
 import argparse, os, sys, warnings
 import pandas as pd

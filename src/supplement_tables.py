@@ -16,24 +16,12 @@ OUT = os.path.join(ROOT, "results", "figures"); os.makedirs(OUT, exist_ok=True)
 
 
 def cohort(tag):
-    from cohort_io import cases
+    from cohort_io import cases, last_visit
     rows = []
     for _, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-        r0, x = d.iloc[0], d.iloc[-1]
+        r0, x = last_visit(d)
         rows.append(dict(mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, A=float(x.vasc_A)))
     return pd.DataFrame(rows)
-
-
-def _unused_stats(D, rng):
-    mp = D.mPAP + rng.normal(0, 2.5, len(D)); ph = D.mPAP >= 25
-    return dict(lt20=100 * (D.mPAP < 20).mean(), b20=100 * ((D.mPAP >= 20) & (D.mPAP < 25)).mean(), ge25=100 * ph.mean(),
-                ge35=100 * (D.mPAP >= 35).mean(), rD=pearsonr(mp, D.DLCO + rng.normal(0, 5, len(D)))[0],
-                rF=pearsonr(mp, D.FVC + rng.normal(0, 5, len(D)))[0], ratio=D.DLCO[ph].mean() / D.DLCO[~ph].mean())
-
-
-def noise_avg_r(D, col, seed=0):
-    rng = np.random.default_rng(seed)
-    return float(np.mean([pearsonr(D.mPAP + rng.normal(0, 2.5, len(D)), D[col] + rng.normal(0, 5, len(D)))[0] for _ in range(1000)]))
 
 
 from ph_stats import bootstrap, point, prevalence_ci
@@ -64,9 +52,9 @@ pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS5_2022_definitions.tsv"), sep
 rows = []
 for tag in ("hom", "het"):
     D = []
-    from cohort_io import cases
+    from cohort_io import cases, last_visit
     for _, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-        r0, x = d.iloc[0], d.iloc[-1]
+        r0, x = last_visit(d)
         D.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, eta=x.eta_p, hpv=x.hpv_max))
     D = pd.DataFrame(D); M = D[(D.FVC >= 50) & (D.FVC <= 90)]
     rows.append(dict(cohort=tag, n=len(D), n_fvc_50_90=len(M), mPAP_mean=round(M.mPAP.mean(), 2), mPAP_sd=round(M.mPAP.std(), 2),

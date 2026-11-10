@@ -65,11 +65,11 @@ def aged_baseline(G=8):
 
 
 def lesion_saturation(cohorts=("big2", "adv2")):
-    from cohort_io import cases, lesion_tau
+    from cohort_io import cases, lesion_tau, last_visit
     rows = []
     for tag in cohorts:
         for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-            x = d.iloc[-1]
+            _, x = last_visit(d)
             if float(x.vasc_A) <= 0:
                 continue
             rows.append(dict(cohort=tag, case=i, vasc_A=float(x.vasc_A), t_vasc0=float(x.t_vasc0), years=float(x.years),

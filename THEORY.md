@@ -48,7 +48,7 @@ Huang et al. (1996) give, for 15 orders of human pulmonary arteries, the number 
 | Mean shear only | 0.825 | factor 1.14 |
 | Murray (b = 1, mean only) | – | factor 1.26 |
 
-With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). In these morphometric tests τ₀ is a free scale fitted by least squares in log D over the 16 orders, with the apparent viscosity of each order. Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90) τ₀ is instead fixed by the radius of the main pulmonary artery and μ = 3.5 mPa s; the explicit arterial generations then match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg (14.6 with the 256-unit tree of the cohorts; calibrated value of the previous, per-vessel law: 14.0). The law sets the arterial conduits, the venous conduits and the terminal sub-tree, 47% of the healthy pressure drop (0.32 + 0.67 + 2.13 mmHg of 6.6); the capillary sheet (2.10) and the venules (1.39) keep the resistances of the reference calibration, `dP0` × `split` (table S18). The healthy mPAP is therefore an output of the law for its arterial half and an input for the rest.
+With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). In these morphometric tests τ₀ is a free scale fitted by least squares in log D over the 16 orders, with the apparent viscosity of each order. Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90) τ₀ is instead fixed by the radius of the main pulmonary artery and μ = 3.5 mPa s; the explicit arterial generations then match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg with 1,024 units and default parameters, 14.6 with 256 units and default parameters, and 14.3 with the 256 units and calibrated parameters of the cohorts, which is the healthy lung every simulated case starts from (per-vessel law, calibrated: 14.0). The law sets the arterial conduits, the venous conduits and the terminal sub-tree, 47% of the healthy pressure drop (0.32 + 0.67 + 2.13 mmHg of 6.6, 256 units, default parameters); the capillary sheet (2.10) and the venules (1.39) keep the resistances of the reference calibration, `dP0` × `split` (table S18). The healthy mPAP is therefore an output of the law for its arterial half and an input for the rest.
 
 ## 3. Vascular lesion
 
@@ -75,7 +75,7 @@ At the visit the lesion has reached its final severity in almost every case (1 �
 
 ### 4.1 Fibrosis without lesion
 
-In 60 simulated cases without lesion, mPAP in mild-to-moderate disease (FVC 50–90%) is 17.6 ± 0.5 mmHg, of which 16.5 is the aged lung before any fibrosis (table S19); r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92; no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by 0.8 mmHg (maximum 20.3 mmHg).
+In 60 simulated cases without lesion, mPAP in mild-to-moderate disease (FVC 50–90%) is 17.6 ± 0.5 mmHg; the healthy lung of the cohorts is at 14.3 mmHg and the aged lung before any fibrosis at 16.5 (table S19); r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92; no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by 0.8 mmHg (maximum 20.3 mmHg).
 
 ### 4.2 Pressure surface
 
@@ -125,12 +125,12 @@ The deficit of DLCO relative to the value expected for the FVC is bimodal (two-c
 
 ### 5.1 Where the lesion sits
 
-Cohorts with the fibrosis course and the lesion draws of the calibrated and advanced cohorts, differing only in `vasc_where` (`src/lesion_location.py`, tables S25–S26). `--a_scale` multiplies A so that each location has the PH prevalence of the diffuse cohort in mild-to-moderate disease (field 5.8; half field: `--where mixed --mix 0.25 --a_scale 2.0`).
+Cohorts with the fibrosis course and the lesion draws of the calibrated and advanced cohorts, differing only in `vasc_where` (`src/lesion_location.py`, tables S25–S26). `--a_scale` multiplies A so that each location has the PH prevalence of the diffuse cohort in mild-to-moderate disease (field: 5.8; mixed: `--where mixed --mix 0.25 --a_scale 2.0`, that is 0.5 A in every unit plus 1.5 A × field weight).
 
 | Lesion | Benchmarks met | r(mPAP, FVC) | PH, FVC < 50% | mPAP > 40, FVC < 50% | PH, FVC ≥ 70% |
 |---|---|---|---|---|---|
 | Diffuse | 7 of 7 | −0.08 | 48% (39–56) | 8% (4–13) | 23% |
-| Half diffuse, half field | 7 of 7 | −0.17 | 54% (46–63) | 16% (11–22) | 14% |
+| Mixed (0.5 A diffuse + 1.5 A × field weight) | 7 of 7 | −0.17 | 54% (46–63) | 16% (11–22) | 14% |
 | Field | 4 of 7 | −0.34 | 68% (60–76) | 31% (23–38) | 0% |
 | Scar only | 1 of 7 | −0.19 | 0% | 0% | 0% |
 | Patients | | ≈ 0 | 46% | ≈ 9% | |
@@ -178,7 +178,7 @@ Median (interquartile range) and proportion (95% bootstrap interval). The restin
 
 ### 7.1 Markers in the simulated cohorts
 
-`src/noninvasive.py`, Figure 5, tables S13–S15. The trajectories give resting SpO₂, arterial blood gases and the systolic pressure that echocardiography would estimate (mPAP = 0.61 sPAP + 2 mmHg, noise 8 mmHg). With measurement noise, the area under the ROC curve for a relevant lesion (effective severity ≥ 1) is 0.69 with FVC and DLCO, 0.72 with SpO₂, 0.74 with PaO₂, 0.77 with the alveolar–arterial gradient, 0.84 with echocardiographic pressure and 0.85 with both; for PH, 0.78, 0.84, 0.87, 0.87, 0.92 and 0.94. With an emulator of the simulator, the error of the estimated mPAP in held-out simulated cases falls from 4.2 to 2.2 mmHg. The web calculator (`index.html`) uses the simulated visits as reference in the same way.
+`src/noninvasive.py`, tables S13–S15 (figure 5 of manuscript v21). The trajectories give resting SpO₂, arterial blood gases and the systolic pressure that echocardiography would estimate (mPAP = 0.61 sPAP + 2 mmHg, noise 8 mmHg). With measurement noise, the area under the ROC curve for a relevant lesion (effective severity ≥ 1) is 0.69 with FVC and DLCO, 0.72 with SpO₂, 0.74 with PaO₂, 0.77 with the alveolar–arterial gradient, 0.84 with echocardiographic pressure and 0.85 with both; for PH, 0.78, 0.84, 0.87, 0.87, 0.92 and 0.94. With an emulator of the simulator, the error of the estimated mPAP in held-out simulated cases falls from 4.2 to 2.2 mmHg. The web calculator (`index.html`) uses the simulated visits as reference in the same way.
 
 ### 7.2 Individual estimate in patients
 
@@ -205,7 +205,7 @@ Repeated 5-fold cross-validation (20 repeats; measurement models and prior from 
 | + pulmonary artery diameter + BNP | 0.83 (0.80–0.85) | 8.9 | 0.82 (41) |
 | + all optional inputs | 0.86 (0.83–0.87) | 8.6 | 0.90 (34) |
 
-The 90% interval covers 72–77% of the patients. With the calibrated cohort or the half-field cohort as reference the AUC changes by 0.01 or less; with the field cohort it is 0.82 with all inputs. Measurement models: pulmonary artery diameter 0.25 mm per mmHg (SD 4.0 mm), echocardiographic sPAP 0.42 mmHg per mmHg (SD 16.5 mmHg).
+The 90% interval covers 72–77% of the patients. With the calibrated cohort or the mixed-lesion cohort as reference the AUC changes by 0.01 or less; with the field cohort it is 0.82 with all inputs. Measurement models: pulmonary artery diameter 0.25 mm per mmHg (SD 4.0 mm), echocardiographic sPAP 0.42 mmHg per mmHg (SD 16.5 mmHg).
 
 ## 8. Limitations
 

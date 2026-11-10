@@ -17,14 +17,14 @@ What the model adds to the estimate: mPAP with an interval, the probability of a
 of the pressure into what the lost lung explains and what the lesion adds, from the partial dependence surface
 mPAP = F(lung lost, effective lesion) of the simulations (R2 0.998).
 
-    python3 src/noninvasive_tool.py --clinical Base_HP_con_Cate.xlsx        # cross-validation and tables
+    python3 src/noninvasive_tool.py --clinical patients.xlsx        # cross-validation and tables
 Columns of the clinical file are mapped in COLS; the file is not part of the repository.
 """
 import argparse, os, sys, warnings
 import numpy as np, pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, viable, effective_lesion
+from cohort_io import cases, usable, effective_lesion
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "figures")
@@ -45,7 +45,7 @@ def trajectory_points(tags=("big2", "adv2", "hom", "big2_uip", "big2_nsip", "adv
     for tag in tags:
         for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
             r0 = d.iloc[0]; d = d.assign(_Aeff=effective_lesion(d))                         # severity as applied
-            for _, x in d.iloc[1:][viable(d).iloc[1:].values].iterrows():
+            for _, x in d.iloc[1:][usable(d).iloc[1:].values].iterrows():
                 rows.append(dict(case=f"{tag}{i}", tag=tag, lost=1 - x.healthy, Aeff=float(x._Aeff),
                                  mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, SpO2=100 * x.SaO2))
     return pd.DataFrame(rows)
@@ -123,7 +123,9 @@ def summarise(R, w, F=None):
 
 # ------------------------------------------------------------------ clinical file
 def load_clinical(path):
-    d = pd.read_excel(path); d.columns = [str(c).strip() for c in d.columns]
+    ext = os.path.splitext(path)[1].lower()
+    d = pd.read_csv(path, sep="\t" if ext in (".tsv", ".txt") else ",") if ext in (".tsv", ".txt", ".csv") else pd.read_excel(path)
+    d.columns = [str(c).strip() for c in d.columns]
     P = pd.DataFrame({k: d[v] for k, v in COLS.items() if v in d.columns})
     for k in P.columns.difference(["pattern", "dx", "ID"]):
         P[k] = pd.to_numeric(P[k], errors="coerce")

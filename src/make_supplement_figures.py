@@ -15,7 +15,7 @@ import matplotlib
 matplotlib.use("Agg"); logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases
+from cohort_io import cases, last_visit
 from ph_stats import point
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -26,7 +26,7 @@ plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "D
 BLUE, GREEN, GREY, DARK = "#2166AC", "#1B7837", "#BDBDBD", "#252525"
 traj, visits = [], []
 for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), "big2"):
-    r0, x = d.iloc[0], d.iloc[-1]
+    r0, x = last_visit(d)
     traj.append(pd.DataFrame(dict(case=i, healthy=d.healthy, FVC=100 * d.FVC / r0.FVC, DLCO=100 * d.DLCO / r0.DLCO)))
     visits.append(dict(FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, mPAP=x.mPAP, A=float(x.vasc_A)))
 T = pd.concat(traj, ignore_index=True); V = pd.DataFrame(visits)
@@ -74,7 +74,7 @@ from cohort_io import cases as _cases
 def _visits(tag):
     R = []
     for _, d in _cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-        r0, x = d.iloc[0], d.iloc[-1]
+        r0, x = last_visit(d)
         R.append(dict(mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, A=float(x.vasc_A), hc=x.honeycomb))
     return pd.DataFrame(R)
 

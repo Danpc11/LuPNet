@@ -7,7 +7,12 @@ Table numbers are those of the online supplement.
 - `src/exercise_response.py`: pressure-flow response at imposed cardiac output (Figure 6, table S16); cases in `results/figures/pressure_flow_cases.tsv`.
 - `src/tree_size.py`: 256 against 1,024 units (table S6); cases in `results/figures/tree_size_cases.tsv`.
 - Sensitivity cohorts `tau1.0`, `tau3.0`, `pv0.50`, `pv0.85` (table S17, figure S2).
-- `src/make_figures_story.py`: figures Story1-Story6 on one grid and one palette; legends in `docs/STORY_FIGURES.md`.
+- `src/make_figures_story.py`: Figure1-Figure6 of the article on one grid and one palette; legends in `docs/FIGURES.md`. Figures of manuscript v21 saved as `V21_Figure1`-`V21_Figure6`.
+- Figure 2g of v21 and its test measure the contributions from the healthy lung of the cohort (14.28 mmHg).
+- `cohort_io.last_visit`, `usable`, `applied_severity`, `MANUSCRIPT`: one routine for the final visit, the usable visits, the effective lesion and the lesion priors; duplicated noise and benchmark code removed.
+- `src/cohort_manifest.py`, `data/cohorts_manifest.tsv`; `requirements-lock.txt` as a full freeze.
+- `src/synthetic_clinical.py`, `data/synthetic_patients.tsv`; the clinical loader reads Excel or delimited text.
+- Continuous integration: `run_all.sh` on the locked environment with a check that derived files are unchanged; the clinical path on the synthetic file.
 - Supplementary tables numbered as in the online supplement (correspondence in the README).
 - Cohort files store their generating parameters, seeds and code version; `cohort_io.meta`, `lesion_tau`, `effective_lesion`.
 - `cohort_io.cases` uses the packed cohort when the per-case files are incomplete.

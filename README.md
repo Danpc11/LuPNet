@@ -3,7 +3,7 @@
 
 ### A physics-based model of the fibrotic lung and its pulmonary circulation
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.9%2B%20%28locked%20versions%3A%203.11%2B%29-3776AB?logo=python&logoColor=white)
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23125038.svg)](https://doi.org/10.5281/zenodo.23125038)
@@ -23,7 +23,7 @@ $$\tau^* = \tau_0\, r^{\,b-1}\,\ell^{\,(b-1)/2}, \qquad S=\bar\tau\,[1+w_1\,\var
 
 The law, its exponent and the weight of the pulsatile term are derived and tested across species in [Pérez-Calixto et al., bioRxiv 2026](https://doi.org/10.64898/2026.09.29.755319) ([InFlow](https://github.com/Danpc11/InFlow)).
 
-With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and, with the capillary and venular resistances of the reference calibration, a normal mean pulmonary artery pressure of 14.8 mmHg (the law sets about half of the pressure drop; [THEORY.md](THEORY.md) §2.4).
+Fitted to the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) with one free scale and exponent b = 0.90, the law predicts the diameters within 14%; applied to the venous tree without refitting, within 16% with a venous pulsatility φ₁ = 0.4 (27% and 32% with φ₁ = 0 and 0.8). In the lung model the scale is fixed on the main pulmonary artery and b = 0.925; the explicit arterial generations then match the measured ones within 6%, and, with the capillary and venular resistances of the reference calibration, the healthy mean pulmonary artery pressure is 14.8 mmHg with 1,024 units and default parameters (14.3 mmHg with the 256 units and calibrated parameters of the cohorts) (the law sets about half of the pressure drop; [THEORY.md](THEORY.md) §2.4).
 
 **2. Fibrosis alone does not produce pulmonary hypertension; a vascular lesion does.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a lesion of the small arteries in 70% of the simulated cases, mostly mild, with an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
 
@@ -44,7 +44,7 @@ These seven numbers were fitted with five vasculopathy parameters. Not fitted: t
 | Lesion | Benchmarks met | r(mPAP, FVC) | PH, FVC < 50% | mPAP > 40, FVC < 50% | PH, FVC ≥ 70% |
 |---|---|---|---|---|---|
 | Diffuse (manuscript) | 7 of 7 | −0.08 | 48% | 8% | 23% |
-| Half diffuse, half spreading from the scar | 7 of 7 | −0.17 | 54% | 16% | 14% |
+| Mixed: diffuse at half severity plus spreading (0.5 A diffuse + 1.5 A × field weight) | 7 of 7 | −0.17 | 54% | 16% | 14% |
 | Spreading from the scar into adjacent lung | 4 of 7 | −0.34 | 68% | 31% | 0% |
 | Inside the scar only | 1 of 7 | −0.19 | 0% | 0% | 0% |
 | Patients | | ≈ 0 | 46% | ≈ 9% | |
@@ -104,12 +104,13 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
 
 ```bash
-python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the lesion against the extent of fibrosis) and Table 1 -> results/figures/
+python src/make_figures_story.py      # Figures 1-6 of the article (add --clinical FILE for Figure 5 and Figure 6D-F; legends in docs/FIGURES.md)
+python src/make_figures_erj.py        # figures 1-4 of manuscript v21 (V21_Figure1-4) and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
-python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
+python src/noninvasive.py             # V21_Figure5 and tables S13-S15 (echocardiography, blood gases, emulator)
 python src/manuscript_numbers.py      # numbers quoted in the text and table S11
 python src/validate_calculator.py     # calculator validation
-python src/exercise_response.py analyze   # Figure 6 and table S16 (pressure-flow response of 70 cases)
+python src/exercise_response.py analyze   # table S16 and V21_Figure6 (pressure-flow response of 70 cases; Figure 6A-B of the article)
 python src/tree_size.py analyze           # table S6 (256 against 1,024 units, 12 cases)
 python src/sensitivity.py --ref big2 --tags tau1.0 tau3.0 pv0.50 pv0.85 --labels 'T_les 1 y' 'T_les 3 y' '70% to 50%' '70% to 85%'   # table S17, figure S2
 ```
@@ -133,7 +134,7 @@ Supplementary tables carry the numbers of the online supplement. Up to version 0
 
 The model has more options than the manuscript uses. The manuscript cohorts use the symmetric tree, the mirrored venous tree, the shared law, gravity, surfactant mechanics with the time-domain breath, the right ventricle and vessel ageing (`data/calibrated_ipf_params.json`). The septal venous tree, the anatomical tree, epithelial senescence (`epi_bio`), acute exacerbations (`ae`), traction, the per-vessel law and the unbounded lesion (`k_vasc`) run and converge but were not used for any published number.
 
-To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
+To regenerate the manuscript cohorts from scratch (about 5 hours on one core, resumable):
 
 ```bash
 python src/ph_cohort.py run --tag big2 --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85
@@ -159,7 +160,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `big2_cdmx`, `adv2_cdmx`, `altF_cdmx` | Barometric pressure of Mexico City | `--PB 585` |
 | `big2_scar` | Lesion in fibrotic and honeycomb units only | `--where scar` |
 | `big2_field`, `adv2_field` | Lesion in the scar and the healthy units next to it | `--where field --a_scale 5.8` |
-| `big2_mix50`, `adv2_mix50` | Half of the lesion diffuse, half following the field | `--where mixed --mix 0.25 --a_scale 2.0` |
+| `big2_mix50`, `adv2_mix50` | Mixed lesion: 0.5 A in every unit plus 1.5 A × field weight | `--where mixed --mix 0.25 --a_scale 2.0` |
 | `tau1.0`, `tau3.0` | Time constant of the lesion 1 and 3 years | `--tau 1.0`, `--tau 3.0` |
 | `pv0.50`, `pv0.85` | Lesion in 50% and 85% of the cases | `--p_vasc 0.50`, `--p_vasc 0.85` |
 
@@ -179,14 +180,16 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
 | `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S11 |
 | `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
-| `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
+| `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (V21_Figure5, tables S13–S15) |
 | `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S17 and Figure S2 |
 | `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S17, Figure S2) |
 | `src/noninvasive_tool.py` | Individual estimate of PH without catheterisation: prior from the simulated visits, measurement models from catheterised patients, cross-validation (tables S22–S24) |
-| `src/exercise_response.py` | Pressure–flow response at imposed cardiac output (Figure 6, table S16); `results/figures/pressure_flow_cases.tsv` holds every case |
+| `src/exercise_response.py` | Pressure–flow response at imposed cardiac output (table S16, V21_Figure6); `results/figures/pressure_flow_cases.tsv` holds every case |
 | `src/tree_size.py` | The same cases with 256 and 1,024 units (table S6); `results/figures/tree_size_cases.tsv` |
 | `data/README.md`, `CITATION.cff` | Provenance of the morphometric tables and the parameter file; how to cite |
-| `src/make_figures_story.py` | Figures of the storyline (Story1–Story6), on one grid and one palette: the shared law, fibrosis alone and the partial dependence, where the lesion sits, UIP and NSIP, catheterised patients, flow and the non-invasive estimate; `--clinical` for the panels with patients |
+| `src/make_figures_story.py` | Figures 1–6 of the article, on one grid and one palette; legends in `docs/FIGURES.md`. Figure 5 and Figure 6D–F need `--clinical` |
+| `src/cohort_manifest.py`, `data/cohorts_manifest.tsv` | Command, seeds, code version and md5 of every cohort; `--check` verifies them |
+| `src/synthetic_clinical.py`, `data/synthetic_patients.tsv` | Synthetic file with the columns of the clinical file, to run and test the scripts that need one; its rows are not patients |
 | `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S25–S26) |
 | `scripts/cohorts_local.sh` | Pattern, altitude and lesion-location cohorts on the cores of one machine |
 | `environment.yml` | Conda environment with the locked versions |
@@ -199,6 +202,12 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `data/huang1996_pulmonary_*.tsv` | Human pulmonary arterial and venous morphometry |
 | `data/virtual_ph_cohort.tsv` | Final visit of every simulated case |
 | `results/ph_calculator.json` | Coefficients used by the calculator |
+
+## Data availability
+
+The simulated cohorts, the code and every derived table are in this repository. The clinical data are not: tables S22–S24, Figure 5, Figure 6D–F and the patients row of table S26 need a clinical file passed with `--clinical` (columns in `noninvasive_tool.COLS`; `data/synthetic_patients.tsv` has the same layout with synthetic rows). Tables S1 and S3 of the supplement are not produced by a script: S1 comes from the companion preprint and S3 lists the parameters of `data/calibrated_ipf_params.json`. `TableS_fibrosis_only.tsv` holds the numbers of the cohorts without lesion quoted in the text.
+
+Two sets of figures are produced. `Figure1`–`Figure6` (`make_figures_story.py`) are the figures of the article. `V21_Figure1`–`V21_Figure6` are those of manuscript v21, kept because the regression test and the audit refer to them.
 
 ## Limitations
 

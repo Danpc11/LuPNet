@@ -7,7 +7,7 @@ cohorts; also supplementary table S11 (PH by FVC range). Writes results/figures/
 import sys, numpy as np, pandas as pd
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases
+from cohort_io import cases, last_visit, applied_severity, usable, lesion_tau
 from ph_stats import point, bootstrap, prevalence_ci
 from scipy.stats import pearsonr, spearmanr
 from sklearn.mixture import GaussianMixture
@@ -16,7 +16,7 @@ F=os.path.join(ROOT,'results','ph_cohorts'); OUT=os.path.join(ROOT,'results','fi
 def last(tag):
     R=[]
     for i,d in cases(F,tag):
-        r0,x=d.iloc[0],d.iloc[-1]
+        r0,x=last_visit(d)
         R.append(dict(mPAP=x.mPAP,PVR=x.PVR,FVC=100*x.FVC/r0.FVC,DLCO=100*x.DLCO/r0.DLCO,A=float(x.get('vasc_A',0)),eta=x.get('eta_p',np.nan),hpv=x.get('hpv_max',np.nan)))
     return pd.DataFrame(R)
 C,A,AF,H,HT=last('big2'),last('adv2'),last('altF'),last('hom'),last('het')
@@ -62,10 +62,10 @@ pd.DataFrame(rows,columns=['FVC','n','PH, % (95% CI)','mPAP > 40 mmHg, % (95% CI
 R=[]
 for tag in ('big2','adv2'):
     for i,d in cases(F,tag):
-        A_=float(d.vasc_A.iloc[0]); t0=float(d.t_vasc0.iloc[0]); r0=d.iloc[0]
-        for _,x in d.iterrows():
-            if x.converged and x.healthy<=0.85:
-                R.append(dict(FVC=100*x.FVC/r0.FVC,DLCO=100*x.DLCO/r0.DLCO,PaO2=x.PaO2,Aeff=A_*(1-np.exp(-(x.years+t0)/2.0)) if A_>0 else 0.0))
+        A_=applied_severity(d); t0=float(d.t_vasc0.iloc[0]); r0=d.iloc[0]
+        for _,x in d[usable(d)].iterrows():
+            if x.healthy<=0.85:
+                R.append(dict(FVC=100*x.FVC/r0.FVC,DLCO=100*x.DLCO/r0.DLCO,PaO2=x.PaO2,Aeff=A_*(1-np.exp(-(x.years+t0)/lesion_tau(d))) if A_>0 else 0.0))
 V=pd.DataFrame(R); Xc=np.c_[np.ones(len(V)),V.FVC,V.DLCO,V.FVC**2,V.DLCO**2,V.FVC*V.DLCO]
 res=lambda y: y-Xc@np.linalg.lstsq(Xc,y,rcond=None)[0]
 add('partial r(PaO2, effective lesion | FVC, DLCO)', f'{pearsonr(res(V.PaO2.values),res(V.Aeff.values))[0]:.2f}')

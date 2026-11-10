@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Figures 1-4 and Table 1 of the manuscript on pulmonary hypertension in IPF.
+"""Figures 1-4 and Table 1 of manuscript v21 (saved as V21_Figure1-4; the figures of the article are those of
+make_figures_story.py).
 
     python3 src/make_figures_erj.py --cohorts results/ph_cohorts --out results/figures
 Figure 1: the shared target law against human pulmonary morphometry. Figure 2: the calibrated virtual cohort
@@ -14,7 +15,6 @@ matplotlib.use("Agg")
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 import matplotlib.pyplot as plt
 from scipy.optimize import brentq, minimize_scalar
-from scipy.stats import pearsonr
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.mixture import GaussianMixture
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +34,7 @@ plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "D
 BLUE, RED, GREEN, GREY, LGREY, DARK = "#2166AC", "#B2182B", "#1B7837", "#8C8C8C", "#D9D9D9", "#252525"
 ORANGE = "#E08214"          # lesion tied to the extent of fibrosis (alternative mechanism)
 PANEL_UPPER = a.upper       # upper-case panel letters (Nature style) with --upper
-MPAP_HEALTHY = 14.8         # mPAP of the healthy model lung, mmHg
+MPAP_HEALTHY = None         # healthy lung of the calibrated cohort (first visit of its cases), set once the cohort is read
 rng0 = np.random.default_rng(0)
 
 
@@ -51,11 +51,11 @@ def save(fig, name):
 
 # ------------------------------------------------------------------ data
 def cohort(tag_):
-    from cohort_io import cases
+    from cohort_io import cases, last_visit
     rows = []
     for _, d in cases(a.cohorts, tag_):
-        r0, x = d.iloc[0], d.iloc[-1]
-        rows.append(dict(mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, A=float(x.vasc_A)))
+        r0, x = last_visit(d)
+        rows.append(dict(mPAP=x.mPAP, mPAP0=r0.mPAP, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, A=float(x.vasc_A)))
     R = pd.DataFrame(rows); R["vasc"] = R.A > 0; R["PH"] = R.mPAP >= 25
     return R
 
@@ -83,17 +83,11 @@ def trajectories(tag_, k=14, seed=1):
     return [runs[i] for i in pick]
 
 
-def noise_avg_r(D, col, n=1000, seed=0):
-    """Pearson r between mPAP and FVC or DLCO, averaged over n realisations of measurement noise."""
-    rng = np.random.default_rng(seed); out = []
-    for _ in range(n):
-        mp = D.mPAP + rng.normal(0, 2.5, len(D)); x = D[col] + rng.normal(0, 5, len(D))
-        out.append(pearsonr(mp, x)[0])
-    return float(np.mean(out))
+from ph_stats import noise_avg_r, SD_MPAP, SD_PFT
 
 
 def noisy(D, rng):
-    return (D.mPAP + rng.normal(0, 2.5, len(D)), D.FVC + rng.normal(0, 5, len(D)), (D.DLCO + rng.normal(0, 5, len(D))).clip(lower=3))
+    return (D.mPAP + rng.normal(0, SD_MPAP, len(D)), D.FVC + rng.normal(0, SD_PFT, len(D)), (D.DLCO + rng.normal(0, SD_PFT, len(D))).clip(lower=3))
 
 
 def network_schematic(ax):
@@ -265,7 +259,7 @@ ax.bar(o, dp_ord, color=BLUE, width=0.7)
 ax.set(xlabel="Strahler order", ylabel="Pressure drop per order (mmHg)", xticks=[1, 4, 8, 12, 16])
 ax.text(0.98, 0.95, f"arterial total {dp_ord.sum():.2f} mmHg", transform=ax.transAxes, ha="right", va="top", fontsize=6)
 tag(ax, "g")
-save(fig, "Figure1")
+save(fig, "V21_Figure1")
 
 # ------------------------------------------------------------------ Figure 2: calibrated cohort
 fig = plt.figure(figsize=(180 * MM, 180 * MM))
@@ -348,6 +342,7 @@ xb = np.arange(len(bands))
 # Reference within each band: the cases of this same cohort that carry no lesion.
 # Those cases are the same fibrosis with no vasculopathy, so the difference is what
 # the lesion adds, and their excess over the healthy lung is what fibrosis adds.
+MPAP_HEALTHY = float(MILD.mPAP0.mean())       # 256 units, calibrated parameters, before ageing: the reference of the cohort
 fib, vas, vsem, pts = [], [], [], []
 for i, (lo, hi) in enumerate(bands):
     sel = MILD[(MILD.FVC >= lo) & (MILD.FVC <= hi if hi == 90 else MILD.FVC < hi)]
@@ -386,11 +381,11 @@ ax.set(xlabel="FVC (% predicted)", ylabel="mPAP (mmHg)", ylim=(12, 50))
 ax.legend(loc="upper left", handlelength=0.8, markerscale=1.3)
 tag(ax, "h")
 
-print(f"Figure 2g, contribution to mPAP by FVC band (mmHg above the healthy lung, {MPAP_HEALTHY} mmHg):")
+print(f"Figure 2g, contribution to mPAP by FVC band (mmHg above the healthy lung of the cohort, {MPAP_HEALTHY:.2f} mmHg):")
 print(f"  aged lung, no fibrosis: {MPAP_AGED - MPAP_HEALTHY:.2f} (mPAP {MPAP_AGED:.2f})")
 for (_lo, _hi), _f, _v, _s in zip(bands, fib, vas, vsem):
     print(f"  FVC {_lo}-{_hi}: fibrosis+ageing {_f:.2f} (fibrosis alone {_f - (MPAP_AGED - MPAP_HEALTHY):.2f}); vasculopathy {_v:.2f} +- {_s:.2f}")
-save(fig, "Figure2")
+save(fig, "V21_Figure2")
 
 # ------------------------------------------------------------------ Figure 3: advanced disease
 POOL = pd.concat([CAL, ADV], ignore_index=True)
@@ -424,7 +419,7 @@ ax.plot([0, 1], [51.4, 48.4], "D", ms=4, mfc="white", mec=DARK, mew=0.9, label="
 ax.set(xticks=[0, 1], xlim=(-0.6, 1.6), ylabel="FVC (% predicted)", ylim=(18, 60))
 ax.set_xticklabels([f"No PH (n = {int((~A5.PH).sum())})", f"PH (n = {int(A5.PH.sum())})"]); ax.legend(loc="upper right", handlelength=0.8)
 tag(ax, "c")
-save(fig, "Figure3")
+save(fig, "V21_Figure3")
 
 # ------------------------------------------------------------------ Figure 4: vascular phenotype
 fig = plt.figure(figsize=(180 * MM, 60 * MM))
@@ -464,7 +459,7 @@ ax.set(xlabel="1 − specificity", ylabel="Sensitivity", xlim=(0, 1), ylim=(0, 1
 ax.legend(loc="lower right", handlelength=1.2)
 ax.text(0.03, 0.98, "Patients:\nFVC/DLCO 0.69–0.74\nDLCO 0.80", transform=ax.transAxes, va="top", ha="left", fontsize=5.5, color=DARK)
 tag(ax, "c")
-save(fig, "Figure4")
+save(fig, "V21_Figure4")
 
 # ------------------------------------------------------------------ Table 1
 T = {k: CI_MILD[k] for k in CI_MILD}
