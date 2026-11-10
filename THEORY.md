@@ -1,6 +1,6 @@
 # LuPNet: theory
 
-This document describes the model and gives every number reported in the README. Parameter names refer to `src/lupnet/params.py`; calibrated values for aged IPF are in `data/calibrated_ipf_params.json`.
+This document describes the model, the simulated cohorts and the individual estimate, and gives every number reported in the README. Parameter names refer to `src/lupnet/params.py`; calibrated values for aged IPF are in `data/calibrated_ipf_params.json`.
 
 ## 1. Structure
 
@@ -12,7 +12,7 @@ The lung is a set of N gas-exchange units (1,024 by default, `G = 10` generation
 
 **Perfusion.** Arterial and venous conduits follow Poiseuille's law with viscosity μ; the capillary sheet follows sheet-flow mechanics with gravity, alveolar and vascular pressures; hypoxic pulmonary vasoconstriction acts on the terminal arterioles.
 
-**Disease.** Fibrosis spreads between units with a hazard that depends on surfactant loss, collapse and neighbourhood (`beta = 0` in the calibrated set: no strain feedback); the vessels age after the healthy baseline (`age_M = 0.3`, `age_sigma = 0.3`: rest point of the remodelling rule at 1.3 times the target shear), which by itself raises mPAP from 14.3 to 16.5 mmHg in the 256-unit lung with no fibrosis (table S19); time is in model units (6.71 years per unit in the calibrated set, `years_per_unit`). The right ventricle adapts to afterload; exacerbations flood units transiently.
+**Disease.** Fibrosis spreads between units with a hazard that depends on surfactant loss, collapse and neighbourhood (`beta = 0` in the calibrated set: no strain feedback); the vessels age after the healthy baseline (`age_M = 0.3`, `age_sigma = 0.3`: rest point of the remodelling rule at 1.3 times the target shear), which by itself raises mPAP from 14.3 to 16.5 mmHg in the 256-unit lung with no fibrosis (table S19); time is in model units (6.71 years per unit in the calibrated set, `years_per_unit`). The left atrial pressure is fixed at 8 mmHg, so the model represents pre-capillary pulmonary hypertension only. The right ventricle adapts to afterload. Acute exacerbations, epithelial senescence, the septal venous tree and the anatomical tree are options of the code that no cohort uses.
 
 ## 2. The shared target law for the pulmonary vessels
 
@@ -50,23 +50,50 @@ Huang et al. (1996) give, for 15 orders of human pulmonary arteries, the number 
 
 With b = 0.675, the exponent fitted to systemic arteries across mammals, the predicted main pulmonary artery is twice its real size. The arterial law (b = 0.90) applied unchanged to the 15 venous orders predicts their diameters within a factor 1.16 (venous φ₁ = 0.4). In these morphometric tests τ₀ is a free scale fitted by least squares in log D over the 16 orders, with the apparent viscosity of each order. Integrated in the lung model (`law="shared"`, b = 0.925, inside the flat region of the error profile: factor 1.136 vs 1.135 at b = 0.90) τ₀ is instead fixed by the radius of the main pulmonary artery and μ = 3.5 mPa s; the explicit arterial generations then match Huang with a geometric error factor of 1.06 (largest deviation 8.2%), and the healthy mean pulmonary artery pressure is 14.8 mmHg (14.6 with the 256-unit tree of the cohorts; calibrated value of the previous, per-vessel law: 14.0). The law sets the arterial conduits, the venous conduits and the terminal sub-tree, 47% of the healthy pressure drop (0.32 + 0.67 + 2.13 mmHg of 6.6); the capillary sheet (2.10) and the venules (1.39) keep the resistances of the reference calibration, `dP0` × `split` (table S18). The healthy mPAP is therefore an output of the law for its arterial half and an input for the rest.
 
-## 3. Structural vasculopathy
+## 3. Vascular lesion
 
-A non-remodellable lesion in series with each terminal arteriole, independent of fibrosis:
+A non-remodellable resistance in series with the terminal arteriole of unit i, with capillary loss:
 
-$$R_\mathrm{les}=R_{ta,0}\,A\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right),\qquad c_\mathrm{cap}=\frac{1}{1+f_\mathrm{cap}\,A\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right)}$$
+$$R_{\mathrm{les},i}=R_{ta,0}\,A\,w_i\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right),\qquad c_{\mathrm{cap},i}=\frac{1}{1+f_\mathrm{cap}\,A\,w_i\left(1-e^{-(t_\mathrm{yr}+t_0)/\tau}\right)}$$
 
-A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopathy before the start (`t_vasc0`), τ its time constant (`vasc_tau`), and c_cap multiplies the capillary bed of every unit (`cap_frac` = f_cap). With A = 0 the model is unchanged.
+A is the severity (`vasc_A`, in units of the normal arteriolar resistance), t₀ the years of lesion before the start (`t_vasc0`), τ its time constant (`vasc_tau`), f_cap the capillary loss per unit of severity (`cap_frac`) and w_i the weight of the unit, set by where the lesion sits (`vasc_where`, `sim.lesion_weights`):
 
-**Simulated cases** (`src/ph_cohort.py`): with probability 0.7 a simulated case has vasculopathy, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05; the speed of fibrosis varies between simulated cases (years per model unit × lognormal, σ = 0.5); one visit at a random stage. With these values the lesion has reached its final severity A at the visit in almost every case (saturation 1 − e^{−(t+t₀)/τ}: minimum 0.60, 5th percentile 0.96, median 1.00 in the calibrated cohort; minimum 0.96 in advanced disease; table S20). The cohort results therefore identify the prevalence and the distribution of A, not τ or t₀, and the independence of the lesion from fibrosis is an assumption of the design, tested against the alternative `vasc_mode="fibrosis"`, not a quantity inferred from the cohorts.
+| `vasc_where` | w_i |
+|---|---|
+| `diffuse` | 1 in every unit |
+| `scar` | 1 in fibrotic and honeycomb units, 0 in preserved ones |
+| `field` | 1 in the scar; in a preserved unit, the fraction of its neighbours that are scar |
+| `mixed` | m + (1 − m) × field, with m = `vasc_mix` |
 
-## 4. Pulmonary hypertension in IPF
+With A = 0 the model is unchanged.
 
-**Without vasculopathy** (60 simulated cases), mPAP in mild-to-moderate disease is 17.6 ± 0.5 mmHg (of which 16.5 is the aged lung before any fibrosis, table S19), r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92, and no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by only 0.8 mmHg (maximum 20.3 mmHg).
+**Simulated cases** (`src/ph_cohort.py`). With probability 0.7 a case carries a lesion, A ~ lognormal(median 1.5, σ = 1.1), t₀ ~ U(0, 10) years, τ = 2 years, f_cap = 0.05, diffuse; the speed of fibrosis varies between cases (years per model unit × lognormal, σ = 0.5); one visit at a random stage (25–85% of preserved units in the calibrated cohort, 12–45% in the advanced one). Every cohort file stores these values, the seeds and the code version.
 
-**With vasculopathy** (200 simulated cases, 113 with FVC 50–90%): see the README table. All seven targets (ARTEMIS-IPF, Raghu et al. 2015; Zisman et al. 2007; the DLCO ratio of a Japanese cohort) lie inside the 95% bootstrap intervals; correlations include measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
+At the visit the lesion has reached its final severity in almost every case (1 − e^{−(t+t₀)/τ}: minimum 0.60, 5th percentile 0.96, median 1.00 in the calibrated cohort; table S20). The cohorts identify the prevalence of the lesion and the distribution of A, not τ or t₀.
 
-**Not fitted:**
+## 4. Pulmonary hypertension in the simulated cohorts
+
+### 4.1 Fibrosis without lesion
+
+In 60 simulated cases without lesion, mPAP in mild-to-moderate disease (FVC 50–90%) is 17.6 ± 0.5 mmHg, of which 16.5 is the aged lung before any fibrosis (table S19); r(mPAP, FVC) = −0.92 and r(mPAP, DLCO) = −0.92; no case reaches 25 mmHg. Varying hypoxic vasoconstriction or pressure-driven maladaptive remodelling between cases spreads mPAP by 0.8 mmHg (maximum 20.3 mmHg).
+
+### 4.2 Pressure surface
+
+In every cohort mPAP is a function of two variables, the fraction of lung lost and the effective lesion: mPAP = F(lost, A), fitted to 11,022 simulated visits with R² = 0.998 (0.996–0.999 by cohort).
+
+| Lung lost | A = 0 | A = 1 | A = 2 | A = 4 | A = 8 |
+|---|---|---|---|---|---|
+| 5% | 16.0 | 18.2 | 20.2 | 24.3 | 33.3 |
+| 30% | 17.6 | 20.1 | 23.0 | 28.0 | 36.7 |
+| 60% | 19.7 | 22.4 | 25.8 | 30.7 | 42.3 |
+
+mPAP in mmHg. Without lesion, losing 60% of the lung adds 3.7 mmHg; a lesion A = 2 adds 4.2 mmHg at 5% of lung lost and 6.1 mmHg at 60%. The effect of fibrosis is a partial dependence: small alone, and a multiplier of the lesion, because the same cardiac output crosses fewer units.
+
+### 4.3 Diffuse lesion: benchmarks
+
+200 simulated cases, 113 with FVC 50–90% (README table). The seven benchmarks (ARTEMIS-IPF, Raghu et al. 2015; Zisman et al. 2007; the DLCO ratio of a Japanese cohort) lie inside the 95% bootstrap intervals; correlations include measurement noise (mPAP 2.5 mmHg, FVC and DLCO 5 points).
+
+Not fitted:
 
 | | Model | Reference |
 |---|---|---|
@@ -76,42 +103,121 @@ A is the maximum severity of the patient (`vasc_A`), t₀ the years of vasculopa
 | AUC of FVC/DLCO for mPAP ≥ 25 (mean of 1,000 noise realisations) | 0.75 | 0.69–0.74 in ILD cohorts |
 | AUC of DLCO alone / FVC alone | 0.74 / 0.65 | ≈ 0.80 / no discrimination |
 
-**Vascular phenotype.** The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture preferred by ΔBIC = 78.8). The low-DLCO component has 50 of 200 simulated cases, all with vasculopathy, and 84% have PH; in the rest, 60% carry vasculopathy and 11% have PH. Most vasculopathy is therefore subclinical in lung function, and only its severe forms show as a disproportionately low DLCO. The separation rests on the near-deterministic DLCO–FVC relation of the model (r = 0.97 at the visit, against about 0.5–0.7 in patients): with the inter-individual spread of the healthy baseline of table S8 plus measurement noise, ΔBIC falls to a median of 7 (range −12 to 46 over 20 replicates), a second component is preferred in 40% of replicates, and the sensitivity for PH falls from 71% to 34% (table S21). The phenotype is a prediction to be tested in patients, not a result that the simulated cohorts establish.
+**Lesion scaled by the extent of fibrosis** (`vasc_mode="fibrosis"`, 100 cases): PH 4% and r(mPAP, FVC) = −0.27 with FVC 50–90%, both outside the intervals of the benchmarks.
 
-**Robustness.** The same 12 simulated cases with 1,024 and 256 units differ by −0.08 ± 0.41 mmHg in mPAP (r = 0.997), −0.6 ± 1.7 points in FVC and −0.2 ± 0.8 points in DLCO.
+**Sensitivity** (`src/sensitivity.py`, table S17, figure S2; 200 cases each, FVC 50–90%, n = 113):
 
-## 5. Histological pattern, altitude and where the lesion sits
+| | Cases with lesion | PH | mPAP ≥ 35 | r(mPAP, FVC) | r(mPAP, DLCO) | DLCO ratio | PH, FVC < 50% |
+|---|---|---|---|---|---|---|---|
+| Calibrated (τ = 2 years, 70%) | 65% | 18.6% | 5.3% | −0.08 | −0.38 | 0.81 | 44% |
+| τ = 1 year | 65% | 18.6% | 6.2% | −0.07 | −0.37 | 0.81 | 44% |
+| τ = 3 years | 65% | 16.8% | 5.3% | −0.10 | −0.38 | 0.81 | 44% |
+| Lesion in 50% of cases | 48% | 14.2% | 4.4% | −0.05 | −0.35 | 0.81 | 29% |
+| Lesion in 85% of cases | 81% | 21.2% | 5.3% | −0.05 | −0.35 | 0.85 | 49% |
 
-**Pattern** (`ph_cohort.py run --pattern`). The calibrated set is patchy without subpleural predominance (units lost: 0.46 subpleural, 0.44 core; honeycomb 22% of lost units). `uip` adds a subpleural seed weighted to the base (`sub_gain = 3`: surfactant decline and direct fibrosis hazard × (1 + sub_gain (1.5 − y)) in the two outer rings, y = 0 base), stronger spread by contiguity (`kn = 1.5`, `kn_s = 3`) and honeycombing (`lam_hc = 0.5`): units lost 0.60 subpleural against 0.25 core, 0.61 base against 0.41 apex, honeycomb 13%, 3.9 years to the visit. `nsip` removes the seed and the contiguity, makes vulnerability nearly uniform (`at2_sigma = 0.3`), honeycombing rare (`lam_hc = 0.05`) and the scar softer (`fib_C = 0.30`): 0.47 against 0.38, 0.68 against 0.30, honeycomb 2%, 6.9 years. PH with FVC 50–90% is 17% in both (calibrated 19%); UIP meets the seven benchmarks and NSIP six (DLCO ratio 0.85, a benchmark measured in IPF). In advanced disease PH is 45% with UIP and 35% with NSIP (transplant candidates with IPF: 46%).
+**Tree size** (`src/tree_size.py`, table S6). The same 12 cases with 1,024 and 256 units differ by −0.08 ± 0.41 mmHg in mPAP (r = 0.997), −0.6 ± 1.7 points in FVC and −0.2 ± 0.8 points in DLCO; 11 of 12 keep the same PH status.
 
-**Pressure surface.** In every cohort mPAP is a function of two variables, the fraction of lung lost and the effective lesion: mPAP = F(lost, A), R² 0.996–0.999. Without lesion, F rises from 16 mmHg (the aged lung) to 20 mmHg at 60% of lung lost; a lesion A = 2 adds 4 mmHg at 5% lost and 6 mmHg at 60% lost. The effect of fibrosis is therefore a partial dependence: small alone, and an amplifier of the lesion, because the same cardiac output crosses fewer units. The surfaces of UIP and NSIP differ by 1 mmHg or less.
+### 4.4 Low-DLCO phenotype
 
-**Altitude** (`--PB 585`). Hypoxic vasoconstriction is normalised to the alveolar PO₂ of each lung at baseline, so a healthy lung has the same mPAP at any barometric pressure; in disease, pressures at 585 mmHg differ by less than 1 mmHg from sea level (PH 16% against 19%). Blood gases do change (SaO₂ 85% against 94% at the visit), and without a ventilatory response or acclimatisation they are lower than in residents; SpO₂ is therefore not used as an input of the tool.
+The deficit of DLCO relative to the value expected for the FVC is bimodal (two-component mixture, ΔBIC = 78.8). The low-DLCO component has 50 of 200 cases, all with lesion, and 84% have PH; in the rest, 60% carry a lesion and 11% have PH. The separation rests on the DLCO–FVC relation of the model (r = 0.97 at the visit; about 0.5–0.7 in patients): with the spread of the healthy baseline of table S8 and measurement noise, ΔBIC falls to a median of 7 (range −12 to 46 over 20 replicates), a second component is preferred in 40% of replicates, and the sensitivity for PH falls from 71% to 34% (table S21).
 
-**Where the lesion sits** (`--where`, `sim.lesion_weights`). The series lesion of unit i is R_ta0 · A · w_i. `diffuse`: w = 1 (manuscript). `scar`: w = 1 in fibrotic and honeycomb units, 0 in healthy ones. `field`: w = 1 in the scar and, in a healthy unit, the fraction of its neighbours that are scar. `mixed`: w = m + (1 − m) · field. `--a_scale` multiplies A so that every mechanism has the PH prevalence of the diffuse cohort in mild-to-moderate disease. Results (`src/lesion_location.py`, tables S25–S26): the scar-only lesion gives no PH in 200 cases (maximum 23.9 mmHg); the field lesion meets 4 of 7 benchmarks, with r(mPAP, FVC) = −0.34, PH 68% and mPAP > 40 mmHg 31% with FVC < 50%, and no PH with FVC ≥ 70%; half diffuse and half field meets the seven benchmarks but already gives 16% (11–22) of mPAP > 40 mmHg with FVC < 50% (patients about 9%). A lesion inside the scar does not raise pressure because the capillary bed of those units is largely gone and flow goes elsewhere; the lesion that raises pressure is the one in preserved lung, and at most a minor share of it can follow the scar.
+## 5. Where the lesion sits, histological pattern and altitude
 
-## 6. Non-invasive individual estimate
+### 5.1 Where the lesion sits
 
-`src/noninvasive_tool.py`. Posterior over the simulated visits: p(visit | data) ∝ prior × p(FVC, DLCO | visit) × Π p(x_k | mPAP). FVC and DLCO are required and carry measurement noise (5 points) plus the spread of the healthy baseline (13% and 15%). Optional inputs x_k (echocardiographic sPAP, pulmonary artery diameter, log BNP, RV fractional area change, right atrial area) are linear in mPAP with Gaussian noise, fitted on catheterised patients in the training folds. The prior gives the simulated visits the distribution of mPAP of the population in five classes (`--prior severity`). Output: mPAP with a 90% interval, probability of PH, PVR, and the split of the pressure into aged lung, lung lost and lesion from the surface F. In 43 catheterised patients with fibrosing ILD (22 NSIP, 9 UIP, 12 other patterns; repeated 5-fold cross-validation): AUC 0.71 with FVC and DLCO, 0.81 with the pulmonary artery diameter, 0.87 with every optional input; error of mPAP 8.5 mmHg; the 90% interval covers 74%. The reference can be the cohort of the patient's pattern or the calibrated cohort, diffuse or half field, with the same result within 0.01 of AUC; a field-only reference lowers it to 0.82. Measured slopes: pulmonary artery diameter 0.25 mm per mmHg (SD 4.0 mm), echocardiographic sPAP 0.42 mmHg per mmHg (SD 16.5), so the estimate of the pressure itself is limited by the measurements, not by the model.
+Cohorts with the fibrosis course and the lesion draws of the calibrated and advanced cohorts, differing only in `vasc_where` (`src/lesion_location.py`, tables S25–S26). `--a_scale` multiplies A so that each location has the PH prevalence of the diffuse cohort in mild-to-moderate disease (field 5.8; half field: `--where mixed --mix 0.25 --a_scale 2.0`).
 
-**Pressure–flow response** (`src/exercise_response.py`, Figure 6, table S16). The first 70 cases of the calibrated cohort (47 with lesion, 23 without) are re-equilibrated at imposed cardiac outputs of 7.5 and 10 L/min with the vessels held at the calibre they had reached; ventilation and oxygen uptake scale with the flow. The slope is (mPAP at 10 L/min − resting mPAP) / (10 − resting output). The resting right ventricle of the model delivers about 7 L/min when 10 are demanded, so the flow has to be imposed; versions of the manuscript up to v21 reported the ventricle-limited state as 10 L/min and its slope is half the correct one (docs/AUDIT.md, finding 21).
+| Lesion | Benchmarks met | r(mPAP, FVC) | PH, FVC < 50% | mPAP > 40, FVC < 50% | PH, FVC ≥ 70% |
+|---|---|---|---|---|---|
+| Diffuse | 7 of 7 | −0.08 | 48% (39–56) | 8% (4–13) | 23% |
+| Half diffuse, half field | 7 of 7 | −0.17 | 54% (46–63) | 16% (11–22) | 14% |
+| Field | 4 of 7 | −0.34 | 68% (60–76) | 31% (23–38) | 0% |
+| Scar only | 1 of 7 | −0.19 | 0% | 0% | 0% |
+| Patients | | ≈ 0 | 46% | ≈ 9% | |
 
-## 7. Limitations
+The scar-only lesion gives no PH in 200 cases (maximum 23.9 mmHg): the capillary bed of the scar is largely gone and flow goes elsewhere. Five runs of the field cohorts end with the oxygen demand not met; their last viable visit is used (`cohort_io.viable`).
 
-- The clinical cohort used for the tool was referred for suspected PH (69% with PH, 12 patients without) and is mostly connective-tissue ILD; thresholds need a second, unselected cohort. Post-capillary PH is not represented (LAP is fixed at 8 mmHg).
-- Fibrotic and honeycomb units keep 15% of normal compliance; FVC is a linear approximation of the pressure–volume curve.
-- Five vasculopathy parameters were chosen against the mild-to-moderate targets; only the advanced-disease results and the phenotype analysis are out of sample.
-- The arterial morphometry is from one lung; b has no interval yet.
-- The pulmonary-artery pulsatility is an effective value; measured waveforms should replace it.
-- Alveolar ventilation is fixed; the breathing pattern (16 breaths/min, 0.41 L) does not change with restriction and a quarter of the calibrated cases are hypercapnic, which lowers their PaO₂ and A–a gradient (Figure 5).
+### 5.2 Histological pattern
+
+`ph_cohort.py run --pattern`. The calibrated set is patchy without subpleural predominance (units lost: 0.46 subpleural, 0.44 core; honeycomb 22% of lost units).
+
+| | `uip` | `nsip` |
+|---|---|---|
+| Parameters | `sub_gain = 3`, `kn = 1.5`, `kn_s = 3`, `lam_hc = 0.5` | `kn = 0`, `kn_s = 0`, `at2_sigma = 0.3`, `lam_hc = 0.05`, `fib_C = 0.30`, `nbr_D = 1` |
+| Units lost, subpleural / core | 0.60 / 0.25 | 0.47 / 0.38 |
+| Units lost, base / apex | 0.61 / 0.41 | 0.68 / 0.30 |
+| Honeycomb, share of lost units | 13% | 2% |
+| Years to the visit | 3.9 | 6.9 |
+| PH, FVC 50–90% | 17% | 17% |
+| Benchmarks met | 7 of 7 | 6 of 7 (DLCO ratio 0.85) |
+| PH, FVC < 50% | 45% | 35% |
+
+`sub_gain` multiplies surfactant decline and the direct fibrosis hazard by 1 + sub_gain (1.5 − y) in the two outer rings of units, y = 0 at the base (`sim.subpleural_factor`). The pressure surfaces of the two patterns differ by 1 mmHg or less.
+
+### 5.3 Altitude
+
+`--PB 585` (Mexico City). Hypoxic vasoconstriction is normalised to the alveolar PO₂ of each lung at baseline, so a healthy lung has the same mPAP at any barometric pressure. In disease, pressures differ by less than 1 mmHg from sea level (PH 16% against 19%); SaO₂ at the visit is 85% against 94%.
+
+## 6. Pressure–flow response
+
+`src/exercise_response.py`, Figure 6, table S16. The first 70 cases of the calibrated cohort (47 with lesion, 23 without) are re-equilibrated at imposed cardiac outputs of 7.5 and 10 L/min with the vessels held at the calibre they had reached; ventilation and oxygen uptake scale with the flow. Slope = (mPAP at 10 L/min − resting mPAP) / (10 − resting output).
+
+| | No lesion (n = 23) | Lesion (n = 47) |
+|---|---|---|
+| Resting mPAP, mmHg | 18.1 (17.5–19.3) | 22.3 (20.7–25.8) |
+| mPAP at 7.5 L/min | 21.7 (21.0–23.3) | 27.5 (25.4–32.4) |
+| mPAP at 10 L/min | 24.8 (23.9–26.6) | 32.2 (29.4–38.4) |
+| Slope, mmHg per L/min | 1.33 (1.28–1.44) | 1.96 (1.72–2.53) |
+| Resting mPAP < 25 that reach 25 at 7.5 L/min | 1 of 23 (4%; 0–13) | 23 of 32 (72%; 56–84) |
+| Resting mPAP < 25 that reach 25 at 10 L/min | 10 of 23 (43%; 22–65) | 32 of 32 |
+| Slope > 3 | 0 of 23 | 9 of 47 (19%; 9–30) |
+
+Median (interquartile range) and proportion (95% bootstrap interval). The resting right ventricle of the model delivers 7.0–7.3 L/min when 10 are demanded; the flow is therefore imposed.
+
+## 7. Non-invasive estimate
+
+### 7.1 Markers in the simulated cohorts
+
+`src/noninvasive.py`, Figure 5, tables S13–S15. The trajectories give resting SpO₂, arterial blood gases and the systolic pressure that echocardiography would estimate (mPAP = 0.61 sPAP + 2 mmHg, noise 8 mmHg). With measurement noise, the area under the ROC curve for a relevant lesion (effective severity ≥ 1) is 0.69 with FVC and DLCO, 0.72 with SpO₂, 0.74 with PaO₂, 0.77 with the alveolar–arterial gradient, 0.84 with echocardiographic pressure and 0.85 with both; for PH, 0.78, 0.84, 0.87, 0.87, 0.92 and 0.94. With an emulator of the simulator, the error of the estimated mPAP in held-out simulated cases falls from 4.2 to 2.2 mmHg. The web calculator (`index.html`) uses the simulated visits as reference in the same way.
+
+### 7.2 Individual estimate in patients
+
+`src/noninvasive_tool.py`, tables S22–S24. For one patient, the posterior over the simulated visits is
+
+$$p(\text{visit}\mid\text{data})\;\propto\;\pi(\text{visit})\;p(\mathrm{FVC},\mathrm{DLCO}\mid\text{visit})\prod_k p(x_k\mid \mathrm{mPAP})$$
+
+- FVC and DLCO are required; their likelihood has the measurement noise (5 points) and the spread of the healthy baseline (13% and 15%).
+- Optional inputs x_k, in any combination: echocardiographic sPAP, pulmonary artery diameter on CT, log BNP, right ventricular fractional area change, right atrial area. Each is linear in mPAP with Gaussian noise, fitted on catheterised patients.
+- The prior π gives the simulated visits the distribution of mPAP of the population in five classes (`--prior severity`). The reference is the cohort of the patient's tomographic pattern (`--reference pattern`).
+- Output: probability of PH, mPAP with a 90% interval, PVR, and the parts of the pressure due to the aged lung, the lung lost and the lesion, from the surface F.
+- SpO₂ and blood gases are not inputs. Catheterisation is used only to fit the measurement models and to score the estimate.
+
+Patients: 47 adults with fibrosing interstitial lung disease and right heart catheterisation at one centre in Mexico City, referred for suspected PH; 43 with FVC, DLCO and mPAP (22 NSIP, 9 UIP, 12 other patterns; 31 with mPAP ≥ 25 mmHg). r(mPAP, FVC) = 0.05 (n = 47) and r(mPAP, DLCO) = −0.28 (n = 43); 6 of 9 patients with FVC ≥ 70% have PH.
+
+Repeated 5-fold cross-validation (20 repeats; measurement models and prior from the training folds):
+
+| Inputs | AUC, mPAP ≥ 25 (range over repeats) | Error of mPAP, mmHg | Logistic regression, AUC (complete cases) |
+|---|---|---|---|
+| FVC + DLCO | 0.70 (0.66–0.72) | 9.9 | 0.64 (43) |
+| + echocardiographic sPAP | 0.72 (0.69–0.75) | 9.8 | 0.70 (43) |
+| + BNP | 0.72 (0.68–0.76) | 9.9 | 0.68 (42) |
+| + pulmonary artery diameter | 0.82 (0.78–0.84) | 8.9 | 0.86 (42) |
+| + pulmonary artery diameter + BNP | 0.83 (0.80–0.85) | 8.9 | 0.82 (41) |
+| + all optional inputs | 0.86 (0.83–0.87) | 8.6 | 0.90 (34) |
+
+The 90% interval covers 72–77% of the patients. With the calibrated cohort or the half-field cohort as reference the AUC changes by 0.01 or less; with the field cohort it is 0.82 with all inputs. Measurement models: pulmonary artery diameter 0.25 mm per mmHg (SD 4.0 mm), echocardiographic sPAP 0.42 mmHg per mmHg (SD 16.5 mmHg).
+
+## 8. Limitations
+
+- The lesion is a resistance added to the arteriole, not a cellular mechanism; its five parameters were chosen against the mild-to-moderate benchmarks. Advanced disease, the pressure–flow response and the patients are out of sample.
+- Pre-capillary pulmonary hypertension only: the left atrial pressure is fixed.
+- Alveolar ventilation is fixed (4.2 L/min; 16 breaths/min, 0.41 L); a quarter of the calibrated cases are hypercapnic, which lowers their PaO₂ and alveolar–arterial gradient (section 7.1). Blood gases at altitude have no ventilatory response or acclimatisation.
 - The vessel ageing offset (`age_M = 0.3`) has no measured anchor; it adds 2.2 mmHg to every case.
-- Conduit arteries inside scar remodel freely to their shear target (`remodel_conduits = True`); the opposite setting has not been run as a sensitivity arm.
+- Conduit arteries inside scar remodel freely to their shear target (`remodel_conduits = True`).
+- Fibrotic and honeycomb units keep 15% of normal compliance; FVC is a linear approximation of the pressure–volume curve. The DLCO–FVC relation of the model is tighter than in patients.
+- The arterial morphometry is from one lung; b has no interval. The pulsatility of the pulmonary artery is an effective value.
+- The individual estimate was evaluated in one cohort, referred for suspected PH (12 patients without PH) and mostly connective-tissue disease; no thresholds are proposed.
 
 ## References
 
-Feaver RE, Gelfand BD, Blackman BR (2013) Nat Commun 4:1525. · Huang W, Yen RT, McLaurine M, Bledsoe G (1996) J Appl Physiol 81:2123–2133. · Raghu G, et al. (2015) Eur Respir J 46:1370–1377 (ARTEMIS-IPF haemodynamics). · Shorr AF, et al. (2007) Eur Respir J 30:715–721. · Zisman DA, et al. (2007) Respir Med 101:2153–2159. · Womersley JR (1955) J Physiol 127:553–563.
-
-
-## 8. Non-invasive markers in the simulated cohorts (Figure 5)
-
-The trajectories also give resting SpO2, the arterial blood gases and the systolic pulmonary artery pressure that echocardiography would estimate (mPAP = 0.61 sPAP + 2 mmHg). At a given FVC and DLCO, PaO2 falls with the severity of the vasculopathy, because capillary loss limits oxygen diffusion. With measurement noise, the area under the ROC curve for relevant vasculopathy (effective lesion at least equal to the baseline arteriolar resistance) is 0.69 with FVC and DLCO, 0.72 with SpO2, 0.74 with PaO2, 0.77 with the alveolar-arterial gradient, 0.84 with echocardiographic pressure and 0.85 with the gradient and echocardiographic pressure; for PH, 0.78, 0.84, 0.87, 0.87, 0.92 and 0.94. An emulator of the simulator (`src/noninvasive.py`) allows a posterior over each case's disease state; in held-out simulated cases the error of the estimated mPAP falls from 4.2 to 2.2 mmHg, with calibrated 90% intervals. The calculator uses the same principle with the simulated visits as reference.
+Feaver RE, Gelfand BD, Blackman BR (2013) Nat Commun 4:1525. · Huang W, Yen RT, McLaurine M, Bledsoe G (1996) J Appl Physiol 81:2123–2133. · Pérez-Calixto D, et al. (2026) bioRxiv, doi:10.64898/2026.09.29.755319. · Raghu G, et al. (2015) Eur Respir J 46:1370–1377. · Shorr AF, et al. (2007) Eur Respir J 30:715–721. · Singhal S, et al. (1973) Circ Res 33:190–197. · Womersley JR (1955) J Physiol 127:553–563. · Zisman DA, et al. (2007) Respir Med 101:2153–2159.

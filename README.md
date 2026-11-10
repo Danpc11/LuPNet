@@ -73,14 +73,14 @@ and places the patient on a map of the 260 simulated cases. In held-out simulate
 
 ## Non-invasive individual estimate
 
-`src/noninvasive_tool.py` estimates PH for one patient without right heart catheterisation. FVC and DLCO are required; echocardiographic systolic pressure, pulmonary artery diameter on CT, BNP, right ventricular fractional area change and right atrial area are optional, in any combination. The simulated visits are the prior; catheterised patients are used only to fit how each measurement relates to pressure and to score the tool. In 43 catheterised patients with fibrosing interstitial lung disease (cross-validated), the area under the ROC curve for mPAP ≥ 25 mmHg is 0.71 with FVC and DLCO and 0.87 with every optional input (logistic regression on the same inputs: 0.64 and 0.89, the latter on the 34 patients with complete data), and the estimate of mPAP has a mean error of 8.5 mmHg. The tool also returns the pressure of the aged lung, what the lost lung adds and what the lesion adds, from the surface mPAP = F(lung lost, lesion) of the simulations (R² 0.998). The clinical file is not part of the repository:
+`src/noninvasive_tool.py` estimates PH for one patient without right heart catheterisation. FVC and DLCO are required; echocardiographic systolic pressure, pulmonary artery diameter on CT, BNP, right ventricular fractional area change and right atrial area are optional, in any combination. The simulated visits are the prior; catheterised patients are used only to fit how each measurement relates to pressure and to score the tool. In 43 catheterised patients with fibrosing interstitial lung disease (cross-validated), the area under the ROC curve for mPAP ≥ 25 mmHg is 0.70 with FVC and DLCO, 0.82 with the pulmonary artery diameter and 0.86 with every optional input (logistic regression on the same inputs: 0.64, 0.86 and 0.90, the last on the 34 patients with complete data), and the estimate of mPAP has a mean error of 8.6 mmHg. The tool also returns the pressure of the aged lung, what the lost lung adds and what the lesion adds, from the surface mPAP = F(lung lost, lesion) of the simulations (R² 0.998). The clinical file is not part of the repository:
 
 ```bash
 python src/noninvasive_tool.py --clinical patients.xlsx      # tables S22-S24
 python src/lesion_location.py --clinical patients.xlsx       # tables S25-S26
 ```
 
-It is a research tool; the thresholds have not been validated in a second cohort.
+It is a research tool, evaluated in one cohort. It estimates pre-capillary PH and does not use SpO₂ or blood gases.
 
 ## Quick start
 

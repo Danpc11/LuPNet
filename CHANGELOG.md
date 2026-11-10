@@ -1,65 +1,61 @@
 # Changelog
 
-Supplementary tables are numbered as in the online supplement from 0.4.0; entries below 0.4.0 use the earlier numbering of the repository (correspondence in the README).
+Table numbers are those of the online supplement.
 
 ## 0.4.0 (2026-11)
 
-Publication release: every result of the manuscript has a script, tables carry the numbers of the supplement, and cohorts record how they were generated.
-
-- `src/exercise_response.py`: pressure-flow response of the first 70 cases of the calibrated cohort at imposed cardiac outputs of 7.5 and 10 L/min (Figure 6, table S16), with every case archived in `results/figures/pressure_flow_cases.tsv`. Corrects the analysis of manuscript v21, in which 10 L/min were demanded of the resting right ventricle and about 7.3 L/min were delivered (docs/AUDIT.md, finding 21).
-- `src/tree_size.py`: the same cases with 256 and 1,024 units (table S6), archived in `results/figures/tree_size_cases.tsv`.
-- Tables renumbered to the supplement: baseline variation S8, wedge pressure S9, phenotype without labels S10, PH by FVC range S11, categories with noise S12, emulator S15, pressure-flow S16, sensitivity S17, audit checks S18-S21, non-invasive tool S22-S24, location of the lesion S25-S26.
-- Cohort files store their generating parameters (`tau`, `cap`, `p_vasc`, `a_med`, `a_sig`, seeds, range of stages, `lupnet_version`); `cohort_io.meta`, `lesion_tau` and `effective_lesion` replace the time constant written by hand in five scripts.
-- `cohort_io.cases` uses the packed cohort when fewer per-case files than cases are present, with a warning.
-- `scripts/cohorts_local.sh`: `WHAT=sensitivity`, `flow`, `tree` and `paper` (the three together).
-- `src/make_figures_story.py`: the six figures of the storyline, built from the shipped cohorts and, for the panels with patients, from a clinical file passed with `--clinical`; `make_figures_erj.py --upper` for upper-case panel letters.
-- Housekeeping: unused imports and variables removed, references to checks and campaigns that are not in the repository removed from docstrings, `fibrosis_only_cohorts.py` writes atomically, `openpyxl` in the requirements, `lupnet.__version__`, `CITATION.cff`, `data/README.md`, the options of the model that the manuscript does not use listed in the README, continuous integration runs two analysis scripts besides the tests.
+- `src/exercise_response.py`: pressure-flow response at imposed cardiac output (Figure 6, table S16); cases in `results/figures/pressure_flow_cases.tsv`.
+- `src/tree_size.py`: 256 against 1,024 units (table S6); cases in `results/figures/tree_size_cases.tsv`.
+- Sensitivity cohorts `tau1.0`, `tau3.0`, `pv0.50`, `pv0.85` (table S17, figure S2).
+- `src/make_figures_story.py`: figures Story1-Story6 on one grid and one palette; legends in `docs/STORY_FIGURES.md`.
+- Supplementary tables numbered as in the online supplement (correspondence in the README).
+- Cohort files store their generating parameters, seeds and code version; `cohort_io.meta`, `lesion_tau`, `effective_lesion`.
+- `cohort_io.cases` uses the packed cohort when the per-case files are incomplete.
+- `scripts/cohorts_local.sh`: `WHAT=sensitivity`, `flow`, `tree`, `paper`.
+- THEORY.md rewritten as one document: lesion and its location, pressure surface, benchmarks, sensitivity, pattern, altitude, pressure-flow, non-invasive estimate, limitations.
+- `CITATION.cff`, `data/README.md`, `lupnet.__version__`, `openpyxl` in the requirements, Python 3.9 in the tests.
+- Local virtual environment and logs removed from the repository; `.nojekyll`.
 
 ## 0.3.14 (2026-11)
 
-- Lesion-location cohorts simulated in full (`big2_scar`, `big2_field`, `big2_mix50`, `adv2_field`, `adv2_mix50`) and `src/lesion_location.py` (tables S24-S25). They confirm the surface estimates of 0.3.13 within 2 to 4 points: no PH with the lesion inside the scar; 4 of 7 benchmarks, r(mPAP, FVC) -0.34 and severe PH 31% in advanced disease with the field lesion; 7 of 7 with half field, but severe PH 16% (11-22) in advanced disease against about 9% in patients.
-- `cohort_io.viable` and `final_visits`: runs that end with the oxygen demand not met or output below 2.5 L/min contribute their last viable visit and are counted as deaths (5 runs of the field cohorts, none in the manuscript cohorts). `ph_cohort.py analyze` and the tool use them.
-- Each visit records the lesion in place (`lesion_mean`, `lesion_healthy`) and each run the applied severity (`vasc_A_scaled`); the tool uses the applied severity.
-- README, THEORY.md and docs/AUDIT.md brought up to date: table of every cohort with the command that generates it, sections on pattern, altitude, lesion location and the non-invasive tool, audit findings 17-20.
+- Cohorts `big2_scar`, `big2_field`, `big2_mix50`, `adv2_field`, `adv2_mix50`; `src/lesion_location.py` (tables S25-S26).
+- `cohort_io.viable`, `final_visits`: last viable visit of a run; runs ending in a non-viable state counted as deaths.
+- Visits record the lesion in place (`lesion_mean`, `lesion_healthy`); runs record `vasc_A_scaled`.
 
 ## 0.3.13 (2026-11)
 
-- Where the lesion sits. `ph_cohort.py run --where {diffuse,scar,field,mixed}` (default `diffuse`, the manuscript cohorts, reproduced exactly): `scar` puts the lesion only in fibrotic and honeycomb units, `field` in the scar and in healthy units in proportion to the fraction of their neighbours that are scar, `mixed` combines a diffuse share (`--mix`) with the field; `--a_scale` multiplies the drawn severity. `sim.lesion_weights`, `sim.apply_lesion`, `scripts/cohorts_local.sh` with `WHAT=location`.
-- First results (surfaces from 12 lungs, applied to the manuscript cohorts): a lesion confined to the scar does not reach 25 mmHg until 80% of the lung is lost; a field lesion produces PH that follows the extent of fibrosis. Up to half of the lesion can follow the field and still meet the seven benchmarks; with three quarters or more, pressure follows FVC (r -0.22 to -0.32) and severe PH in advanced disease is two to three times the clinical figure.
+- `ph_cohort.py run --where {diffuse,scar,field,mixed}`, `--mix`, `--a_scale`; `sim.lesion_weights`, `sim.apply_lesion`.
 
 ## 0.3.12 (2026-11)
 
-- Advanced-disease cohorts by pattern (`adv2_uip`, `adv2_nsip`, 60 cases each): PH with FVC < 50% is 45% with the UIP pattern and 35% with NSIP (transplant candidates with IPF: 46%).
-- `noninvasive_tool.py --prior severity` (default): the reference visits take the distribution of mPAP of the catheterised population, in five classes estimated in the training folds, instead of matching only the share with PH. It halves the underestimate of the pressure (bias -6.2 to -3.5 mmHg with FVC and DLCO, -4.3 to -2.6 with every optional input) and leaves discrimination unchanged.
+- Cohorts `adv2_uip`, `adv2_nsip`.
+- `noninvasive_tool.py --prior {severity,prevalence}`.
 
 ## 0.3.11 (2026-11)
 
-- Cohorts of 200 cases with the UIP and the fibrotic NSIP pattern (`big2_uip`, `big2_nsip`) and the three manuscript cohorts at the barometric pressure of Mexico City (`big2_cdmx`, `adv2_cdmx`, `altF_cdmx`), same seeds as the manuscript. PH (mPAP >= 25, FVC 50-90%) is 17% in both patterns (19% calibrated); UIP meets the seven targets, NSIP six (DLCO ratio 0.85, a target measured in IPF).
-- `noninvasive_tool.py --reference pattern` (default): UIP and NSIP patients are scored against the cohort of their pattern; the partial dependence surface is fitted per pattern.
-- `cohort_io.cases` reads only `tag_<digits>.tsv`; `ph_cohort.py analyze` no longer fails on cohorts without cases in the FVC 50-90% band; `scripts/cohorts_local.sh` gains `WHAT=advanced` (adv2_uip, adv2_nsip).
+- Cohorts `big2_uip`, `big2_nsip`, `big2_cdmx`, `adv2_cdmx`, `altF_cdmx`.
+- `noninvasive_tool.py --reference {pattern,calibrated}`.
+- Fix: `cohort_io.cases` reads only `tag_<digits>.tsv`.
+- `ph_cohort.py analyze` handles cohorts without cases in the FVC 50-90% band.
 
 ## 0.3.10 (2026-11)
 
-- `src/noninvasive_tool.py`: individual estimate of PH without catheterisation. FVC and DLCO required; echocardiographic sPAP, pulmonary artery diameter on CT, BNP, RV fractional area change and right atrial area optional in any combination. Prior from the simulated visits of the manuscript cohorts (5,036 visits), measurement models and prevalence fitted on catheterised patients, repeated 5-fold cross-validation, comparison with logistic regression on the same inputs (tables S21-S23). The clinical file is passed with `--clinical` and is not part of the repository.
-- Partial dependence: in the simulations mPAP is a surface of two variables, lung lost and effective lesion (R2 0.998). The tool reports for each patient the pressure of the aged lung, what the lost lung adds and what the lesion adds.
+- `src/noninvasive_tool.py`: individual estimate of PH without catheterisation (tables S22-S24).
+- Pressure surface mPAP = F(lung lost, lesion).
 
 ## 0.3.9 (2026-11)
 
-- Histological patterns. `ph_cohort.py run --pattern {calibrated,uip,nsip}` (default `calibrated`, the manuscript cohorts, unchanged). UIP: subpleural, basal-weighted seed (`sub_gain = 3`), spread by contiguity (`kn = 1.5`, `kn_s = 3`), heterogeneous vulnerability, honeycombing. Fibrotic NSIP: no seed and no contiguity, near-uniform vulnerability (`at2_sigma = 0.3`), almost no honeycombing (`lam_hc = 0.05`), softer scar (`fib_C = 0.30`). The calibrated set is patchy without subpleural predominance (lost units 0.46 subpleural vs 0.44 core).
-- New parameter `sub_gain` and `sim.subpleural_factor`: multiplier on surfactant decline and on the direct fibrosis hazard in the subpleural ring, weighted 1.5 at the base to 0.5 at the apex; 1 everywhere at the default `sub_gain = 0`.
-- `ph_cohort.py run --PB` (barometric pressure; 585 mmHg for Mexico City) and `scripts/cohorts_local.sh`, which generates the pattern and altitude cohorts on the cores of one machine without a scheduler.
-- In 12 paired cases (same seeds and lesions), mPAP differs by +0.3 mmHg between NSIP and UIP (Wilcoxon P = 1.00): the pattern sets where tissue is lost and the DLCO-FVC relation, not the pressure.
+- `ph_cohort.py run --pattern {calibrated,uip,nsip}`; parameter `sub_gain`, `sim.subpleural_factor`.
+- `ph_cohort.py run --PB`; `scripts/cohorts_local.sh`.
 
 ## 0.3.8 (2026-11)
 
-Audit of 0.3.7 before the comparison with clinical data. No published number changes; the regression tests pass unchanged.
-
-- Fix: Figure 2f computed the lesion clock from `t x ypu`, without the 6.71 years per model unit, so the lesion ran 6.7 times too slowly along the trajectories. The stored `years` column is now used.
-- Figure 2g draws the mPAP of the aged lung without fibrosis (16.5 mmHg, `age_M = 0.3`) as a reference line, and the script prints the contribution of fibrosis above it (1.8, 1.0 and 0.4 mmHg by band) alongside the published values above the healthy lung (3.5, 2.7, 2.2).
-- `src/audit_extra.py` and tables S17-S20: decomposition of the healthy pressure drop (47% set by the law), the aged baseline, the saturation of the lesion at the visit (median 1.00), and the low-DLCO phenotype under the baseline spread of table S6 (delta BIC median 7, bimodal in 40% of replicates). `tests/test_audit_extra.py` guards them.
-- `ph_cohort.py run` takes `--t_max` and reports cases that stop before the drawn stage (7 of 60 in adv2).
-- `Lung._baseline` and `sim.run` restore the fields of `Params` they alter in `finally` blocks.
-- THEORY.md, docs/AUDIT.md and README corrected: the cohorts use the product form of the unit diffusing capacity (`rf = False`), not Roughton-Forster; DLNO is not computed; the morphometric fits use a free tau0 while the lung fixes it on the main pulmonary artery; healthy mPAP is an output of the law for its arterial half; ventilation is fixed and a quarter of the calibrated cases are hypercapnic; `beta = 0` (no strain feedback) in the calibrated set.
+- Fix: Figure 2f computed the lesion clock without the years per model unit.
+- Figure 2g shows the aged lung without fibrosis.
+- `src/audit_extra.py` (tables S18-S21): pressure decomposition, aged baseline, lesion saturation, phenotype under baseline spread.
+- `ph_cohort.py run --t_max`.
+- `Params` fields altered by `Lung._baseline` and `sim.run` restored in `finally` blocks.
+- THEORY.md, docs/AUDIT.md, README: product form of the unit diffusing capacity, free tau0 in the morphometric fits, fixed ventilation.
 
 ## 0.3.7 (2026-10)
 
