@@ -8,6 +8,10 @@
 #   WHAT=altitude bash scripts/cohorts_local.sh         # only big2_cdmx, adv2_cdmx and altF_cdmx
 #   WHAT=advanced bash scripts/cohorts_local.sh         # only adv2_uip and adv2_nsip (advanced disease by pattern)
 #   WHAT=location bash scripts/cohorts_local.sh         # where the lesion sits: scar only, field, half field (big2 and adv2)
+#   WHAT=sensitivity bash scripts/cohorts_local.sh      # tau1.0, tau3.0, pv0.50, pv0.85, then table S17 and figure S2
+#   WHAT=flow bash scripts/cohorts_local.sh             # pressure-flow response of 70 cases, then table S16 and Figure 6
+#   WHAT=tree bash scripts/cohorts_local.sh             # 12 cases with 1,024 units (several minutes each), then table S6
+#   WHAT=paper bash scripts/cohorts_local.sh            # sensitivity, flow and tree: what the manuscript needs beyond the shipped cohorts
 #   PB=585 WHAT=patterns bash scripts/cohorts_local.sh  # pattern cohorts at Mexico City altitude
 #   LIMIT=4 bash scripts/cohorts_local.sh               # pilot: the first 4 cases of each cohort
 #   nohup bash scripts/cohorts_local.sh > logs/cohorts.log 2>&1 &     # detached; follow with tail -f
@@ -54,9 +58,25 @@ if [ "$WHAT" = location ]; then
     SPECS+="adv2_field"$'\t'"60"$'\t'"$ADV --where field --a_scale 5.8"$'\n'
     SPECS+="adv2_mix50"$'\t'"60"$'\t'"$ADV --where mixed --mix 0.25 --a_scale 2.0"$'\n'
 fi
-[ -n "$SPECS" ] || { echo "WHAT must be all, patterns, altitude, advanced or location" >&2; exit 1; }
+if [ "$WHAT" = sensitivity ] || [ "$WHAT" = paper ]; then
+    SPECS+="tau1.0"$'\t'"200"$'\t'"$BIG --tau 1.0"$'\n'
+    SPECS+="tau3.0"$'\t'"200"$'\t'"$BIG --tau 3.0"$'\n'
+    SPECS+="pv0.50"$'\t'"200"$'\t'"$BIG --p_vasc 0.50"$'\n'
+    SPECS+="pv0.85"$'\t'"200"$'\t'"$BIG --p_vasc 0.85"$'\n'
+fi
+EXTRA=$(mktemp)                               # tasks that are not cohorts
+if [ "$WHAT" = flow ] || [ "$WHAT" = paper ]; then
+    nf=70; [ "$LIMIT" -gt 0 ] && [ "$LIMIT" -lt "$nf" ] && nf=$LIMIT
+    for i in $(seq 0 $((nf - 1))); do printf '%s src/exercise_response.py run --n 70 --i0 %d --i1 %d\n' "$PY" "$i" "$((i + 1))" >> "$EXTRA"; done
+fi
+if [ "$WHAT" = tree ] || [ "$WHAT" = paper ]; then
+    nt=12; [ "$LIMIT" -gt 0 ] && [ "$LIMIT" -lt "$nt" ] && nt=$LIMIT
+    for i in $(seq 0 $((nt - 1))); do printf '%s src/tree_size.py run --n 12 --i0 %d --i1 %d\n' "$PY" "$i" "$((i + 1))" >> "$EXTRA"; done
+fi
+[ -n "$SPECS" ] || [ -s "$EXTRA" ] || { echo "WHAT must be all, patterns, altitude, advanced, location, sensitivity, flow, tree or paper" >&2; exit 1; }
 
-TASKS=$(mktemp); trap 'rm -f "$TASKS"' EXIT
+TASKS=$(mktemp); trap 'rm -f "$TASKS" "$EXTRA"' EXIT
+cat "$EXTRA" >> "$TASKS"
 while IFS=$'\t' read -r tag n args; do
     [ -n "$tag" ] || continue
     [ "$LIMIT" -gt 0 ] && [ "$LIMIT" -lt "$n" ] && n=$LIMIT
@@ -65,7 +85,7 @@ while IFS=$'\t' read -r tag n args; do
     done
 done <<< "$SPECS"
 
-echo "$(wc -l < "$TASKS") cases on $JOBS workers"
+echo "$(wc -l < "$TASKS" | tr -d ' ') cases on $JOBS workers"
 xargs -P "$JOBS" -I CMD bash -c 'CMD' < "$TASKS" > logs/cohorts_local.out 2>&1 || true
 
 status=0
@@ -81,4 +101,11 @@ while IFS=$'\t' read -r tag n args; do
         echo "== $tag incomplete: $have of $n cases; run the script again to resume (see logs/cohorts_local.out)" >&2; status=1
     fi
 done <<< "$SPECS"
+if [ "$LIMIT" -eq 0 ]; then
+    if [ "$WHAT" = sensitivity ] || [ "$WHAT" = paper ]; then
+        "$PY" src/sensitivity.py --ref big2 --tags tau1.0 tau3.0 pv0.50 pv0.85 --labels 'T_les 1 y' 'T_les 3 y' '70% to 50%' '70% to 85%' || status=1
+    fi
+    if [ "$WHAT" = flow ] || [ "$WHAT" = paper ]; then "$PY" src/exercise_response.py analyze || status=1; fi
+    if [ "$WHAT" = tree ] || [ "$WHAT" = paper ]; then "$PY" src/tree_size.py analyze || status=1; fi
+fi
 exit $status

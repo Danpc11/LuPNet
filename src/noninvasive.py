@@ -9,7 +9,7 @@
    with measurement noise; areas under the ROC curve by case-grouped cross-validation (table S13).
 4. Individual inference: for held-out simulated cases, a posterior over the latent state given the observables, from
    the emulator, gives each case's mPAP with a 90% interval and its probability of relevant vasculopathy (table S14).
-Writes Figure 5 and tables S13-S14 to results/figures/.
+Writes Figure 5 and tables S13-S15 to results/figures/.
 """
 import os, sys, logging
 import numpy as np, pandas as pd
@@ -23,7 +23,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, roc_curve
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases
+from cohort_io import cases, lesion_tau
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 F = os.path.join(ROOT, "results", "ph_cohorts"); OUT = os.path.join(ROOT, "results", "figures"); os.makedirs(OUT, exist_ok=True)
@@ -40,7 +40,7 @@ def trajectory_points():
                 if not x.converged:
                     continue
                 rows.append(dict(case=f"{tag}{i}", healthy=x.healthy, fibrotic=x.fibrotic, honeycomb=x.honeycomb, years=x.years,
-                                 Aeff=A * (1 - np.exp(-(x.years + t0) / 2.0)) if A > 0 else 0.0,
+                                 Aeff=A * (1 - np.exp(-(x.years + t0) / lesion_tau(d))) if A > 0 else 0.0,
                                  eta=float(x.get("eta_p", 0.0)) if tag == "het" else 0.0, hpv=float(x.get("hpv_max", 3.0)) if tag == "het" else 3.0,
                                  lost_base=x.lost_base, lost_apex=x.lost_apex, mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC,
                                  DLCO=100 * x.DLCO / r0.DLCO, PaO2=x.PaO2, PaCO2=x.PaCO2, SpO2=100 * x.SaO2))
@@ -63,7 +63,7 @@ for y in ["mPAP", "FVC", "DLCO", "PaO2", "AaDO2", "SpO2"]:
         pred[te] = gbr().fit(D[LAT].iloc[tr], D[y].iloc[tr]).predict(D[LAT].iloc[te])
     e = pred - D[y].values
     emu_rows.append(dict(output=y, R2=round(1 - np.var(e) / np.var(D[y]), 3), MAE=round(float(np.mean(np.abs(e))), 2)))
-pd.DataFrame(emu_rows).to_csv(os.path.join(OUT, "TableS13a_emulator.tsv"), sep="\t", index=False)
+pd.DataFrame(emu_rows).to_csv(os.path.join(OUT, "TableS15_emulator.tsv"), sep="\t", index=False)
 
 # ---------------------------------------------------------------- detection by case-grouped cross-validation
 V = D[D.case.str.match(r"^(big2|adv2)") & (D.healthy >= 0.12) & (D.healthy <= 0.85)].reset_index(drop=True)
@@ -157,4 +157,4 @@ ax.legend(loc="upper center", bbox_to_anchor=(0.45, -0.22), fontsize=5.6, handle
 for ext in ("pdf", "png"):
     fig.savefig(os.path.join(OUT, f"Figure5.{ext}"), bbox_inches="tight", pad_inches=0.04)
 fig.savefig(os.path.join(OUT, "Figure5.tif"), bbox_inches="tight", pad_inches=0.04, dpi=600, pil_kwargs={"compression": "tiff_lzw"})
-print("Figure 5 and tables S13-S14 written")
+print("Figure 5 and tables S13-S15 written")

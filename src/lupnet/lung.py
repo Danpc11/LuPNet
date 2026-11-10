@@ -132,7 +132,7 @@ class Lung:
         return self.p.L_pa * 2.0 ** (-self.depth / 3.0)
 
     def _build_vessels(self):
-        p, d = self.p, self.depth
+        p = self.p
         b = p.b
         self.Lv = self._vessel_lengths()
         f_ref = p.Q * LPM * self.nleaf / self.N
@@ -187,7 +187,7 @@ class Lung:
         self.R_cond = float((R_edge * (self.nleaf / self.N) ** 2).sum())
         # the lumped terminal element stands for the sub-tree below the last explicit generation: continue the
         # symmetric tree under the same law down to 10 um radius and use its equivalent resistance
-        G0 = int(self.depth.max()); fl = p.Q * LPM / N; R_sub = 0.0; g = G0 + 1
+        G0 = int(self.depth.max()); R_sub = 0.0; g = G0 + 1
         rows = []
         while True:
             f_g = p.Q * LPM / 2 ** g; L_g = p.L_pa * 2 ** (-g / 3)
@@ -219,8 +219,8 @@ class Lung:
         Returns dict with flows per edge Q, leaf flows, pressures, actual radii.
         Distension makes it a fixed point; it is iterated with damping.
         """
-        p, N = self.p, self.N
-        lv, leaf, par = self.levels, self.leaf, self.parent
+        p = self.p
+        leaf, par = self.leaf, self.parent
         if P is None:
             P = self._P_base
         for it in range(maxit):
@@ -288,7 +288,7 @@ class Lung:
 
     def _ptm(self, Phead, z):
         """Transmural pressure of an extra-alveolar vessel. Without perf_grav this is the
-        intravascular pressure itself (earlier campaigns). With perf_grav: head minus hydrostatic
+        intravascular pressure itself (default). With perf_grav: head minus hydrostatic
         column minus extravascular pressure."""
         p = self.p
         if not p.perf_grav:
@@ -443,7 +443,7 @@ class Lung:
 
     def impedance(self, C, f):
         """Leaf flow fractions and input impedances for breathing frequencies f (1/min)."""
-        p, lv, leaf = self.p, self.levels, self.leaf
+        p, leaf = self.p, self.leaf
         w = 2 * np.pi * np.atleast_1d(f)[:, None] / 60.0
         Z = np.empty((w.shape[0], self.n), complex); Ys = np.empty_like(Z)
         Z[:, leaf] = self.R_aw[leaf] + self.R_unit + 1 / (1j * w * C[None, :])
@@ -527,7 +527,6 @@ class Lung:
         Pc, Po = self.critical_pressures()
         Pexp = p.PL_FRC + p.PEEP + p.pl_grad * self.z_mech               # regional end-expiratory P_L
         Copen = self.C_h                                                  # tissue compliance of the open unit
-        Pins = Pexp + np.where(self.rd == 2, 0.0, air["VTi"] / Copen)
         Pins_open = Pexp + air["VTi"] / Copen
         new = self.rd.copy()
         was_closed = self.rd == 2
@@ -841,7 +840,6 @@ class Lung:
         """Murray/Hu-Cai functional of the remodelable vessels: dissipation of the whole circuit plus
         lambda (pi r^2 L)^b, with lambda per vessel from its set-point constant: tau0^2 = b lambda mu pi^(b-1)."""
         p, b = self.p, self.p.b
-        Q = vs["Q"] * LPM; Ql = vs["Ql"] * LPM; Qv = vs["Qv"] * LPM
         mu = p.mu_b
         D = (vs["dP"] * MMHG) * (p.Q * LPM)                 # total power = inflow x pressure drop (W)
         cost = 0.0

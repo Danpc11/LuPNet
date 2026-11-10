@@ -24,7 +24,7 @@ class Params:
     alpha: float = 0.02            # vessel distensibility, 1/mmHg
     alpha_c: float = 0.015         # capillary sheet distensibility, 1/mmHg
     Vcap: float = 0.075            # capillary blood volume, L
-    # ---- gravity in perfusion, West zones, extravascular pressures (off = earlier campaigns)
+    # ---- gravity in perfusion, West zones, extravascular pressures (off by default)
     perf_grav: bool = False
     lung_height_cm: float = 30.0   # upright base-to-apex height
     heart_frac: float = 0.5        # height of the pulmonary artery / left atrium as a fraction of lung height
@@ -134,7 +134,7 @@ class Params:
     ex_inotropy: float = 2.0       # healthy inotropic reserve; shrinks to 1 as Ees -> Ees_max
     ex_EDV: float = 20.0
     stop_Q: float = 2.5            # stop a run when resting output falls below this (L/min)
-    # ---- parenchyma: surfactant, recruitment/derecruitment, collapse induration (off = earlier campaigns)
+    # ---- parenchyma: surfactant, recruitment/derecruitment, collapse induration (off by default)
     parenchyma: str = "linear"     # "linear" | "surfactant"
     pl_grad: float = 0.25          # pleural pressure gradient, cmH2O per cm of height
     PEEP: float = 0.0              # extra end-expiratory transpulmonary pressure, cmH2O (intervention)

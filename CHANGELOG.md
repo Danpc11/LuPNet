@@ -1,5 +1,19 @@
 # Changelog
 
+Supplementary tables are numbered as in the online supplement from 0.4.0; entries below 0.4.0 use the earlier numbering of the repository (correspondence in the README).
+
+## 0.4.0 (2026-11)
+
+Publication release: every result of the manuscript has a script, tables carry the numbers of the supplement, and cohorts record how they were generated.
+
+- `src/exercise_response.py`: pressure-flow response of the first 70 cases of the calibrated cohort at imposed cardiac outputs of 7.5 and 10 L/min (Figure 6, table S16), with every case archived in `results/figures/pressure_flow_cases.tsv`. Corrects the analysis of manuscript v21, in which 10 L/min were demanded of the resting right ventricle and about 7.3 L/min were delivered (docs/AUDIT.md, finding 21).
+- `src/tree_size.py`: the same cases with 256 and 1,024 units (table S6), archived in `results/figures/tree_size_cases.tsv`.
+- Tables renumbered to the supplement: baseline variation S8, wedge pressure S9, phenotype without labels S10, PH by FVC range S11, categories with noise S12, emulator S15, pressure-flow S16, sensitivity S17, audit checks S18-S21, non-invasive tool S22-S24, location of the lesion S25-S26.
+- Cohort files store their generating parameters (`tau`, `cap`, `p_vasc`, `a_med`, `a_sig`, seeds, range of stages, `lupnet_version`); `cohort_io.meta`, `lesion_tau` and `effective_lesion` replace the time constant written by hand in five scripts.
+- `cohort_io.cases` uses the packed cohort when fewer per-case files than cases are present, with a warning.
+- `scripts/cohorts_local.sh`: `WHAT=sensitivity`, `flow`, `tree` and `paper` (the three together).
+- Housekeeping: unused imports and variables removed, references to checks and campaigns that are not in the repository removed from docstrings, `fibrosis_only_cohorts.py` writes atomically, `openpyxl` in the requirements, `lupnet.__version__`, `CITATION.cff`, `data/README.md`, the options of the model that the manuscript does not use listed in the README, continuous integration runs two analysis scripts besides the tests.
+
 ## 0.3.14 (2026-11)
 
 - Lesion-location cohorts simulated in full (`big2_scar`, `big2_field`, `big2_mix50`, `adv2_field`, `adv2_mix50`) and `src/lesion_location.py` (tables S24-S25). They confirm the surface estimates of 0.3.13 within 2 to 4 points: no PH with the lesion inside the scar; 4 of 7 benchmarks, r(mPAP, FVC) -0.34 and severe PH 31% in advanced disease with the field lesion; 7 of 7 with half field, but severe PH 16% (11-22) in advanced disease against about 9% in patients.

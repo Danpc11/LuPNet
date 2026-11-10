@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Where the vascular lesion sits, and how much of it can be a local consequence of fibrosis (tables S24-S25).
+"""Where the vascular lesion sits, and how much of it can be a local consequence of fibrosis (tables S25-S26).
 
 The cohorts share the fibrosis course and the lesion draws of big2 and adv2 and differ only in the location of the
 lesion (`ph_cohort.py run --where`):
@@ -11,13 +11,13 @@ lesion (`ph_cohort.py run --where`):
 comparison is at equal prevalence. Runs that end in a non-viable state contribute their last viable visit and are
 counted as deaths.
 
-S24  the seven mild-to-moderate benchmarks, advanced disease (FVC < 50%, pooled) and deaths, by mechanism.
-S25  PH (mPAP >= 25 mmHg) by FVC band, by mechanism, and in catheterised patients when --clinical is given.
+S25  the seven mild-to-moderate benchmarks, advanced disease (FVC < 50%, pooled) and deaths, by mechanism.
+S26  PH (mPAP >= 25 mmHg) by FVC band, by mechanism, and in catheterised patients when --clinical is given.
 
     python3 src/lesion_location.py [--clinical Base_HP_con_Cate.xlsx]
 """
 import argparse, os, sys, warnings
-import numpy as np, pandas as pd
+import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cohort_io import final_visits
@@ -52,9 +52,9 @@ if __name__ == "__main__":
         V = load_clinical(a.clinical).dropna(subset=["FVC", "mPAP"])
         bands.append(dict(mechanism="patients", **{f"FVC {lo}-{hi}": f"{int((V[(V.FVC >= lo) & (V.FVC < hi)].mPAP >= 25).sum())} of {((V.FVC >= lo) & (V.FVC < hi)).sum()}"
                                                    for lo, hi in BANDS}))
-    S24, S25 = pd.DataFrame(rows), pd.DataFrame(bands)
-    S24.to_csv(os.path.join(OUT, "TableS24_lesion_location.tsv"), sep="\t", index=False)
-    S25.to_csv(os.path.join(OUT, "TableS25_PH_by_FVC_and_location.tsv"), sep="\t", index=False)
+    S25, S26 = pd.DataFrame(rows), pd.DataFrame(bands)
+    S25.to_csv(os.path.join(OUT, "TableS25_lesion_location.tsv"), sep="\t", index=False)
+    S26.to_csv(os.path.join(OUT, "TableS26_PH_by_FVC_and_location.tsv"), sep="\t", index=False)
     show = ["mechanism", "n_mild", "ge25", "ge35", "rDLCO", "rFVC", "ratio", "targets_inside", "PH_adv", "severe_adv", "deaths"]
-    print(S24[[c for c in show if c in S24]].to_string(index=False)); print(S25.to_string(index=False))
+    print(S25[[c for c in show if c in S25]].to_string(index=False)); print(S26.to_string(index=False))
     print("targets:", TARGETS, "| advanced disease: PH 46%, mPAP > 40 mmHg about 9%")

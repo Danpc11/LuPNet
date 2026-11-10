@@ -11,7 +11,7 @@ Structure (Bayes):
     lost, effective lesion, FVC, DLCO, mPAP and PVR. The share of visits with PH is re-weighted to the prevalence of
     the population the tool is used in (--prevalence, or the training folds in cross-validation).
   - FVC and DLCO: measurement noise (5 points) plus the inter-individual spread of the healthy baseline (13% and 15%,
-    supplement table S6), because the model gives % of the case's own baseline and patients give % predicted.
+    supplement table S8), because the model gives % of the case's own baseline and patients give % predicted.
   - optional inputs: x_k = a_k + b_k mPAP + noise, fitted on catheterised patients (training folds only).
 What the model adds to the estimate: mPAP with an interval, the probability of a relevant vasculopathy, and the split
 of the pressure into what the lost lung explains and what the lesion adds, from the partial dependence surface
@@ -24,11 +24,10 @@ import argparse, os, sys, warnings
 import numpy as np, pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, viable
+from cohort_io import cases, viable, effective_lesion
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "figures")
-TAU = 2.0
 SD_PFT, SPREAD = 5.0, dict(FVC=0.13, DLCO=0.15)
 OPTIONAL = ["sPAP_echo", "PA_diam", "logBNP", "RV_FAC", "RA_area"]
 COLS = {"FVC": "FVC (%)", "DLCO": "DLCO aj (%)", "mPAP": "PmAP", "PVR": "RVP (UW)", "PAWP": "Cuña", "sPAP_echo": "PSAP",
@@ -45,10 +44,9 @@ def trajectory_points(tags=("big2", "adv2", "hom", "big2_uip", "big2_nsip", "adv
     rows = []
     for tag in tags:
         for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-            A = float(d.vasc_A.iloc[0]) * (float(d["a_scale"].iloc[0]) if "a_scale" in d else 1.0)     # severity as applied
-            t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0; r0 = d.iloc[0]
+            r0 = d.iloc[0]; d = d.assign(_Aeff=effective_lesion(d))                         # severity as applied
             for _, x in d.iloc[1:][viable(d).iloc[1:].values].iterrows():
-                rows.append(dict(case=f"{tag}{i}", tag=tag, lost=1 - x.healthy, Aeff=A * (1 - np.exp(-(x.years + t0) / TAU)) if A > 0 else 0.0,
+                rows.append(dict(case=f"{tag}{i}", tag=tag, lost=1 - x.healthy, Aeff=float(x._Aeff),
                                  mPAP=x.mPAP, PVR=x.PVR, FVC=100 * x.FVC / r0.FVC, DLCO=100 * x.DLCO / r0.DLCO, SpO2=100 * x.SaO2))
     return pd.DataFrame(rows)
 
@@ -202,16 +200,16 @@ if __name__ == "__main__":
         print(f"reference {g}: {len(RP[g])} simulated visits of {RP[g].case.nunique()} cases" + (f"; surface R2 {FP[g][1]:.3f}" if g in FP else ""))
     P = load_clinical(a.clinical)
     S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps, prior=a.prior)
-    S.round(3).to_csv(os.path.join(OUT, f"TableS21_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
+    S.round(3).to_csv(os.path.join(OUT, f"TableS22_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
     M = fit_obs(V); prev = float((V.mPAP >= 25).mean())
-    pd.DataFrame([dict(input=k, intercept=v[0], slope_per_mmHg=v[1], sd=v[2]) for k, v in M.items()]).round(3).to_csv(os.path.join(OUT, "TableS22_measurement_models.tsv"), sep="\t", index=False)
+    pd.DataFrame([dict(input=k, intercept=v[0], slope_per_mmHg=v[1], sd=v[2]) for k, v in M.items()]).round(3).to_csv(os.path.join(OUT, "TableS23_measurement_models.tsv"), sep="\t", index=False)
     rep = []
     for _, row in V.iterrows():
         g = row.group; F = FP.get(g, FP["other"])[0]
         pw = severity_weights(RP[g], V.mPAP.values) if a.prior == "severity" else None
         s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, M, prev, pw), F)
         rep.append(dict(ID=row.ID, group=g, FVC=row.FVC, DLCO=row.DLCO, mPAP_RHC=row.mPAP, PVR_RHC=row.PVR, **s))
-    pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS23_individual_report{suf}.tsv"), sep="\t", index=False)
+    pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS24_individual_report{suf}.tsv"), sep="\t", index=False)
     for name, df in per.items():
         df.round(2).to_csv(os.path.join(OUT, f"cv{suf}_" + name.replace("+", "plus").replace(" ", "_") + ".tsv"), sep="\t", index=False)
-    print("tables S21-S23 written to results/figures/")
+    print("tables S22-S24 written to results/figures/")

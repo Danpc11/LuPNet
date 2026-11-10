@@ -3,7 +3,11 @@ __pycache__/
 .DS_Store
 .pytest_cache/
 results/runs/
-results/figures/
+results/figures/*
+!results/figures/pressure_flow_cases.tsv
+!results/figures/tree_size_cases.tsv
+results/pressure_flow/
+results/tree_size/
 results/*.tsv
 manuscript/
 

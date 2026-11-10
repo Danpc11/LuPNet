@@ -6,7 +6,7 @@ Figure 1: the shared target law against human pulmonary morphometry. Figure 2: t
 (a-e) and the two clocks of fibrosis and vasculopathy (f-h).
 Figure 3: advanced disease (out of sample). Figure 4: the vascular phenotype. Table 1: calibration targets.
 """
-import argparse, glob, os, sys
+import argparse, os, sys
 import numpy as np, pandas as pd
 import logging
 import matplotlib
@@ -33,7 +33,6 @@ plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "D
 BLUE, RED, GREEN, GREY, LGREY, DARK = "#2166AC", "#B2182B", "#1B7837", "#8C8C8C", "#D9D9D9", "#252525"
 ORANGE = "#E08214"          # lesion tied to the extent of fibrosis (alternative mechanism)
 PANEL_UPPER = False         # True for upper-case panel letters (Nature style)
-VASC_TAU = 2.0              # time constant of the lesion, years (ph_cohort.py --tau)
 MPAP_HEALTHY = 14.8         # mPAP of the healthy model lung, mmHg
 rng0 = np.random.default_rng(0)
 
@@ -70,6 +69,9 @@ _fib_co = np.polyfit(HOM.FVC, HOM.mPAP, 2)  # mPAP that fibrosis alone produces 
 def mPAP_fibrosis_only(fvc):
     """mPAP (mmHg) of the fibrosis-only cohort at this FVC, % predicted."""
     return np.polyval(_fib_co, fvc)
+
+
+from cohort_io import lesion_tau
 
 
 def trajectories(tag_, k=14, seed=1):
@@ -300,7 +302,7 @@ ax.set(xticks=[0, 1], xlim=(-0.6, 1.6), ylabel="mPAP (mmHg)", ylim=(12, 50))
 ax.set_xticklabels([f"No vasculopathy\n(n = {len(parts[0])})", f"Vasculopathy\n(n = {len(parts[1])})"])
 tag(ax, "d")
 # e: Table-like dot plot of the seven targets relative to their CI
-from ph_stats import bootstrap as ph_bootstrap, point as ph_point, prevalence_ci
+from ph_stats import bootstrap as ph_bootstrap, point as ph_point
 CI_MILD = ph_bootstrap(MILD); PT_MILD = ph_point(MILD)
 S = {"r_DLCO": (CI_MILD["rDLCO"], PT_MILD["rDLCO"]), "r_FVC": (CI_MILD["rFVC"], PT_MILD["rFVC"]), "ratio": (CI_MILD["ratio"], PT_MILD["ratio"])}
 sub = gs[1, 1:].subgridspec(1, 2, width_ratios=[1.0, 0.75], wspace=0.08)
@@ -330,7 +332,7 @@ for tag_, c, lab in (("big2", RED, "Own clock"), ("altF", ORANGE, "Tied to fibro
         ext = 1.0 - d.healthy.to_numpy()
         if tag_ == "big2":
             # d.years = t x years_per_unit (6.71 x ypu); v0.3.7 used t x ypu and ran the lesion 6.7x too slowly
-            s = 1.0 - np.exp(-(d.years.to_numpy() + d.t_vasc0.to_numpy()) / VASC_TAU)
+            s = 1.0 - np.exp(-(d.years.to_numpy() + d.t_vasc0.to_numpy()) / lesion_tau(d))
         else:
             s = np.clip(ext / 0.5, 0.0, 1.0)
         ax.plot(100 * ext, 100 * s, color=c, lw=0.7, alpha=0.55, label=lab if j == 0 else None)

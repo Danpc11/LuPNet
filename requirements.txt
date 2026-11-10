@@ -3,3 +3,4 @@ scipy>=1.13
 pandas>=2.2
 matplotlib>=3.9
 scikit-learn>=1.4
+openpyxl>=3.1        # only to read a clinical spreadsheet (noninvasive_tool.py, lesion_location.py --clinical)

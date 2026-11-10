@@ -1,9 +1,9 @@
 {
   "title": "LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation",
   "upload_type": "software",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "license": "PolyForm-Noncommercial-1.0.0",
-  "description": "Physics-based network model of the fibrotic lung and its pulmonary circulation, with a shared shear-stress remodelling law for the pulmonary vessels, in silico cohorts of pulmonary hypertension in idiopathic pulmonary fibrosis, and a browser-based research calculator. Code, data and simulations accompanying the manuscript 'A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis'.",
+  "description": "Physics-based network model of the fibrotic lung and its pulmonary circulation, with a shared shear-stress remodelling law for the pulmonary vessels. Includes the in silico cohorts of pulmonary hypertension in fibrosing interstitial lung disease (calibrated, UIP and fibrotic NSIP patterns, Mexico City altitude, and lesions located in the scar, spreading from it, or diffuse), the scripts that produce every figure and table of the manuscript 'A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis' from those cohorts, a non-invasive individual estimate of pulmonary hypertension from FVC, DLCO and optional echocardiography, CT and BNP, and a browser-based research calculator. No patient data are included.",
   "creators": [
     {
       "name": "Toscano-Marquez, Fernanda",
@@ -43,12 +43,17 @@
     }
   ],
   "keywords": [
+    "computational model",
+    "computational physiology",
+    "hemodynamics",
+    "idiopathic pulmonary fibrosis",
+    "in silico cohort",
+    "interstitial lung disease",
+    "lung model",
+    "pulmonary circulation",
     "pulmonary fibrosis",
     "pulmonary hypertension",
-    "lung model",
-    "hemodynamics",
-    "computational physiology",
-    "idiopathic pulmonary fibrosis"
+    "vascular remodelling"
   ],
   "related_identifiers": [
     {

@@ -3,7 +3,7 @@
 
 ### A physics-based model of the fibrotic lung and its pulmonary circulation
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23125038.svg)](https://doi.org/10.5281/zenodo.23125038)
@@ -76,8 +76,8 @@ and places the patient on a map of the 260 simulated cases. In held-out simulate
 `src/noninvasive_tool.py` estimates PH for one patient without right heart catheterisation. FVC and DLCO are required; echocardiographic systolic pressure, pulmonary artery diameter on CT, BNP, right ventricular fractional area change and right atrial area are optional, in any combination. The simulated visits are the prior; catheterised patients are used only to fit how each measurement relates to pressure and to score the tool. In 43 catheterised patients with fibrosing interstitial lung disease (cross-validated), the area under the ROC curve for mPAP ≥ 25 mmHg is 0.71 with FVC and DLCO and 0.87 with every optional input (logistic regression on the same inputs: 0.64 and 0.89, the latter on the 34 patients with complete data), and the estimate of mPAP has a mean error of 8.5 mmHg. The tool also returns the pressure of the aged lung, what the lost lung adds and what the lesion adds, from the surface mPAP = F(lung lost, lesion) of the simulations (R² 0.998). The clinical file is not part of the repository:
 
 ```bash
-python src/noninvasive_tool.py --clinical patients.xlsx      # tables S21-S23
-python src/lesion_location.py --clinical patients.xlsx       # tables S24-S25
+python src/noninvasive_tool.py --clinical patients.xlsx      # tables S22-S24
+python src/lesion_location.py --clinical patients.xlsx       # tables S25-S26
 ```
 
 It is a research tool; the thresholds have not been validated in a second cohort.
@@ -86,11 +86,10 @@ It is a research tool; the thresholds have not been validated in a second cohort
 
 ```bash
 conda env create -f environment.yml && conda activate lupnet      # or: pip install -r requirements.txt -r requirements-dev.txt
-pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest tests -q                       # fast checks
 python src/pulmonary_shared_law.py              # the shared law against human arterial morphometry
 python src/ph_cohort.py analyze --table data/virtual_ph_cohort.tsv --tag calibrated   # the shipped calibrated cohort
-./run_all.sh                                    # everything, about 2 hours on one core (resumable)
+./run_all.sh                                    # every figure and table from the shipped simulations, about 6 minutes
 ```
 
 ```python
@@ -108,9 +107,31 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the two clocks) and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
 python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
-python src/manuscript_numbers.py      # numbers quoted in the text and table S10
+python src/manuscript_numbers.py      # numbers quoted in the text and table S11
 python src/validate_calculator.py     # calculator validation
+python src/exercise_response.py analyze   # Figure 6 and table S16 (pressure-flow response of 70 cases)
+python src/tree_size.py analyze           # table S6 (256 against 1,024 units, 12 cases)
+python src/sensitivity.py --ref big2 --tags tau1.0 tau3.0 pv0.50 pv0.85 --labels 'T_les 1 y' 'T_les 3 y' '70% to 50%' '70% to 85%'   # table S17, figure S2
 ```
+
+Supplementary tables carry the numbers of the online supplement. Up to version 0.3.14 the repository used its own numbering; the correspondence is
+
+| Content | Supplement and v0.4.0 | Up to v0.3.14 |
+|---|---|---|
+| Tree of 256 and 1,024 units | S6 | not in the repository |
+| Variation of the healthy baseline | S8 | S6 |
+| Wedge pressure | S9 | S8 |
+| Low-DLCO phenotype without labels | S10 | S9 |
+| PH by FVC range | S11 | S10 |
+| Pressure categories with noise | S12 | S11 |
+| Emulator | S15 | S13a |
+| Pressure–flow response | S16 | not in the repository |
+| Sensitivity to the lesion time constant and prevalence | S17 | S16 |
+| Audit checks (pressure decomposition, aged lung, lesion saturation, phenotype under baseline spread) | S18–S21 | S17–S20 |
+| Non-invasive tool (cross-validation, measurement models, individual report) | S22–S24 | S21–S23 |
+| Location of the lesion | S25–S26 | S24–S25 |
+
+The model has more options than the manuscript uses. The manuscript cohorts use the symmetric tree, the mirrored venous tree, the shared law, gravity, surfactant mechanics with the time-domain breath, the right ventricle and vessel ageing (`data/calibrated_ipf_params.json`). The septal venous tree, the anatomical tree, epithelial senescence (`epi_bio`), acute exacerbations (`ae`), traction, the per-vessel law and the unbounded lesion (`k_vasc`) run and converge but were not used for any published number.
 
 To regenerate the cohorts from scratch (about 3 hours on one core, resumable):
 
@@ -154,17 +175,20 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `docs/AUDIT.md` | Reproducibility audit |
 | `results/ph_cohorts/*.tsv.gz` | Simulated cohorts, one compressed file each (see "Cohorts") |
 | `src/cohort_io.py` | Reads cohorts stored per case or packed per cohort |
-| `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S10 |
+| `src/manuscript_numbers.py` | Every number quoted in the text of the manuscript, and supplementary table S11 |
 | `src/validate_calculator.py` | Validation of the calculator on held-out simulated cases |
 | `src/noninvasive.py` | Emulator, identification of vasculopathy and PH with echocardiographic pressure and arterial blood gases, individual estimation (Figure 5, tables S13–S15) |
-| `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S16 and Figure S2 |
-| `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S16, Figure S2) |
-| `src/noninvasive_tool.py` | Individual estimate of PH without catheterisation: prior from the simulated visits, measurement models from catheterised patients, cross-validation (tables S21–S23) |
-| `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S24–S25) |
+| `scripts/sensitivity_parallel.sh`, `scripts/sensitivity.slurm` | Generate the four sensitivity cohorts across several cores, or as a SLURM array, then build Table S17 and Figure S2 |
+| `src/sensitivity.py` | Benchmarks recomputed across cohorts generated at other values of the lesion time constant and of the proportion of cases carrying a lesion (Table S17, Figure S2) |
+| `src/noninvasive_tool.py` | Individual estimate of PH without catheterisation: prior from the simulated visits, measurement models from catheterised patients, cross-validation (tables S22–S24) |
+| `src/exercise_response.py` | Pressure–flow response at imposed cardiac output (Figure 6, table S16); `results/figures/pressure_flow_cases.tsv` holds every case |
+| `src/tree_size.py` | The same cases with 256 and 1,024 units (table S6); `results/figures/tree_size_cases.tsv` |
+| `data/README.md`, `CITATION.cff` | Provenance of the morphometric tables and the parameter file; how to cite |
+| `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S25–S26) |
 | `scripts/cohorts_local.sh` | Pattern, altitude and lesion-location cohorts on the cores of one machine |
 | `environment.yml` | Conda environment with the locked versions |
 | `tests/` | Mathematical invariants of the model and a regression test of every number published in the manuscript |
-| `src/audit_extra.py` | Checks of the 0.3.7 audit: where the healthy pressure drop comes from, the aged lung without fibrosis, lesion saturation at the visit, the low-DLCO phenotype under baseline spread (tables S17–S20) |
+| `src/audit_extra.py` | Checks of the 0.3.7 audit: where the healthy pressure drop comes from, the aged lung without fibrosis, lesion saturation at the visit, the low-DLCO phenotype under baseline spread (tables S18–S21) |
 | `src/ph_stats.py` | The single statistics routine behind Table 1, the supplementary tables and `ph_cohort.py analyze` |
 | `src/fibrosis_only_cohorts.py` | Cohorts without vasculopathy (fibrosis alone and variable vascular responses) |
 | `src/fit_calculator.py`, `src/build_app.py`, `src/app_template.html` | Calculator inputs and page |
@@ -182,7 +206,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.3.14). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.4.0). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
 
 ## License
 

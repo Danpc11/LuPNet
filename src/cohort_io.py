@@ -1,24 +1,50 @@
 """Read in silico cohorts stored either as one file per simulated case (tag_000.tsv, ... written by ph_cohort.py)
 or as one compressed file per cohort (tag.tsv.gz, with a 'case' column), which is how the cohorts of the manuscript
 are distributed."""
-import glob, os, re
-import pandas as pd
+import glob, os, re, warnings
+import numpy as np, pandas as pd
 
 
 def cases(folder, tag):
-    """Yield (case_index, DataFrame of the run) for every simulated case of a cohort."""
+    """Yield (case_index, DataFrame of the run) for every simulated case of a cohort.
+
+    Per-case files (tag_000.tsv, ...) are used when they are the only form of the cohort or when they are at least
+    as many as the cases of the packed file; otherwise the packed file (tag.tsv.gz) is used and a warning says so,
+    because a few per-case files next to a packed cohort are the trace of an interrupted re-run, not the cohort."""
     # exactly tag_<digits>.tsv: "big2_*.tsv" would also pick up the cases of big2_uip, big2_nsip or big2_cdmx
     pat = re.compile(re.escape(tag) + r"_\d+\.tsv$")
     files = sorted(f for f in glob.glob(os.path.join(folder, f"{tag}_*.tsv")) if pat.fullmatch(os.path.basename(f)))
+    packed = os.path.join(folder, f"{tag}.tsv.gz")
+    D = pd.read_csv(packed, sep="\t") if os.path.exists(packed) else None
+    if files and D is not None and len(files) < D["case"].nunique():
+        warnings.warn(f"cohort {tag}: {len(files)} per-case files but {D['case'].nunique()} cases in {tag}.tsv.gz; "
+                      f"using the packed cohort (remove the per-case files or finish the run)")
+        files = []
     if files:
         for f in files:
             yield int(os.path.basename(f).rsplit("_", 1)[1].split(".")[0]), pd.read_csv(f, sep="\t")
         return
-    packed = os.path.join(folder, f"{tag}.tsv.gz")
-    if os.path.exists(packed):
-        D = pd.read_csv(packed, sep="\t")
+    if D is not None:
         for i, d in D.groupby("case", sort=True):
             yield int(i), d.drop(columns="case").reset_index(drop=True)
+
+
+def meta(d, key, default):
+    """Generating parameter of a run (tau, cap, p_vasc, a_scale, ...). Cohorts written before 0.4.0 do not store
+    them; `default` is then the value of the manuscript cohorts."""
+    return type(default)(d[key].iloc[0]) if key in d and pd.notna(d[key].iloc[0]) else default
+
+
+def lesion_tau(d):
+    """Time constant of the lesion of a run, years (2.0 in every cohort written before 0.4.0)."""
+    return meta(d, "tau", 2.0)
+
+
+def effective_lesion(d, years=None):
+    """Severity of the lesion in place along a run: A x a_scale x (1 - exp(-(years + t0) / tau)); 0 without lesion."""
+    A = float(d.vasc_A.iloc[0]) * meta(d, "a_scale", 1.0); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
+    y = d.years.to_numpy() if years is None else years
+    return A * (1.0 - np.exp(-(y + t0) / lesion_tau(d))) if A > 0 else np.zeros(np.shape(y))
 
 
 def viable(d):

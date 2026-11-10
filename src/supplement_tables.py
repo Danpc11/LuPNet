@@ -5,7 +5,7 @@ in results/ph_cohorts.
 
     python3 src/supplement_tables.py
 """
-import glob, os, sys
+import os, sys
 import numpy as np, pandas as pd
 from scipy.optimize import brentq, minimize_scalar
 from scipy.stats import pearsonr

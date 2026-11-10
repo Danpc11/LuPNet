@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generate the four sensitivity cohorts across several cores, then build Table S16 and
+# Generate the four sensitivity cohorts across several cores, then build Table S17 and
 # Figure S2. Run from the root of the repository.
 #
 #   bash scripts/sensitivity_parallel.sh                  # uses every core it can see

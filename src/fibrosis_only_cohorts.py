@@ -37,4 +37,5 @@ for i in range(a.n):
     p.law, p.b, p.G, p.seed, p.eta_p, p.hpv_max, p.beta, p.stop_healthy = "shared", 0.925, 8, 100 + i, float(e), float(h), 0.0, float(stop[i])
     t = time.time(); rows, _, _ = run(p, do_exercise=False)
     df = pd.DataFrame(rows); df["eta_p"] = e; df["hpv_max"] = h; df["stop"] = stop[i]; df["vasc_A"] = 0.0
-    df.to_csv(f, sep="\t", index=False); print(a.arm, i, round(time.time() - t), "s", flush=True)
+    tmp = f + f".tmp{os.getpid()}"; df.to_csv(tmp, sep="\t", index=False); os.replace(tmp, f)      # never a truncated file
+    print(a.arm, i, round(time.time() - t), "s", flush=True)

@@ -6,5 +6,5 @@ dependencies:
   - pip
   - pip:
       - -r requirements-lock.txt
-      - pytest
       - openpyxl
+      - pytest

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Every number quoted in the text of the manuscript that is not in a figure or table script, recomputed from the stored
-cohorts; also supplementary table S10 (PH by FVC range). Writes results/figures/manuscript_numbers.tsv.
+cohorts; also supplementary table S11 (PH by FVC range). Writes results/figures/manuscript_numbers.tsv.
 
     python3 src/manuscript_numbers.py
 """
@@ -11,7 +11,6 @@ from cohort_io import cases
 from ph_stats import point, bootstrap, prevalence_ci
 from scipy.stats import pearsonr, spearmanr
 from sklearn.mixture import GaussianMixture
-from sklearn.metrics import roc_auc_score
 ROOT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 F=os.path.join(ROOT,'results','ph_cohorts'); OUT=os.path.join(ROOT,'results','figures'); os.makedirs(OUT,exist_ok=True)
 def last(tag):
@@ -53,12 +52,12 @@ g=np.random.default_rng(1); b=[]
 for _ in range(1000):
     S=M.iloc[g.integers(0,len(M),len(M))]; ph=S.mPAP>=21; b.append(S.DLCO[ph].mean()/S.DLCO[~ph].mean())
 ph=M.mPAP>=21; add('DLCO ratio at 21 mmHg (95% CI)', f'{M.DLCO[ph].mean()/M.DLCO[~ph].mean():.2f} ({np.percentile(b,2.5):.2f}-{np.percentile(b,97.5):.2f})')
-# table S10: PH by FVC range, pooled calibrated and advanced cohorts
+# table S11: PH by FVC range, pooled calibrated and advanced cohorts
 P=pd.concat([C,A]).reset_index(drop=True); rows=[]
 for lab,lo,hi in (('< 35%',0,35),('35-40%',35,40),('40-45%',40,45),('45-50%',45,50),('50-60%',50,60),('60-70%',60,70),('70-80%',70,81),('< 50% (main text)',0,50),('34-66% (range of transplant candidates)',34,66.0001)):
     D=P[(P.FVC>=lo)&(P.FVC<hi)].reset_index(drop=True); v,l,h=prevalence_ci(D,lambda D:D.mPAP>=25); s_,sl,sh=prevalence_ci(D,lambda D:D.mPAP>40)
     rows.append([lab,len(D),f'{v:.0f} ({l:.0f}-{h:.0f})',f'{s_:.0f} ({sl:.0f}-{sh:.0f})'])
-pd.DataFrame(rows,columns=['FVC','n','PH, % (95% CI)','mPAP > 40 mmHg, % (95% CI)']).to_csv(os.path.join(OUT,'TableS10_PH_by_FVC.tsv'),sep='\t',index=False)
+pd.DataFrame(rows,columns=['FVC','n','PH, % (95% CI)','mPAP > 40 mmHg, % (95% CI)']).to_csv(os.path.join(OUT,'TableS11_PH_by_FVC.tsv'),sep='\t',index=False)
 # partial association of PaO2 with lesion severity at given FVC and DLCO (trajectory points in established disease)
 R=[]
 for tag in ('big2','adv2'):
@@ -71,4 +70,4 @@ V=pd.DataFrame(R); Xc=np.c_[np.ones(len(V)),V.FVC,V.DLCO,V.FVC**2,V.DLCO**2,V.FV
 res=lambda y: y-Xc@np.linalg.lstsq(Xc,y,rcond=None)[0]
 add('partial r(PaO2, effective lesion | FVC, DLCO)', f'{pearsonr(res(V.PaO2.values),res(V.Aeff.values))[0]:.2f}')
 pd.DataFrame(o,columns=['quantity','value']).to_csv(os.path.join(OUT,'manuscript_numbers.tsv'),sep='\t',index=False)
-print('written results/figures/manuscript_numbers.tsv and TableS10_PH_by_FVC.tsv')
+print('written results/figures/manuscript_numbers.tsv and TableS11_PH_by_FVC.tsv')

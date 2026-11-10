@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Supplementary figure S1 and tables S6-S9, S11: range of lung function and sensitivity analyses of the audit.
+"""Supplementary figure S1 and tables S8-S10, S12: range of lung function and sensitivity analyses of the audit.
 
 a) FVC and DLCO (% of each case's healthy baseline) along the full trajectories of the calibrated cohort, against the
    fraction of healthy tissue; the shaded band is the window from which the single cross-sectional visit was drawn.
 b) DLCO against FVC for all trajectory points (grey) and for the cross-sectional visits (coloured by mPAP).
-Table S6: calibration targets after adding inter-individual variation of the healthy baseline in % predicted
+Table S8: calibration targets after adding inter-individual variation of the healthy baseline in % predicted
 (SD 13% for FVC and 15% for DLCO, correlation 0.5; mean of 20 replicates).
 
     python3 src/make_supplement_figures.py
@@ -50,23 +50,23 @@ ax.set(xlim=(35, 102), ylim=(0, 105), xlabel="FVC (% of healthy baseline)", ylab
 ax.legend(loc="upper left", markerscale=3); ax.text(-0.15, 1.04, "b", transform=ax.transAxes, fontsize=9, fontweight="bold")
 for ext in ("pdf", "png"):
     fig.savefig(os.path.join(OUT, f"FigureS1.{ext}"), bbox_inches="tight", pad_inches=0.04)
-# table S6: baseline variation in % predicted
+# table S8: baseline variation in % predicted
 C = V.copy(); rows = []
 for rep in range(20):
     g = np.random.default_rng(100 + rep); z = g.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], len(C))
     D = C.copy(); D["FVC"] = D.FVC * (1 + 0.13 * z[:, 0]); D["DLCO"] = D.DLCO * (1 + 0.15 * z[:, 1])
     M = D[(D.FVC >= 50) & (D.FVC <= 90)].reset_index(drop=True); p = point(M); p["n"] = len(M); rows.append(p)
 R = pd.DataFrame(rows)
-S6 = pd.DataFrame(dict(quantity=R.columns, mean=R.mean().round(3).values, min=R.min().round(3).values, max=R.max().round(3).values))
-S6.to_csv(os.path.join(OUT, "TableS6_baseline_variation.tsv"), sep="\t", index=False)
+S8 = pd.DataFrame(dict(quantity=R.columns, mean=R.mean().round(3).values, min=R.min().round(3).values, max=R.max().round(3).values))
+S8.to_csv(os.path.join(OUT, "TableS8_baseline_variation.tsv"), sep="\t", index=False)
 bins = [(0.95, 1.01), (0.85, 0.95), (0.75, 0.85), (0.6, 0.75), (0.45, 0.6), (0.25, 0.45)]
 S7 = pd.DataFrame([dict(healthy=f"{a:.2f}-{min(b, 1):.2f}", FVC_median=round(T.FVC[(T.healthy >= a) & (T.healthy < b)].median(), 1),
                         DLCO_median=round(T.DLCO[(T.healthy >= a) & (T.healthy < b)].median(), 1)) for a, b in bins])
 S7.to_csv(os.path.join(OUT, "TableS7_trajectory_ranges.tsv"), sep="\t", index=False)
-print(S6.to_string(index=False)); print(S7.to_string(index=False))
+print(S8.to_string(index=False)); print(S7.to_string(index=False))
 
 
-# ---------------------------------------------------------------- audit sensitivity analyses (tables S8-S11)
+# ---------------------------------------------------------------- audit sensitivity analyses (tables S9-S12)
 from sklearn.mixture import GaussianMixture
 from cohort_io import cases as _cases
 
@@ -81,7 +81,7 @@ def _visits(tag):
 
 CAL, ADV = _visits("big2"), _visits("adv2")
 MILD = CAL[(CAL.FVC >= 50) & (CAL.FVC <= 90)].reset_index(drop=True)
-# S8: pulmonary artery wedge pressure (left atrial pressure fixed at 8 mmHg in the model)
+# S9: pulmonary artery wedge pressure (left atrial pressure fixed at 8 mmHg in the model)
 rows = [dict(scenario="Fixed at 8 mmHg (model)", **point(MILD))]
 for lab, mu, sd, post in (("Mean 8, SD 2.5 mmHg", 8, 2.5, 0.0), ("Mean 7, SD 2.5 mmHg", 7, 2.5, 0.0), ("Fixed at 9 mmHg", 9, 0.0, 0.0),
                           ("Mean 9, SD 2.5 mmHg, 5% post-capillary (16-22 mmHg)", 9, 2.5, 0.05)):
@@ -92,8 +92,8 @@ for lab, mu, sd, post in (("Mean 8, SD 2.5 mmHg", 8, 2.5, 0.0), ("Mean 7, SD 2.5
         post_ = g.uniform(0, 1, len(M)) < post; pawp[post_] = g.uniform(16, 22, post_.sum())
         M["mPAP"] = M.mPAP + (pawp - 8); out.append(point(M))
     rows.append(dict(scenario=lab, **pd.DataFrame(out).mean().to_dict()))
-pd.DataFrame(rows).round(3).to_csv(os.path.join(OUT, "TableS8_wedge_pressure.tsv"), sep="\t", index=False)
-# S9: low-DLCO phenotype without using the vasculopathy labels (expected DLCO from a trimmed fit to all cases)
+pd.DataFrame(rows).round(3).to_csv(os.path.join(OUT, "TableS9_wedge_pressure.tsv"), sep="\t", index=False)
+# S10: low-DLCO phenotype without using the vasculopathy labels (expected DLCO from a trimmed fit to all cases)
 x, y = CAL.FVC.values, np.log(CAL.DLCO.values); ph = (CAL.mPAP >= 25).values; rows = []
 masks = {"Expected DLCO from cases without vasculopathy (manuscript)": CAL.A.values == 0, "Expected DLCO from all cases": np.ones(len(CAL), bool)}
 m = np.ones(len(CAL), bool)
@@ -106,13 +106,13 @@ for lab, mk in masks.items():
     L = g2.predict(res) == int(np.argmin(g2.means_.ravel()))
     rows.append(dict(method=lab, dBIC=round(g1.bic(res) - g2.bic(res), 1), n_low=int(L.sum()), PH_in_low_pct=round(100 * ph[L].mean(), 1),
                      sensitivity_pct=round(100 * (L & ph).sum() / ph.sum(), 1), specificity_pct=round(100 * ((~L) & (~ph)).sum() / (~ph).sum(), 1)))
-pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS9_phenotype_without_labels.tsv"), sep="\t", index=False)
-# S11: mPAP categories with measurement noise added to mPAP (SD 2.5 mmHg), mean of 1,000 realisations
+pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS10_phenotype_without_labels.tsv"), sep="\t", index=False)
+# S12: mPAP categories with measurement noise added to mPAP (SD 2.5 mmHg), mean of 1,000 realisations
 g = np.random.default_rng(0); Pn = []
 for _ in range(1000):
     mp = MILD.mPAP + g.normal(0, 2.5, len(MILD)); Pn.append([100 * (mp < 20).mean(), 100 * ((mp >= 20) & (mp < 25)).mean(), 100 * (mp >= 25).mean(), 100 * (mp >= 35).mean()])
 pd.DataFrame([dict(version="Without noise (manuscript)", lt20=100 * (MILD.mPAP < 20).mean(), b20_25=100 * ((MILD.mPAP >= 20) & (MILD.mPAP < 25)).mean(),
                    ge25=100 * (MILD.mPAP >= 25).mean(), ge35=100 * (MILD.mPAP >= 35).mean()),
               dict(version="With measurement noise", **dict(zip(["lt20", "b20_25", "ge25", "ge35"], np.mean(Pn, 0))))]).round(1).to_csv(
-    os.path.join(OUT, "TableS11_categories_with_noise.tsv"), sep="\t", index=False)
-print("tables S8, S9 and S11 written")
+    os.path.join(OUT, "TableS12_categories_with_noise.tsv"), sep="\t", index=False)
+print("tables S9, S10 and S12 written")

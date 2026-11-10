@@ -20,9 +20,10 @@ inside the 95% intervals):
     python3 src/ph_cohort.py analyze --table data/virtual_ph_cohort.tsv --tag calibrated   # shipped summary table
 The run is resumable: finished patients are skipped.
 """
-import argparse, glob, json, os, sys, time
+import argparse, json, os, sys, time
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+import lupnet
 from lupnet import Params
 from lupnet.sim import run
 
@@ -83,13 +84,16 @@ def cmd_run(a):
             # 7 of 60 cases of the adv2 cohort of the manuscript end this way (t_max = 3.0)
             print(f"  warning: case {i} stopped at healthy = {rows[-1]['healthy']:.3f}, drawn stage {stop[i]:.3f}", flush=True)
         df = pd.DataFrame(rows); df["vasc_A"] = A[i]; df["t_vasc0"] = t0[i]; df["ypu"] = ypu[i]; df["stop"] = stop[i]; df["G"] = a.G; df["PB"] = a.PB; df["pattern"] = a.pattern; df["where"] = a.where; df["mix"] = a.mix; df["a_scale"] = a.a_scale; df["vasc_A_scaled"] = A[i] * a.a_scale
+        # how the case was generated, so that no reader has to assume it
+        for k in ("tau", "cap", "p_vasc", "a_med", "a_sig", "seed", "pseed", "lo", "hi", "vmode", "n", "t_max"):
+            df[k] = getattr(a, k)
+        df["lupnet_version"] = lupnet.__version__
         tmp = f + f".tmp{os.getpid()}"
         df.to_csv(tmp, sep="\t", index=False); os.replace(tmp, f)
         print(a.tag, i, round(time.time() - t), "s", flush=True)
 
 
 def cmd_analyze(a):
-    from scipy.stats import pearsonr
     if a.table:
         T = pd.read_csv(a.table, sep="\t")
         R = T[T.cohort == a.tag][["mPAP", "FVC", "DLCO"]].reset_index(drop=True) if a.tag else T[["mPAP", "FVC", "DLCO"]]

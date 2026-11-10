@@ -16,7 +16,7 @@
     python3 src/fit_calculator.py --cohorts results/ph_cohorts
 Cohort files are produced by src/ph_cohort.py.
 """
-import argparse, glob, json, os
+import argparse, json, os
 import numpy as np, pandas as pd
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -61,7 +61,7 @@ out = dict(tissue_curve=tissue.round(6).tolist(), dlco_curve=dl.round(6).tolist(
                                       coef_log_ratio=round(float(lr.coef_[0][1]), 4), auc_with_noise=round(float(auc), 3)),
            n_patients=int(len(V)), fvc_range=[float(V.FVC.min()), float(V.FVC.max())], dlco_range=[float(V.DLCO.min()), float(V.DLCO.max())])
 # reference visits for the likelihood-weighted estimates (optional echocardiographic pressure and A-a gradient)
-from cohort_io import cases as _cases
+from cohort_io import cases as _cases, lesion_tau
 ref = []
 for tag in ("big2", "adv2"):
     for i, d in _cases(a.cohorts, tag):
@@ -71,7 +71,7 @@ for tag in ("big2", "adv2"):
             continue
         s_ = s_.iloc[np.linspace(0, len(s_) - 1, min(25, len(s_))).round().astype(int)]
         for _, x in s_.iterrows():
-            aeff = A * (1 - np.exp(-(x.years + t0) / 2.0)) if A > 0 else 0.0
+            aeff = A * (1 - np.exp(-(x.years + t0) / lesion_tau(d))) if A > 0 else 0.0
             ref.append([round(float(100 * x.FVC / r0.FVC), 1), round(float(100 * x.DLCO / r0.DLCO), 1), round(float(x.mPAP), 1),
                         round(float(150 - x.PaCO2 / 0.8 - x.PaO2), 1), int(aeff >= 1.0), round(float(100 * x.SaO2), 1)])
 out["reference"] = ref

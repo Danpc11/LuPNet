@@ -9,7 +9,7 @@ solved as a graph Laplacian (Kirchhoff nodal analysis) with a sparse direct solv
 and microvascular network codes.
 
   veins = "septal"  corner venules, interdigitated with the arterial H-tree (default of this class)
-  veins = "mirror"  the same general solver on the mirrored tree: must reproduce Lung exactly (C13)
+  veins = "mirror"  the same general solver on the mirrored tree: must reproduce Lung exactly (used as a check of the solver)
 
 vein_occl in [0, 1): a corner venule loses conductance in proportion to the fraction of stiff
 units around it, g -> g (1 - vein_occl f_stiff) (septal fibrosis compressing or obliterating veins).
@@ -17,7 +17,7 @@ units around it, g -> g (1 - vein_occl f_stiff) (septal fibrosis compressing or 
 import numpy as np
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve
-from .lung import Lung, pois, MMHG, LPM
+from .lung import Lung, LPM
 
 
 class SeptalLung(Lung):
@@ -142,7 +142,7 @@ class SeptalLung(Lung):
         super()._baseline()
 
     def solve_vessels(self, ru_a, ru_v, ru_ta, c, h, Qtot, P=None, tol=1e-7, maxit=200, Pt=0.0):
-        p, N = self.p, self.N
+        p = self.p
         if P is None:
             P = self._P_base
         else:

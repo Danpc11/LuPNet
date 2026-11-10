@@ -11,8 +11,8 @@
                       averages of the fast level; acute exacerbations are Poisson shocks on s
     readout:          z_P = z_F z_R ,  z_dP = z_V z_E        (LiPNet loads)
 
-Check C19 verifies that the medium level is a descent of the Murray/Hu-Cai functional when the
-non-variational terms are off, and that an aging offset climbs away from its minimum.
+With the non-variational terms off, the medium level is a descent of the Murray/Hu-Cai functional
+(`Lung.functional_E`); an aging offset moves the vessels away from its minimum.
 These functions only name the levels; the implementation lives in lung.py, breath.py and sim.py.
 """
 import numpy as np

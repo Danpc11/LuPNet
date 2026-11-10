@@ -24,7 +24,7 @@ Keeping --seed and --pseed fixed means every cohort has the same fibrosis course
 the same severities, so a difference between rows comes from the parameter and not
 from a different draw of cases.
 
-Writes results/figures/TableS16_sensitivity.tsv and FigureS2.{png,pdf}.
+Writes results/figures/TableS17_sensitivity.tsv and FigureS2.{png,pdf}.
 """
 import argparse
 import os
@@ -83,7 +83,7 @@ def main():
                      [row(t, l, a.cohorts) for t, l in zip(a.tags, labels)])
     os.makedirs(a.out, exist_ok=True)
     cols = ["label", "n", "vasc_pct", "ph_pct", "severe_pct", "rFVC", "rDLCO", "dlco_ratio"]
-    R[cols].round(2).to_csv(os.path.join(a.out, "TableS16_sensitivity.tsv"), sep="\t", index=False)
+    R[cols].round(2).to_csv(os.path.join(a.out, "TableS17_sensitivity.tsv"), sep="\t", index=False)
     print(R[cols].round(2).to_string(index=False))
 
     # PH prevalence against the clinical target, anchored at zero
@@ -112,7 +112,7 @@ def main():
     ax.text(-0.18, 1.02, "B", transform=ax.transAxes, fontsize=9, fontweight="bold", va="bottom")
     for ext in ("png", "pdf"):
         fig.savefig(os.path.join(a.out, f"FigureS2.{ext}"), bbox_inches="tight", pad_inches=0.04)
-    print(f"wrote {a.out}/TableS16_sensitivity.tsv and FigureS2")
+    print(f"wrote {a.out}/TableS17_sensitivity.tsv and FigureS2")
 
 
 if __name__ == "__main__":
