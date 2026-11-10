@@ -94,7 +94,7 @@
       <p class="verdict" id="verdict"></p>
       <div class="block">
         <h3>Mean pulmonary artery pressure</h3>
-        <svg id="gauge" role="img" aria-label="Estimated mean pulmonary artery pressure with its 90% interval and the pressure expected from fibrosis alone"></svg>
+        <svg id="gauge" role="img" aria-label="Estimated mean pulmonary artery pressure with its 90% interval and the pressure expected from no lesion"></svg>
       </div>
       <div class="block">
         <h3>Probabilities</h3>
@@ -113,7 +113,7 @@
 
     <section class="panel map" aria-label="In silico cohort">
       <h2>Where the patient sits</h2>
-      <p>Each dot is a simulated case, coloured by its simulated mean pulmonary artery pressure. The line is the DLCO that tissue loss alone produces at each FVC; cases well below it carry the low-DLCO phenotype.</p>
+      <p>Each dot is a simulated case, coloured by its simulated mean pulmonary artery pressure. The line is the DLCO of the simulated cases without lesion at each FVC; cases well below it carry the low-DLCO phenotype.</p>
       <svg id="plot" role="img" aria-label="FVC against DLCO for the simulated cases, with the patient marked"></svg>
       <div class="legend">
         <span>mPAP 15<span class="scale"></span>35+ mmHg</span>
@@ -126,7 +126,7 @@
   <details>
     <summary>How the estimates are made</summary>
     <ul>
-      <li>The simulated cases come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Each simulated case is an independent run of the model, not a real patient. 70% of the cases carry a structural small-artery vasculopathy with its own course, mostly mild, and fibrosis progresses at a different speed in each case.</li>
+      <li>The simulated cases come from LuPNet, a network model of the fibrotic lung with a shared shear-stress law for the pulmonary vessels. Each simulated case is an independent run of the model, not a real patient. 70% of the cases carry a structural small-artery vasculopathy mostly mild, and fibrosis progresses at a different speed in each case.</li>
       <li>Each simulated visit is weighted by how likely it is to produce the patient's data, given measurement errors (SD 5 percentage points for FVC and DLCO, 8 mmHg for echocardiographic systolic pressure, 6 mmHg for the alveolar–arterial gradient and 2 points for SpO₂). The estimated mPAP, its 90% interval and the probabilities of PH and of relevant vasculopathy (an effective lesion at least equal to the baseline arteriolar resistance) are weighted averages over the visits. Echocardiographic pressure is related to mPAP by mPAP = 0.61 × systolic pressure + 2 mmHg.</li>
       <li>In simulated cases held out from the reference set, the area under the ROC curve for PH was 0.77 with FVC and DLCO, 0.84 with SpO₂, 0.88 with the alveolar–arterial gradient, 0.93 with echocardiographic pressure and 0.94 with all three; for relevant vasculopathy, 0.72, 0.75, 0.76, 0.81 and 0.83. The mean error of the estimated mPAP fell from 3.6 to 2.0 mmHg.</li>
       <li>The low-DLCO phenotype probability comes from a two-component mixture of the DLCO deficit relative to the expected curve. The alveolar–arterial gradient and SpO₂ assume sea-level conditions and no other cause of hypoxaemia; at altitude they are not comparable with the model.</li>
@@ -192,7 +192,7 @@ function drawGauge(e) {
   const leg = el('g', { transform: `translate(${L},${y + 46})` }, g);
   el('circle', { cx: 6, cy: -4, r: 5, fill: css('--oxygen') }, leg); el('text', { x: 16, y: 0, 'font-size': 12 }, leg, `estimate, 90% interval ${fmt(e.lo, 0)}–${fmt(e.hi, 0)} mmHg`);
   const dx = narrow ? 0 : 250, dy = narrow ? 20 : 0;
-  el('path', { d: `M${dx + 6} ${dy - 9} L${dx + 12} ${dy - 4} L${dx + 6} ${dy + 1} L${dx} ${dy - 4} Z`, fill: 'none', stroke: css('--muted'), 'stroke-width': 1.4 }, leg); el('text', { x: dx + 18, y: dy, 'font-size': 12 }, leg, `fibrosis alone, ${fmt(e.tissue, 1)} mmHg`);
+  el('path', { d: `M${dx + 6} ${dy - 9} L${dx + 12} ${dy - 4} L${dx + 6} ${dy + 1} L${dx} ${dy - 4} Z`, fill: 'none', stroke: css('--muted'), 'stroke-width': 1.4 }, leg); el('text', { x: dx + 18, y: dy, 'font-size': 12 }, leg, `no lesion, ${fmt(e.tissue, 1)} mmHg`);
 }
 
 function drawPlot(fvc, dlco) {

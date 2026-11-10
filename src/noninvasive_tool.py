@@ -203,13 +203,14 @@ if __name__ == "__main__":
     P = load_clinical(a.clinical)
     S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps, prior=a.prior)
     S.round(3).to_csv(os.path.join(OUT, f"TableS22_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
-    M = fit_obs(V); prev = float((V.mPAP >= 25).mean())
+    M = fit_obs(V)
     pd.DataFrame([dict(input=k, intercept=v[0], slope_per_mmHg=v[1], sd=v[2]) for k, v in M.items()]).round(3).to_csv(os.path.join(OUT, "TableS23_measurement_models.tsv"), sep="\t", index=False)
     rep = []
-    for _, row in V.iterrows():
-        g = row.group; F = FP.get(g, FP["other"])[0]
-        pw = severity_weights(RP[g], V.mPAP.values) if a.prior == "severity" else None
-        s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, M, prev, pw), F)
+    for j, row in V.iterrows():
+        g = row.group; F = FP.get(g, FP["other"])[0]; rest = V.drop(index=j)          # models and prior without this patient
+        Mj = fit_obs(rest); prevj = float((rest.mPAP >= 25).mean())
+        pw = severity_weights(RP[g], rest.mPAP.values) if a.prior == "severity" else None
+        s = summarise(RP[g], posterior(RP[g], row, OPTIONAL, Mj, prevj, pw), F)
         rep.append(dict(ID=row.ID, group=g, FVC=row.FVC, DLCO=row.DLCO, mPAP_RHC=row.mPAP, PVR_RHC=row.PVR, **s))
     pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS24_individual_report{suf}.tsv"), sep="\t", index=False)
     for name, df in per.items():

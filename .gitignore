@@ -13,3 +13,4 @@ manuscript/
 
 .venv/
 logs/
+results/verify/
