@@ -184,7 +184,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `src/exercise_response.py` | Pressure–flow response at imposed cardiac output (Figure 6, table S16); `results/figures/pressure_flow_cases.tsv` holds every case |
 | `src/tree_size.py` | The same cases with 256 and 1,024 units (table S6); `results/figures/tree_size_cases.tsv` |
 | `data/README.md`, `CITATION.cff` | Provenance of the morphometric tables and the parameter file; how to cite |
-| `src/make_figures_story.py` | Figures of the storyline (Story2–Story6): fibrosis alone and the partial dependence, where the lesion sits, UIP and NSIP, catheterised patients, flow and the non-invasive estimate; `--clinical` for the panels with patients |
+| `src/make_figures_story.py` | Figures of the storyline (Story1–Story6), on one grid and one palette: the shared law, fibrosis alone and the partial dependence, where the lesion sits, UIP and NSIP, catheterised patients, flow and the non-invasive estimate; `--clinical` for the panels with patients |
 | `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S25–S26) |
 | `scripts/cohorts_local.sh` | Pattern, altitude and lesion-location cohorts on the cores of one machine |
 | `environment.yml` | Conda environment with the locked versions |

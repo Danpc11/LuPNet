@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Figures of the storyline "pulmonary hypertension in fibrosing lung disease arises from vascular disease in
-preserved lung, not from the scar" (Story1-Story6 in results/figures/). Figure 1 is Figure1 of make_figures_erj.py.
+preserved lung, not from the scar" (Story1-Story6 in results/figures/).
+
+  Story1  one shear-stress rule builds the normal pulmonary circulation (as Figure 1 of make_figures_erj.py)
 
   Story2  fibrosis alone does not produce PH, and it multiplies the effect of a lesion
   Story3  where the lesion sits: scar, field, half field, diffuse
@@ -152,6 +154,95 @@ def maps():
 def grid(M, pat, values):
     ix, iy = M[f"{pat}_ix"].astype(int), M[f"{pat}_iy"].astype(int); G = np.full((ix.max() + 1, iy.max() + 1), np.nan); G[ix, iy] = values
     return G.T
+
+
+# ---------------------------------------------------------------- Story1: one shear-stress rule builds the lung
+def network_diagram(ax):
+    """The networks of the model: arterial tree, gas-exchange units, venous tree, and the series lesion."""
+    from matplotlib.patches import FancyBboxPatch, Polygon
+    ART, VEN = MODEL, "#555555"
+    ax.set_xlim(0, 10); ax.set_ylim(0.0, 3.7); yl = np.linspace(0.55, 2.95, 8); xr, dx, yc0 = 0.95, 0.56, 1.75
+
+    def branch(x0, y0, level, ys, sign, col):
+        if level == 3:
+            return
+        half = len(ys) // 2
+        for sub in (ys[:half], ys[half:]):
+            yc = float(np.mean(sub)); x1 = x0 + sign * dx
+            ax.plot([x0, x0 + sign * dx * 0.35, x1], [y0, yc, yc], color=col, lw=2.4 - 0.55 * level, solid_capstyle="round", zorder=2)
+            branch(x1, yc, level + 1, sub, sign, col)
+    ax.plot([0.35, xr], [yc0, yc0], color=ART, lw=3.0, solid_capstyle="round"); branch(xr, yc0, 0, yl, +1, ART)
+    xa = xr + 3 * dx; xu0, xu1 = xa + 0.62, xa + 1.45; state = [0, 0, 1, 0, 2, 1, 0, 0]
+    for k, y in enumerate(yl):
+        ax.add_patch(Polygon([[xa, y], [xa + 0.42, y + 0.11], [xa + 0.42, y - 0.11]], closed=True, fc="white", ec=ART, lw=0.6, zorder=3))
+        ax.plot([xa + 0.42, xu0], [y, y], color=ART, lw=0.6, zorder=2)
+        if k in (2, 5):
+            ax.add_patch(matplotlib.patches.Rectangle((xa + 0.47, y - 0.085), 0.09, 0.17, fc=LESION, ec="none", zorder=4))
+        ax.add_patch(FancyBboxPatch((xu0, y - 0.11), xu1 - xu0, 0.22, boxstyle="round,pad=0.0,rounding_size=0.08", fc=TISSUE[state[k]], ec=DARK, lw=0.5, zorder=3))
+        ax.plot([xu1, xu1 + 0.25], [y, y], color=VEN, lw=0.6, zorder=2)
+    xla = xu1 + 0.25 + 3 * dx; branch(xla, yc0, 0, yl, -1, VEN); ax.plot([xla, xla + 0.6], [yc0, yc0], color=VEN, lw=3.0, solid_capstyle="round")
+    ax.text(0.35, yc0 - 0.2, "Main pulmonary\nartery", fontsize=6, va="top"); ax.text(xla + 0.08, yc0 + 0.2, "Left atrium\n(8 mmHg)", fontsize=6, va="bottom")
+    top, bot = 3.62, 0.3
+    ax.text(xr + 1.5 * dx, top, "Arterial tree\n10 explicit generations", fontsize=6, ha="center", va="top", color=ART)
+    ax.text(0.5 * (xu0 + xu1), top, "Gas-exchange\nunits", fontsize=6, ha="center", va="top")
+    ax.text(xu1 + 0.25 + 1.5 * dx, top, "Venous tree", fontsize=6, ha="center", va="top", color=VEN)
+    ax.text(xa + 0.21, bot, "Sub-tree to\n10 µm radius", fontsize=6, ha="center", va="top", color=ART)
+    x0k, y, dy = 6.9, 3.32, 0.40
+    ax.plot([x0k, x0k + 0.28], [y, y], color=ART, lw=2.0); ax.text(x0k + 0.4, y, "Shared law: τ* = τ₀ r$^{b-1}$ ℓ$^{(b-1)/2}$", va="center", fontsize=6)
+    y -= 0.8 * dy; ax.text(x0k + 0.4, y, "sensed shear S = τ̄ [1 + w₁φ₁G(α)]", va="center", fontsize=6, color=NEUTRAL); y -= 1.15 * dy
+    for c, t in ((TISSUE[0], "Preserved unit: ventilation, capillary sheet, diffusion"), (TISSUE[1], "Fibrotic unit: low compliance and capillary bed"), (TISSUE[2], "Honeycomb unit")):
+        ax.add_patch(FancyBboxPatch((x0k, y - 0.08), 0.28, 0.16, boxstyle="round,pad=0.0,rounding_size=0.05", fc=c, ec=DARK, lw=0.5)); ax.text(x0k + 0.4, y, t, va="center", fontsize=6); y -= dy
+    ax.add_patch(matplotlib.patches.Rectangle((x0k + 0.09, y - 0.085), 0.09, 0.17, fc=LESION, ec="none")); ax.text(x0k + 0.4, y, "Vascular lesion: resistance in series, capillary loss", va="center", fontsize=6)
+
+
+def story1(clinical):
+    from scipy.optimize import brentq, minimize_scalar
+    from lupnet.lung import Lung, womersley_G
+    from lupnet.params import Params
+    Q = 5.0 / 60 * 1e-3; RHO, W1, OM = 1060.0, 2.865, 2 * np.pi * 70.0 / 60
+
+    def tree(fname):
+        H = pd.read_csv(os.path.join(ROOT, "data", fname), sep="\t"); return H, Q / H.N.values, H.L_cm.values / 100, H.mu_cP.values * 1e-3, H.D_cm.values / 100
+
+    def radius(Qv, L, mu, b, tau0, phi):
+        fn = lambda x: np.log(4 * mu * Qv / (np.pi * np.exp(3 * x)) * (1 + W1 * phi * womersley_G(np.exp(x) * np.sqrt(OM * RHO / mu))[0])) - np.log(tau0 * np.exp(x) ** (b - 1) * L ** ((b - 1) / 2))
+        return float(np.exp(brentq(fn, np.log(1e-9), np.log(5.0))))
+    predict = lambda T, b, tau0, phi: np.array([2 * radius(q, l, m, b, tau0, phi) for q, l, m in zip(T[1], T[2], T[3])])
+    err = lambda T, D: float(np.sqrt(np.mean((np.log10(D) - np.log10(T[4])) ** 2)))
+
+    def fit(T, b, phi):
+        r = minimize_scalar(lambda lt: err(T, predict(T, b, 10 ** lt, phi)) ** 2, bounds=(-3, 2), method="bounded", options=dict(xatol=1e-4)); return float(np.sqrt(r.fun)), 10 ** r.x
+    ART, VEN = tree("huang1996_pulmonary_arteries.tsv"), tree("huang1996_pulmonary_veins.tsv"); bgrid = np.round(np.arange(0.55, 1.101, 0.025), 3)
+    prof_p = np.array([fit(ART, b, 0.8)[0] for b in bgrid]); prof_m = np.array([fit(ART, b, 0.0)[0] for b in bgrid]); b_best = float(bgrid[int(prof_p.argmin())])
+    _, t_best = fit(ART, b_best, 0.8); _, t_675 = fit(ART, 0.675, 0.8)
+    D_best, D_675, D_ven = predict(ART, b_best, t_best, 0.8), predict(ART, 0.675, t_675, 0.8), predict(VEN, b_best, t_best, 0.4)
+    e_art, e_ven = 10 ** err(ART, D_best), 10 ** err(VEN, D_ven); o = ART[0].order.values
+    g = Grid(180, 168, heights=[0.74, 1, 1], widths=[1, 1, 1])
+    network_diagram(g.cell(0, 0, "A", cs=3, pad=(2, 2, 2, 3), axis=False))
+    ax = g.cell(1, 0, "B")
+    ax.semilogy(o, ART[4] * 1e3, "o", ms=3.2, mfc="white", mec=DARK, mew=0.8, label="Measured"); ax.semilogy(o, D_best * 1e3, "-", color=MODEL, lw=1.1, label=f"Shared law, b = {b_best:.3g}")
+    ax.semilogy(o, D_675 * 1e3, "--", color=NEUTRAL, lw=1.1, label="Systemic exponent, b = 0.675")
+    ax.set(xlabel="Strahler order", ylabel="Diameter (mm)", xticks=[1, 4, 8, 12, 16], ylim=(0.01, 3000)); ax.legend(loc="upper left", fontsize=5.8, handlelength=1.6)
+    ax = g.cell(1, 1, "C"); lim = [0.01, 50]; ax.loglog(lim, lim, color=LIGHT, lw=0.8)
+    ax.loglog(ART[4] * 1e3, D_best * 1e3, "o", ms=3.2, color=MODEL, mew=0, label=f"Arteries (fitted), ×{e_art:.2f}")
+    ax.loglog(VEN[4] * 1e3, D_ven * 1e3, "s", ms=3.0, mfc="white", mec=MODEL, mew=0.9, label=f"Veins (not refitted), ×{e_ven:.2f}")
+    ax.set(xlim=lim, ylim=lim, xlabel="Measured diameter (mm)", ylabel="Predicted diameter (mm)"); ax.legend(loc="upper left", fontsize=5.8, handlelength=1.2)
+    ax = g.cell(1, 2, "D"); ax.plot(bgrid, 10 ** prof_p, color=MODEL, lw=1.1, label="Pulsatile sensing"); ax.plot(bgrid, 10 ** prof_m, color=NEUTRAL, lw=1.1, ls="--", label="Mean shear only")
+    ax.axvline(0.675, color=DARK, lw=0.5, ls=":"); ax.text(0.668, 1.012, "systemic\nb = 0.675", fontsize=5.8, va="bottom", ha="right")
+    ax.axvline(1.0, color=DARK, lw=0.5, ls=":"); ax.text(1.008, 1.012, "Murray", fontsize=5.8, va="bottom")
+    ax.set(xlabel="Maintenance-cost exponent b", ylabel="Diameter error (geometric factor)", ylim=(1.0, 1.48)); ax.legend(loc="upper center", bbox_to_anchor=(0.62, 1.0), fontsize=5.8, handlelength=1.6)
+    Lh = Lung(Params(law="shared", b=0.925)); vs = Lh.base_state["vs"]; Ll = Lung(Params())
+    ax = g.cell(2, 0, "E"); ax.axhspan(14.0 - 3.3, 14.0 + 3.3, color=LIGHT, lw=0)
+    ax.text(1.45, 14.0 + 3.3 - 0.3, "Healthy adults\n14.0 ± 3.3 mmHg", fontsize=5.8, va="top", ha="right")
+    ax.plot([0], [Ll.base_state["vs"]["PPA"]], "o", ms=4.5, mfc="white", mec=NEUTRAL, mew=1.0); ax.plot([1], [vs["PPA"]], "o", ms=4.5, color=MODEL)
+    ax.set(xlim=(-0.5, 1.5), ylim=(8, 20), xticks=[0, 1], ylabel="mPAP (mmHg)"); ax.set_xticklabels(["Per-vessel law\n(calibrated)", "Shared law\n(predicted)"], fontsize=6)
+    ax = g.cell(2, 1, "F"); d = Lh.depth; gg = np.arange(0, d.max() + 1); Dm = np.array([2 * np.median(vs["r_a"][d == k]) for k in gg])
+    Dhu = np.exp(np.interp(np.log(Q / 2 ** gg), np.log(Q / ART[0].N.values), np.log(ART[4])))
+    ax.semilogy(gg, Dhu * 1e3, "o", ms=3.2, mfc="white", mec=DARK, mew=0.8, label="Measured, matched by flow"); ax.semilogy(gg, Dm * 1e3, "-", color=MODEL, lw=1.1, label="Model tree, shared law")
+    ax.set(xlabel="Generation of the explicit tree", ylabel="Diameter (mm)", xticks=[0, 2, 4, 6, 8, 10]); ax.set_yticks([2, 5, 10, 20, 30]); ax.set_yticklabels(["2", "5", "10", "20", "30"]); ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter()); ax.legend(loc="lower left", fontsize=5.8, handlelength=1.6)
+    ax = g.cell(2, 2, "G"); dp = 8 * ART[3] * ART[2] * ART[1] / (np.pi * (D_best / 2) ** 4) / 133.322; ax.bar(o, dp, color=MODEL, width=0.7)
+    ax.set(xlabel="Strahler order", ylabel="Pressure drop per order (mmHg)", xticks=[1, 4, 8, 12, 16]); ax.text(0.97, 0.97, f"arterial total {dp.sum():.2f} mmHg", transform=ax.transAxes, ha="right", va="top", fontsize=5.8)
+    g.save("Story1"); print(f"  b {b_best}; arteries x{e_art:.3f}, veins x{e_ven:.3f}; healthy mPAP {vs['PPA']:.2f} (per-vessel law {Ll.base_state['vs']['PPA']:.2f})")
 
 
 # ---------------------------------------------------------------- Story2: fibrosis alone, and the partial dependence
@@ -390,6 +481,6 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--clinical", default=""); ap.add_argument("--only", nargs="*", default=[])
     a = ap.parse_args(); os.makedirs(OUT, exist_ok=True)
     C = nt.load_clinical(a.clinical) if a.clinical else None
-    for name, fn in (("2", story2), ("3", story3), ("4", story4), ("5", story5), ("6", story6)):
+    for name, fn in (("1", story1), ("2", story2), ("3", story3), ("4", story4), ("5", story5), ("6", story6)):
         if not a.only or name in a.only:
             fn(C)
