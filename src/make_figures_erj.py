@@ -22,7 +22,8 @@ from lupnet.lung import womersley_G
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 ap = argparse.ArgumentParser(); ap.add_argument("--cohorts", default=os.path.join(ROOT, "results", "ph_cohorts"))
-ap.add_argument("--out", default=os.path.join(ROOT, "results", "figures")); a = ap.parse_args()
+ap.add_argument("--out", default=os.path.join(ROOT, "results", "figures"))
+ap.add_argument("--upper", action="store_true", help="upper-case panel letters"); a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 MM = 1 / 25.4
 plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "DejaVu Sans"], "font.size": 7, "axes.labelsize": 7, "axes.titlesize": 7,
@@ -32,7 +33,7 @@ plt.rcParams.update({"font.family": ["Liberation Sans", "Arial", "Helvetica", "D
                      "lines.linewidth": 1.0, "pdf.fonttype": 42})
 BLUE, RED, GREEN, GREY, LGREY, DARK = "#2166AC", "#B2182B", "#1B7837", "#8C8C8C", "#D9D9D9", "#252525"
 ORANGE = "#E08214"          # lesion tied to the extent of fibrosis (alternative mechanism)
-PANEL_UPPER = False         # True for upper-case panel letters (Nature style)
+PANEL_UPPER = a.upper       # upper-case panel letters (Nature style) with --upper
 MPAP_HEALTHY = 14.8         # mPAP of the healthy model lung, mmHg
 rng0 = np.random.default_rng(0)
 

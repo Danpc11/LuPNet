@@ -12,6 +12,7 @@ Publication release: every result of the manuscript has a script, tables carry t
 - Cohort files store their generating parameters (`tau`, `cap`, `p_vasc`, `a_med`, `a_sig`, seeds, range of stages, `lupnet_version`); `cohort_io.meta`, `lesion_tau` and `effective_lesion` replace the time constant written by hand in five scripts.
 - `cohort_io.cases` uses the packed cohort when fewer per-case files than cases are present, with a warning.
 - `scripts/cohorts_local.sh`: `WHAT=sensitivity`, `flow`, `tree` and `paper` (the three together).
+- `src/make_figures_story.py`: the six figures of the storyline, built from the shipped cohorts and, for the panels with patients, from a clinical file passed with `--clinical`; `make_figures_erj.py --upper` for upper-case panel letters.
 - Housekeeping: unused imports and variables removed, references to checks and campaigns that are not in the repository removed from docstrings, `fibrosis_only_cohorts.py` writes atomically, `openpyxl` in the requirements, `lupnet.__version__`, `CITATION.cff`, `data/README.md`, the options of the model that the manuscript does not use listed in the README, continuous integration runs two analysis scripts besides the tests.
 
 ## 0.3.14 (2026-11)
