@@ -5,6 +5,8 @@ from scipy.stats import pearsonr
 
 TARGETS = dict(lt20=51, b20_25=30, ge25=19, ge35=4, rDLCO=-0.30, rFVC=0.0, ratio=0.73)
 SD_MPAP, SD_PFT = 2.5, 5.0          # measurement noise: mPAP (mmHg), FVC and DLCO (percentage points)
+SPREAD = dict(FVC=0.13, DLCO=0.15)  # inter-individual spread of the healthy baseline (fraction); correlation 0.5
+SPREAD_RHO = 0.5
 
 
 def noise_avg_r(D, col, n=1000, seed=0):

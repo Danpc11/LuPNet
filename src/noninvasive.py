@@ -23,7 +23,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import roc_auc_score, roc_curve
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, lesion_tau, applied_severity, usable, MANUSCRIPT as MS
+from cohort_io import cases, effective_lesion, usable, MANUSCRIPT as MS
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 F = os.path.join(ROOT, "results", "ph_cohorts"); OUT = os.path.join(ROOT, "results", "figures"); os.makedirs(OUT, exist_ok=True)
@@ -35,10 +35,11 @@ def trajectory_points():
     rows = []
     for tag in ("big2", "adv2", "hom", "het"):
         for i, d in cases(F, tag):
-            r0 = d.iloc[0]; A = applied_severity(d); t0 = float(d.t_vasc0.iloc[0]) if "t_vasc0" in d else 0.0
-            for _, x in d[usable(d)].iterrows():
+            r0 = d.iloc[0]
+            ae = effective_lesion(d)
+            for k, x in d[usable(d)].iterrows():
                 rows.append(dict(case=f"{tag}{i}", healthy=x.healthy, fibrotic=x.fibrotic, honeycomb=x.honeycomb, years=x.years,
-                                 Aeff=A * (1 - np.exp(-(x.years + t0) / lesion_tau(d))) if A > 0 else 0.0,
+                                 Aeff=float(ae[k]),
                                  eta=float(x.get("eta_p", 0.0)) if tag == "het" else 0.0, hpv=float(x.get("hpv_max", 3.0)) if tag == "het" else 3.0,
                                  lost_base=x.lost_base, lost_apex=x.lost_apex, mPAP=x.mPAP, FVC=100 * x.FVC / r0.FVC,
                                  DLCO=100 * x.DLCO / r0.DLCO, PaO2=x.PaO2, PaCO2=x.PaCO2, SpO2=100 * x.SaO2))

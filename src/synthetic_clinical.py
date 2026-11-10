@@ -12,6 +12,7 @@ import os, sys
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import noninvasive_tool as nt
+from ph_stats import SD_MPAP, SD_PFT, SPREAD, SPREAD_RHO
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "data", "synthetic_patients.tsv")
@@ -22,11 +23,11 @@ if __name__ == "__main__":
     rng = np.random.default_rng(0); n = 60
     R = nt.reference(nt.trajectory_points(tags=("big2", "adv2")))
     w = np.where(R.mPAP >= 25, 3.0, 1.0); V = R.sample(n, weights=w, random_state=0).reset_index(drop=True)     # referral bias
-    z = rng.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], n); m = V.mPAP.values + rng.normal(0, 2.5, n)
+    z = rng.multivariate_normal([0, 0], [[1, SPREAD_RHO], [SPREAD_RHO, 1]], n); m = V.mPAP.values + rng.normal(0, SD_MPAP, n)
     D = pd.DataFrame({nt.COLS["ID"]: [f"SYN-{i:03d}" for i in range(n)], nt.COLS["dx"]: "synthetic",
                       nt.COLS["pattern"]: rng.choice(["NIU", "NINE", "otro"], n, p=[0.25, 0.5, 0.25]),
-                      nt.COLS["FVC"]: np.clip(V.FVC * (1 + 0.13 * z[:, 0]) + rng.normal(0, 5, n), 15, 120).round(0),
-                      nt.COLS["DLCO"]: np.clip(V.DLCO * (1 + 0.15 * z[:, 1]) + rng.normal(0, 5, n), 8, 110).round(0),
+                      nt.COLS["FVC"]: np.clip(V.FVC * (1 + SPREAD["FVC"] * z[:, 0]) + rng.normal(0, SD_PFT, n), 15, 120).round(0),
+                      nt.COLS["DLCO"]: np.clip(V.DLCO * (1 + SPREAD["DLCO"] * z[:, 1]) + rng.normal(0, SD_PFT, n), 8, 110).round(0),
                       nt.COLS["mPAP"]: m.round(0), nt.COLS["PVR"]: np.clip(V.PVR + rng.normal(0, 0.5, n), 0.5, None).round(1),
                       nt.COLS["PAWP"]: rng.integers(5, 14, n)})
     for k, (a, b, sd) in MODELS.items():

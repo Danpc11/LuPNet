@@ -10,7 +10,11 @@ Table numbers are those of the online supplement.
 - `src/make_figures_story.py`: Figure1-Figure6 of the article on one grid and one palette; legends in `docs/FIGURES.md`. Figures of manuscript v21 saved as `V21_Figure1`-`V21_Figure6`.
 - Figure 2g of v21 and its test measure the contributions from the healthy lung of the cohort (14.28 mmHg).
 - `cohort_io.last_visit`, `usable`, `applied_severity`, `MANUSCRIPT`: one routine for the final visit, the usable visits, the effective lesion and the lesion priors; duplicated noise and benchmark code removed.
-- `src/verify_cohorts.py`: re-simulation of the stored cohorts.
+- `src/verify_cohorts.py`, `data/cohorts_verification.tsv`: every case of the 21 cohorts simulated again and identical.
+- `src/table_checksums.py`, `data/table_checksums.tsv`, checked in continuous integration.
+- `ph_stats.SPREAD`, `cohort_io.DESIGN`; `ph_cohort.py` takes its defaults from `cohort_io`; `effective_lesion` used everywhere.
+- Outputs of the synthetic clinical file in `results/synthetic/`, figures watermarked.
+- Manifest: `written_with` from the cohort file, `reproduced_with` from the verification.
 - Table S24 leaves the patient out of the measurement models and the prior.
 - Web calculator: "no lesion" marker; text.
 - `src/cohort_manifest.py`, `data/cohorts_manifest.tsv`; `requirements-lock.txt` as a full freeze.

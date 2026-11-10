@@ -57,6 +57,9 @@ def viable(d):
 
 
 MANUSCRIPT = dict(p_vasc=0.7, a_med=1.5, a_sig=1.1, tau=2.0, t0_max=10.0, cap=0.05)   # lesion priors of the manuscript cohorts
+DESIGN = {"big2": dict(n=200, seed=5000, pseed=20000, lo=0.25, hi=0.85),               # cases, seeds and range of stages
+          "adv2": dict(n=60, seed=6000, pseed=30000, lo=0.12, hi=0.45),
+          "altF": dict(n=100, seed=7000, pseed=40000, lo=0.25, hi=0.85)}
 
 
 def usable(d):

@@ -21,6 +21,7 @@ Importable: aged_baseline() is used by make_figures_erj.py for the reference lin
 import json, os, sys
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ph_stats import SD_PFT, SPREAD, SPREAD_RHO
 from lupnet import Params
 from lupnet.lung import Lung
 from lupnet.septal import make_lung
@@ -95,9 +96,9 @@ def phenotype_with_baseline_spread(n_rep=20, seed=0):
     rows = [dict(replicate="noiseless", **phenotype(C))]
     rng = np.random.default_rng(seed)
     for rep in range(n_rep):
-        z = rng.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], len(C)); D = C.copy()
-        D["FVC"] = D.FVC * (1 + 0.13 * z[:, 0]) + rng.normal(0, 5, len(D))
-        D["DLCO"] = (D.DLCO * (1 + 0.15 * z[:, 1]) + rng.normal(0, 5, len(D))).clip(lower=3)
+        z = rng.multivariate_normal([0, 0], [[1, SPREAD_RHO], [SPREAD_RHO, 1]], len(C)); D = C.copy()
+        D["FVC"] = D.FVC * (1 + SPREAD["FVC"] * z[:, 0]) + rng.normal(0, SD_PFT, len(D))
+        D["DLCO"] = (D.DLCO * (1 + SPREAD["DLCO"] * z[:, 1]) + rng.normal(0, SD_PFT, len(D))).clip(lower=3)
         rows.append(dict(replicate=rep, **phenotype(D)))
     return pd.DataFrame(rows)
 

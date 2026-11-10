@@ -189,6 +189,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `data/README.md`, `CITATION.cff` | Provenance of the morphometric tables and the parameter file; how to cite |
 | `src/make_figures_story.py` | Figures 1–6 of the article, on one grid and one palette; legends in `docs/FIGURES.md`. Figure 5 and Figure 6D–F need `--clinical` |
 | `src/cohort_manifest.py`, `data/cohorts_manifest.tsv` | Command, seeds, code version and md5 of every cohort; `--check` verifies them |
+| `src/table_checksums.py`, `data/table_checksums.tsv` | Checksums of the tables of `run_all.sh` in the locked environment; `--check` compares |
 | `src/verify_cohorts.py` | Simulates the cases again from the manifest and compares them with the stored cohorts (`data/cohorts_verification.tsv`) |
 | `src/synthetic_clinical.py`, `data/synthetic_patients.tsv` | Synthetic file with the columns of the clinical file, to run and test the scripts that need one; its rows are not patients |
 | `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S25–S26) |
@@ -206,7 +207,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 
 ## Data availability
 
-The simulated cohorts, the code and every derived table are in this repository. The clinical data are not: tables S22–S24, Figure 5, Figure 6D–F and the patients row of table S26 need a clinical file passed with `--clinical` (columns in `noninvasive_tool.COLS`; `data/synthetic_patients.tsv` has the same layout with synthetic rows). Tables S1 and S3 of the supplement are not produced by a script: S1 comes from the companion preprint and S3 lists the parameters of `data/calibrated_ipf_params.json`. `TableS_fibrosis_only.tsv` holds the numbers of the cohorts without lesion quoted in the text.
+The simulated cohorts, the code and every derived table are in this repository. The clinical data are not: tables S22–S24, Figure 5, Figure 6D–F and the patients row of table S26 need a clinical file passed with `--clinical` (columns in `noninvasive_tool.COLS`; `data/synthetic_patients.tsv` has the same layout with synthetic rows; what is computed from it goes to `results/synthetic/` and its figures carry a watermark). Tables S1 and S3 of the supplement are not produced by a script: S1 comes from the companion preprint and S3 lists the parameters of `data/calibrated_ipf_params.json`. `TableS_fibrosis_only.tsv` holds the numbers of the cohorts without lesion quoted in the text.
 
 Two sets of figures are produced. `Figure1`–`Figure6` (`make_figures_story.py`) are the figures of the article. `V21_Figure1`–`V21_Figure6` are those of manuscript v21, kept because the regression test and the audit refer to them.
 

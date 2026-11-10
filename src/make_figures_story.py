@@ -45,6 +45,9 @@ PAT = {"calibrated": ("Calibrated", PATTERN["calibrated"], ("big2", "adv2")), "u
        "nsip": ("NSIP", PATTERN["nsip"], ("big2_nsip", "adv2_nsip"))}
 
 
+RUN = dict(synthetic=False, out=OUT)      # where this run writes; a synthetic clinical file switches both
+
+
 class Grid:
     """Fixed grid of cells on a canvas of fixed size (mm). Every panel lives in one cell; its letter sits in the
     top-left corner of the cell, so letters of a column are aligned and those of the first column are flush with
@@ -72,8 +75,10 @@ class Grid:
         return ax
 
     def save(self, name):
-        self.fig.savefig(os.path.join(OUT, f"{name}.pdf"), metadata={"CreationDate": None})     # same bytes on every run
-        self.fig.savefig(os.path.join(OUT, f"{name}.png"))
+        if RUN["synthetic"]:                                                                     # never mistaken for a result
+            self.fig.text(0.5, 0.5, "SYNTHETIC DATA, NOT PATIENTS", fontsize=26, color="#C00000", alpha=0.22, ha="center", va="center", rotation=28, fontweight="bold")
+        self.fig.savefig(os.path.join(RUN["out"], f"{name}.pdf"), metadata={"CreationDate": None})     # same bytes on every run
+        self.fig.savefig(os.path.join(RUN["out"], f"{name}.png"))
         plt.close(self.fig); print(name, "written")
 
 
@@ -418,7 +423,7 @@ def story5(clinical):
     ax.bar(xb + w, [100 * a / b for a, b in o], w * 0.92, color="white", edgecolor=DARK, lw=0.9, label="Patients")
     for i, (a, b) in enumerate(o): ax.text(xb[i] + w, 100 * a / b + 2, f"{a} of {b}", ha="center", fontsize=5.6)
     ax.set_xticks(xb); ax.set_xticklabels(["< 50", "50–70", "≥ 70"]); ax.set(xlabel="FVC (%)", ylabel="mPAP ≥ 25 mmHg (%)", ylim=(0, 112)); ax.set_yticks([0, 25, 50, 75, 100]); legend_below(ax, dy=-0.22, ncol=1)
-    ax = g.cell(1, 1, "D", pad=(12.5, 19, 2.5, 6)); f = os.path.join(OUT, "TableS24_individual_report.tsv")
+    ax = g.cell(1, 1, "D", pad=(12.5, 19, 2.5, 6)); f = os.path.join(RUN["out"], "TableS24_individual_report.tsv")
     if os.path.exists(f):
         J = pd.read_csv(f, sep="\t").sort_values("mPAP_RHC").reset_index(drop=True); x = np.arange(len(J))
         ax.bar(x, J.baseline, color=LIGHT, width=0.85, label="Aged lung"); ax.bar(x, J.from_lung_lost, bottom=J.baseline, color=NEUTRAL, width=0.85, label="Lung lost")
@@ -450,7 +455,7 @@ def story6(clinical):
     box_diagram(ax, 52, 60, 46, 36, "Simulated visits\nof the model\n(lung lost, lesion,\nFVC, DLCO, mPAP)", fc="#D6E9F5", ec=MODEL)
     box_diagram(ax, 52, 6, 46, 40, "For the patient\nprobability of PH\nmPAP, 90% interval\nlung lost and lesion", ec=MODEL, bold=False)
     arrow(ax, 42, 83, 52, 80); arrow(ax, 42, 50, 52, 66); arrow(ax, 75, 60, 75, 46)
-    f = os.path.join(OUT, "TableS22_noninvasive_tool_cv.tsv")
+    f = os.path.join(RUN["out"], "TableS22_noninvasive_tool_cv.tsv")
     if clinical is None or not os.path.exists(f):
         print("Figure 6, panels D-F skipped: need --clinical and the tables of noninvasive_tool.py"); g.save("Figure6"); return
     S = pd.read_csv(f, sep="\t"); S = S[S.inputs.isin(["FVC + DLCO", "+ echo sPAP", "+ BNP", "+ PA diameter", "+ PA diameter + BNP", "+ all optional"])].reset_index(drop=True)
@@ -461,7 +466,7 @@ def story6(clinical):
     lab = {"FVC + DLCO": "FVC + DLCO", "+ echo sPAP": "+ echo sPAP", "+ BNP": "+ BNP", "+ PA diameter": "+ PA diameter (CT)", "+ PA diameter + BNP": "+ PA diameter + BNP", "+ all optional": "+ all optional inputs"}
     ax.set_yticks(y); ax.set_yticklabels([lab[i] for i in S.inputs], fontsize=5.8); ax.set(xlim=(0.55, 1.0), ylim=(-0.6, len(S) - 0.4), xlabel="AUC for mPAP ≥ 25 mmHg")
     ax.legend(loc="upper right", bbox_to_anchor=(1.03, -0.27), fontsize=5.6, handlelength=1)
-    cv0 = pd.read_csv(os.path.join(OUT, "cv_FVC_plus_DLCO.tsv"), sep="\t"); cv1 = pd.read_csv(os.path.join(OUT, "cv_plus_all_optional.tsv"), sep="\t")
+    cv0 = pd.read_csv(os.path.join(RUN["out"], "cv_FVC_plus_DLCO.tsv"), sep="\t"); cv1 = pd.read_csv(os.path.join(RUN["out"], "cv_plus_all_optional.tsv"), sep="\t")
     ax = g.cell(1, 1, "E", pad=(12.5, 18, 2.5, 6))
     for k, df in enumerate((cv0, cv1)):
         for j, ph in enumerate((False, True)):
@@ -481,6 +486,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--clinical", default=""); ap.add_argument("--only", nargs="*", default=[])
     a = ap.parse_args(); os.makedirs(OUT, exist_ok=True)
     C = nt.load_clinical(a.clinical) if a.clinical else None
+    if C is not None and nt.is_synthetic(C):
+        RUN.update(synthetic=True, out=nt.output_dir(C)); print("synthetic clinical file: figures go to results/synthetic/ with a watermark")
     for name, fn in (("1", story1), ("2", story2), ("3", story3), ("4", story4), ("5", story5), ("6", story6)):
         if not a.only or name in a.only:
             fn(C)

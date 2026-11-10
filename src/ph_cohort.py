@@ -23,6 +23,7 @@ The run is resumable: finished patients are skipped.
 import argparse, json, os, sys, time
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+from cohort_io import MANUSCRIPT as MS, DESIGN
 import lupnet
 from lupnet import Params
 from lupnet.sim import run
@@ -62,7 +63,7 @@ def draws(n, seed, lo, hi, p_vasc, a_med, a_sig):
     g = np.random.default_rng(seed)
     stop = g.uniform(lo, hi, n); has = g.uniform(0, 1, n) < p_vasc
     A = np.exp(g.normal(np.log(a_med), a_sig, n)) * has
-    t0 = g.uniform(0, 10, n); ypu = np.exp(g.normal(0, 0.5, n))
+    t0 = g.uniform(0, MS["t0_max"], n); ypu = np.exp(g.normal(0, 0.5, n))
     return stop, A, t0, ypu
 
 
@@ -124,11 +125,12 @@ def cmd_analyze(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--tag", required=True); r.add_argument("--n", type=int, default=200); r.add_argument("--seed", type=int, default=5000)
-    r.add_argument("--pseed", type=int, default=20000, help="fibrosis seed of patient i is pseed + i")
-    r.add_argument("--lo", type=float, default=0.25); r.add_argument("--hi", type=float, default=0.85); r.add_argument("--G", type=int, default=8)
-    r.add_argument("--p_vasc", type=float, default=0.7); r.add_argument("--a_med", type=float, default=1.5); r.add_argument("--a_sig", type=float, default=1.1)
-    r.add_argument("--tau", type=float, default=2.0); r.add_argument("--cap", type=float, default=0.05)
+    B = DESIGN["big2"]
+    r.add_argument("--tag", required=True); r.add_argument("--n", type=int, default=B["n"]); r.add_argument("--seed", type=int, default=B["seed"])
+    r.add_argument("--pseed", type=int, default=B["pseed"], help="fibrosis seed of patient i is pseed + i")
+    r.add_argument("--lo", type=float, default=B["lo"]); r.add_argument("--hi", type=float, default=B["hi"]); r.add_argument("--G", type=int, default=8)
+    r.add_argument("--p_vasc", type=float, default=MS["p_vasc"]); r.add_argument("--a_med", type=float, default=MS["a_med"]); r.add_argument("--a_sig", type=float, default=MS["a_sig"])
+    r.add_argument("--tau", type=float, default=MS["tau"]); r.add_argument("--cap", type=float, default=MS["cap"])
     r.add_argument("--vmode", default="independent", choices=["independent", "fibrosis"])
     r.add_argument("--t_max", type=float, default=3.0, help="model time limit of a run (years = t_max x years_per_unit x ypu); 3.0 in the manuscript cohorts")
     r.add_argument("--PB", type=float, default=760.0, help="barometric pressure, mmHg (760 sea level, the manuscript cohorts; 585 Mexico City, 2,240 m)")

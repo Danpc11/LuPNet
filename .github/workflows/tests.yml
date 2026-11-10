@@ -27,5 +27,6 @@ jobs:
       - run: pip install -r requirements-lock.txt
       - run: bash run_all.sh
       - run: git diff --exit-code -- data results/ph_calculator.json index.html
+      - run: python src/table_checksums.py --check
       - run: python src/noninvasive_tool.py --clinical data/synthetic_patients.tsv --reps 1
       - run: python src/make_figures_story.py --clinical data/synthetic_patients.tsv --only 5 6

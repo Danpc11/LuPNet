@@ -16,7 +16,7 @@ matplotlib.use("Agg"); logging.getLogger("matplotlib.font_manager").setLevel(log
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cohort_io import cases, last_visit
-from ph_stats import point
+from ph_stats import point, SD_MPAP, SPREAD, SPREAD_RHO
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "figures"); os.makedirs(OUT, exist_ok=True)
@@ -53,8 +53,8 @@ for ext in ("pdf", "png"):
 # table S8: baseline variation in % predicted
 C = V.copy(); rows = []
 for rep in range(20):
-    g = np.random.default_rng(100 + rep); z = g.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], len(C))
-    D = C.copy(); D["FVC"] = D.FVC * (1 + 0.13 * z[:, 0]); D["DLCO"] = D.DLCO * (1 + 0.15 * z[:, 1])
+    g = np.random.default_rng(100 + rep); z = g.multivariate_normal([0, 0], [[1, SPREAD_RHO], [SPREAD_RHO, 1]], len(C))
+    D = C.copy(); D["FVC"] = D.FVC * (1 + SPREAD["FVC"] * z[:, 0]); D["DLCO"] = D.DLCO * (1 + SPREAD["DLCO"] * z[:, 1])
     M = D[(D.FVC >= 50) & (D.FVC <= 90)].reset_index(drop=True); p = point(M); p["n"] = len(M); rows.append(p)
 R = pd.DataFrame(rows)
 S8 = pd.DataFrame(dict(quantity=R.columns, mean=R.mean().round(3).values, min=R.min().round(3).values, max=R.max().round(3).values))
@@ -110,7 +110,7 @@ pd.DataFrame(rows).to_csv(os.path.join(OUT, "TableS10_phenotype_without_labels.t
 # S12: mPAP categories with measurement noise added to mPAP (SD 2.5 mmHg), mean of 1,000 realisations
 g = np.random.default_rng(0); Pn = []
 for _ in range(1000):
-    mp = MILD.mPAP + g.normal(0, 2.5, len(MILD)); Pn.append([100 * (mp < 20).mean(), 100 * ((mp >= 20) & (mp < 25)).mean(), 100 * (mp >= 25).mean(), 100 * (mp >= 35).mean()])
+    mp = MILD.mPAP + g.normal(0, SD_MPAP, len(MILD)); Pn.append([100 * (mp < 20).mean(), 100 * ((mp >= 20) & (mp < 25)).mean(), 100 * (mp >= 25).mean(), 100 * (mp >= 35).mean()])
 pd.DataFrame([dict(version="Without noise (manuscript)", lt20=100 * (MILD.mPAP < 20).mean(), b20_25=100 * ((MILD.mPAP >= 20) & (MILD.mPAP < 25)).mean(),
                    ge25=100 * (MILD.mPAP >= 25).mean(), ge35=100 * (MILD.mPAP >= 35).mean()),
               dict(version="With measurement noise", **dict(zip(["lt20", "b20_25", "ge25", "ge35"], np.mean(Pn, 0))))]).round(1).to_csv(

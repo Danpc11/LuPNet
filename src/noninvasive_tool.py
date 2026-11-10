@@ -28,7 +28,8 @@ from cohort_io import cases, usable, effective_lesion
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "results", "figures")
-SD_PFT, SPREAD = 5.0, dict(FVC=0.13, DLCO=0.15)
+SYN_OUT = os.path.join(ROOT, "results", "synthetic")      # outputs of a synthetic clinical file never share a folder with real ones
+from ph_stats import SD_PFT, SPREAD
 OPTIONAL = ["sPAP_echo", "PA_diam", "logBNP", "RV_FAC", "RA_area"]
 COLS = {"FVC": "FVC (%)", "DLCO": "DLCO aj (%)", "mPAP": "PmAP", "PVR": "RVP (UW)", "PAWP": "Cuña", "sPAP_echo": "PSAP",
         "PA_diam": "Diámetro AP (mm)", "BNP": "BNP (pg/mL)", "RV_FAC": "FACVD (%)", "RA_area": "ÁREA_AD(CM2)",
@@ -135,6 +136,16 @@ def load_clinical(path):
     return P
 
 
+def is_synthetic(P):
+    """True for the synthetic clinical file (every ID starts with SYN-)."""
+    return bool(len(P)) and bool(P.ID.astype(str).str.startswith("SYN-").all())
+
+
+def output_dir(P):
+    d = SYN_OUT if is_synthetic(P) else OUT; os.makedirs(d, exist_ok=True)
+    return d
+
+
 def references_by_pattern(T):
     """One reference per tomographic pattern; falls back to the calibrated set when a pattern cohort is absent."""
     have = set(T.tag.unique()); out = {}
@@ -191,7 +202,7 @@ if __name__ == "__main__":
     ap.add_argument("--prior", default="severity", choices=["severity", "prevalence"],
                     help="severity: the reference takes the mPAP distribution of the catheterised population (training folds); "
                          "prevalence: only the share of visits with PH is matched")
-    a = ap.parse_args(); os.makedirs(OUT, exist_ok=True)
+    a = ap.parse_args()
     suf = ("" if a.reference == "pattern" else "_calibrated") + ("" if a.prior == "severity" else "_prevalence")
     T = trajectory_points()
     RP = references_by_pattern(T) if a.reference == "pattern" else {g: reference(T) for g in REFERENCE_TAGS}
@@ -200,7 +211,9 @@ if __name__ == "__main__":
           for g, tags in REFERENCE_TAGS.items() if any(t in have for t in tags)}
     for g in RP:
         print(f"reference {g}: {len(RP[g])} simulated visits of {RP[g].case.nunique()} cases" + (f"; surface R2 {FP[g][1]:.3f}" if g in FP else ""))
-    P = load_clinical(a.clinical)
+    P = load_clinical(a.clinical); OUT = output_dir(P)
+    if is_synthetic(P):
+        print("synthetic clinical file: outputs go to results/synthetic/ and are not results")
     S, per, V = cross_validate(P, RP, SETS, n_rep=a.reps, prior=a.prior)
     S.round(3).to_csv(os.path.join(OUT, f"TableS22_noninvasive_tool_cv{suf}.tsv"), sep="\t", index=False); print(S.round(2).to_string(index=False))
     M = fit_obs(V)
@@ -215,4 +228,4 @@ if __name__ == "__main__":
     pd.DataFrame(rep).round(2).to_csv(os.path.join(OUT, f"TableS24_individual_report{suf}.tsv"), sep="\t", index=False)
     for name, df in per.items():
         df.round(2).to_csv(os.path.join(OUT, f"cv{suf}_" + name.replace("+", "plus").replace(" ", "_") + ".tsv"), sep="\t", index=False)
-    print("tables S22-S24 written to results/figures/")
+    print(f"tables S22-S24 written to {os.path.relpath(OUT, ROOT)}/")

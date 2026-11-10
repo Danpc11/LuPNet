@@ -18,6 +18,8 @@ Cohort files are produced by src/ph_cohort.py.
 """
 import argparse, json, os
 import numpy as np, pandas as pd
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ph_stats import SD_MPAP, SD_PFT
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 ap = argparse.ArgumentParser(); ap.add_argument("--cohorts", default=os.path.join(ROOT, "results", "ph_cohorts")); a = ap.parse_args()
@@ -50,8 +52,8 @@ mix = dict(weights=gm.weights_.round(4).tolist(), means=gm.means_.ravel().round(
            sds=np.sqrt(gm.covariances_.ravel()).round(4).tolist(), vascular_component=low)
 rng = np.random.default_rng(0); Xs, ys = [], []
 for _ in range(10):
-    fv = V.FVC + rng.normal(0, 5, len(V)); d = (V.DLCO + rng.normal(0, 5, len(V))).clip(lower=5)
-    Xs.append(np.c_[fv, np.log(fv / d)]); ys.append((V.mPAP + rng.normal(0, 2.5, len(V))) >= 25)
+    fv = V.FVC + rng.normal(0, SD_PFT, len(V)); d = (V.DLCO + rng.normal(0, SD_PFT, len(V))).clip(lower=5)
+    Xs.append(np.c_[fv, np.log(fv / d)]); ys.append((V.mPAP + rng.normal(0, SD_MPAP, len(V))) >= 25)
 X = np.vstack(Xs); y = np.concatenate(ys)
 lr = LogisticRegression().fit(X, y)
 from sklearn.metrics import roc_auc_score
@@ -61,17 +63,18 @@ out = dict(tissue_curve=tissue.round(6).tolist(), dlco_curve=dl.round(6).tolist(
                                       coef_log_ratio=round(float(lr.coef_[0][1]), 4), auc_with_noise=round(float(auc), 3)),
            n_patients=int(len(V)), fvc_range=[float(V.FVC.min()), float(V.FVC.max())], dlco_range=[float(V.DLCO.min()), float(V.DLCO.max())])
 # reference visits for the likelihood-weighted estimates (optional echocardiographic pressure and A-a gradient)
-from cohort_io import cases as _cases, lesion_tau, applied_severity, usable
+from cohort_io import cases as _cases, effective_lesion, usable
 ref = []
 for tag in ("big2", "adv2"):
     for i, d in _cases(a.cohorts, tag):
-        r0 = d.iloc[0]; A = applied_severity(d); t0 = float(d.t_vasc0.iloc[0])
+        r0 = d.iloc[0]
         s_ = d[usable(d) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
         if len(s_) == 0:
             continue
         s_ = s_.iloc[np.linspace(0, len(s_) - 1, min(25, len(s_))).round().astype(int)]
-        for _, x in s_.iterrows():
-            aeff = A * (1 - np.exp(-(x.years + t0) / lesion_tau(d))) if A > 0 else 0.0
+        ae = effective_lesion(d)
+        for k, x in s_.iterrows():
+            aeff = float(ae[k])
             ref.append([round(float(100 * x.FVC / r0.FVC), 1), round(float(100 * x.DLCO / r0.DLCO), 1), round(float(x.mPAP), 1),
                         round(float(150 - x.PaCO2 / 0.8 - x.PaO2), 1), int(aeff >= 1.0), round(float(100 * x.SaO2), 1)])
 out["reference"] = ref

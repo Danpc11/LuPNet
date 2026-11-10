@@ -2,9 +2,7 @@ name: lupnet
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.12.3
   - pip
   - pip:
       - -r requirements-lock.txt
-      - openpyxl
-      - pytest

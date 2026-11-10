@@ -20,7 +20,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 WORK = os.path.join(ROOT, "results", "pressure_flow"); FIG = os.path.join(ROOT, "results", "figures")
 CASES = os.path.join(FIG, "pressure_flow_cases.tsv")
 FLOWS = (7.5, 10.0)                                   # L/min
-BIG2 = dict(n=200, seed=5000, pseed=20000, lo=0.25, hi=0.85, p_vasc=0.7, a_med=1.5, a_sig=1.1, tau=2.0, cap=0.05)
+from cohort_io import MANUSCRIPT, DESIGN
+BIG2 = dict(DESIGN["big2"], **{k: MANUSCRIPT[k] for k in ("p_vasc", "a_med", "a_sig", "tau", "cap")})
 
 
 def load_flow(L, Q, imposed=True):

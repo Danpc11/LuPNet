@@ -48,9 +48,9 @@ if __name__ == "__main__":
         bands.append(dict(mechanism=name, **{f"FVC {lo}-{hi}": f"{100 * (P[(P.FVC >= lo) & (P.FVC < hi)].mPAP >= 25).mean():.0f}% (n = {((P.FVC >= lo) & (P.FVC < hi)).sum()})"
                                              for lo, hi in BANDS}))
     if a.clinical:
-        from noninvasive_tool import load_clinical
-        V = load_clinical(a.clinical).dropna(subset=["FVC", "mPAP"])
-        bands.append(dict(mechanism="patients", **{f"FVC {lo}-{hi}": f"{int((V[(V.FVC >= lo) & (V.FVC < hi)].mPAP >= 25).sum())} of {((V.FVC >= lo) & (V.FVC < hi)).sum()}"
+        from noninvasive_tool import load_clinical, is_synthetic, output_dir
+        V = load_clinical(a.clinical); OUT = output_dir(V); V = V.dropna(subset=["FVC", "mPAP"])
+        bands.append(dict(mechanism="synthetic rows, not patients" if is_synthetic(V) else "patients", **{f"FVC {lo}-{hi}": f"{int((V[(V.FVC >= lo) & (V.FVC < hi)].mPAP >= 25).sum())} of {((V.FVC >= lo) & (V.FVC < hi)).sum()}"
                                                    for lo, hi in BANDS}))
     S25, S26 = pd.DataFrame(rows), pd.DataFrame(bands)
     S25.to_csv(os.path.join(OUT, "TableS25_lesion_location.tsv"), sep="\t", index=False)

@@ -30,4 +30,5 @@ python3 src/lesion_location.py                # tables S25-S26: where the lesion
 python3 src/audit_extra.py                    # tables S18-S21: pressure decomposition, aged baseline, lesion saturation, phenotype robustness
 python3 src/fit_calculator.py                 # data/virtual_ph_cohort.tsv and results/ph_calculator.json
 python3 src/build_app.py                      # index.html
+python3 src/table_checksums.py --check || echo "tables differ from data/table_checksums.tsv (recorded in the locked environment)"
 python3 src/validate_calculator.py            # calculator validation on held-out simulated cases

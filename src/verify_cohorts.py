@@ -13,11 +13,11 @@ resumable and parallel-safe.
 import argparse, os, shlex, sys
 import numpy as np, pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, MANUSCRIPT
+from cohort_io import cases, MANUSCRIPT, DESIGN
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."); F = os.path.join(ROOT, "results", "ph_cohorts")
 WORK = os.path.join(ROOT, "results", "verify"); MAN = os.path.join(ROOT, "data", "cohorts_manifest.tsv")
-DEFAULT = dict(n=200, seed=5000, pseed=20000, lo=0.25, hi=0.85, G=8, p_vasc=MANUSCRIPT["p_vasc"], a_med=MANUSCRIPT["a_med"], a_sig=MANUSCRIPT["a_sig"],
+DEFAULT = dict(DESIGN["big2"], G=8, p_vasc=MANUSCRIPT["p_vasc"], a_med=MANUSCRIPT["a_med"], a_sig=MANUSCRIPT["a_sig"],
                tau=MANUSCRIPT["tau"], cap=MANUSCRIPT["cap"], vmode="independent", t_max=3.0, PB=760.0, pattern="calibrated", where="diffuse", mix=0.5, a_scale=1.0)
 
 

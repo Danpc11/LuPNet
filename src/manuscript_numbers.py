@@ -7,7 +7,7 @@ cohorts; also supplementary table S11 (PH by FVC range). Writes results/figures/
 import sys, numpy as np, pandas as pd
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases, last_visit, applied_severity, usable, lesion_tau
+from cohort_io import cases, last_visit, usable, effective_lesion
 from ph_stats import point, bootstrap, prevalence_ci
 from scipy.stats import pearsonr, spearmanr
 from sklearn.mixture import GaussianMixture
@@ -62,10 +62,11 @@ pd.DataFrame(rows,columns=['FVC','n','PH, % (95% CI)','mPAP > 40 mmHg, % (95% CI
 R=[]
 for tag in ('big2','adv2'):
     for i,d in cases(F,tag):
-        A_=applied_severity(d); t0=float(d.t_vasc0.iloc[0]); r0=d.iloc[0]
-        for _,x in d[usable(d)].iterrows():
+        r0=d.iloc[0]
+        ae=effective_lesion(d)
+        for k,x in d[usable(d)].iterrows():
             if x.healthy<=0.85:
-                R.append(dict(FVC=100*x.FVC/r0.FVC,DLCO=100*x.DLCO/r0.DLCO,PaO2=x.PaO2,Aeff=A_*(1-np.exp(-(x.years+t0)/lesion_tau(d))) if A_>0 else 0.0))
+                R.append(dict(FVC=100*x.FVC/r0.FVC,DLCO=100*x.DLCO/r0.DLCO,PaO2=x.PaO2,Aeff=float(ae[k])))
 V=pd.DataFrame(R); Xc=np.c_[np.ones(len(V)),V.FVC,V.DLCO,V.FVC**2,V.DLCO**2,V.FVC*V.DLCO]
 res=lambda y: y-Xc@np.linalg.lstsq(Xc,y,rcond=None)[0]
 add('partial r(PaO2, effective lesion | FVC, DLCO)', f'{pearsonr(res(V.PaO2.values),res(V.Aeff.values))[0]:.2f}')
