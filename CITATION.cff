@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use LuPNet, please cite the software and the manuscript it accompanies."
 title: "LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation"
 version: 0.4.0
-date-released: 2026-11-09
+date-released: 2026-11-10
 doi: 10.5281/zenodo.23125038
 repository-code: "https://github.com/Danpc11/LuPNet"
 license-url: "https://polyformproject.org/licenses/noncommercial/1.0.0"

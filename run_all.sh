@@ -10,11 +10,9 @@ python3 src/pulmonary_veins_shared_law.py     # the same law vs the venous tree
 # python3 src/ph_cohort.py run --tag altF --n 100 --seed 7000 --pseed 40000 --vmode fibrosis       # alternative mechanism
 # Sensitivity of the benchmarks to the two parameters the conclusion rests on (same seeds, so only the
 # parameter changes). About 25 s per simulated case on one core; the runs are resumable.
-# for t in 1.0 3.0; do python3 src/ph_cohort.py run --tag tau$t --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85 --tau $t; done
+# for t in 1.0 3.0; do python3 src/ph_cohort.py run --tag tau$t --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85 --tau $t; done       # sensitivity
 # for p in 0.50 0.85; do python3 src/ph_cohort.py run --tag pv$p --n 200 --seed 5000 --pseed 20000 --lo 0.25 --hi 0.85 --p_vasc $p; done
-# python3 src/sensitivity.py --ref big2 --tags tau1.0 tau3.0 pv0.50 pv0.85 \
-#     --labels 'T_les 1 y' 'T_les 3 y' '70% to 50%' '70% to 85%'   # TableS17 and FigureS2
-# On several cores: bash scripts/sensitivity_parallel.sh   (or sbatch scripts/sensitivity.slurm)
+# Pattern, altitude, lesion-location and sensitivity cohorts on several cores: scripts/cohorts_local.sh
 # python3 src/fibrosis_only_cohorts.py --arm hom --n 60                                            # fibrosis alone
 # python3 src/fibrosis_only_cohorts.py --arm het --n 38                                            # variable vascular responses
 python3 src/make_figures_erj.py               # Figures 1-4 and Table 1
@@ -23,6 +21,8 @@ python3 src/exercise_response.py analyze || echo "skipped: no pressure-flow case
 python3 src/tree_size.py analyze || echo "skipped: no 1,024-unit cases (WHAT=tree bash scripts/cohorts_local.sh)"            # table S6
 python3 src/make_supplement_figures.py        # Figure S1 and tables S8-S12 (lung-function range, baseline variation, audit sensitivity analyses)
 python3 src/noninvasive.py                    # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
+python3 src/sensitivity.py --ref big2 --tags tau1.0 tau3.0 pv0.50 pv0.85 --labels 'T_les 1 y' 'T_les 3 y' '70% to 50%' '70% to 85%'   # table S17, figure S2
+python3 src/make_figures_story.py             # figures Story1-Story6 (add --clinical FILE for the panels with patients)
 python3 src/manuscript_numbers.py            # numbers quoted in the text and table S11
 python3 src/lesion_location.py                # tables S25-S26: where the lesion sits (add --clinical FILE for the patients row)
 # python3 src/noninvasive_tool.py --clinical FILE   # tables S22-S24: individual estimate; needs the clinical file, not in the repository

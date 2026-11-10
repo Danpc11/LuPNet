@@ -3,7 +3,7 @@
 
     python3 src/make_figures_erj.py --cohorts results/ph_cohorts --out results/figures
 Figure 1: the shared target law against human pulmonary morphometry. Figure 2: the calibrated virtual cohort
-(a-e) and the two clocks of fibrosis and vasculopathy (f-h).
+(a-e) and the lesion against the extent of fibrosis (f-h).
 Figure 3: advanced disease (out of sample). Figure 4: the vascular phenotype. Table 1: calibration targets.
 """
 import argparse, os, sys
@@ -328,7 +328,7 @@ tag(axL, "e", x=-0.42)
 
 # f: how far the lesion has run at each extent of fibrosis
 ax = fig.add_subplot(gs[2, 0])
-for tag_, c, lab in (("big2", RED, "Own clock"), ("altF", ORANGE, "Tied to fibrosis")):
+for tag_, c, lab in (("big2", RED, "Not scaled by fibrosis"), ("altF", ORANGE, "Scaled by fibrosis")):
     for j, d in enumerate(trajectories(tag_)):
         ext = 1.0 - d.healthy.to_numpy()
         if tag_ == "big2":

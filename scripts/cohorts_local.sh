@@ -51,7 +51,7 @@ if [ "$WHAT" = all ] || [ "$WHAT" = advanced ]; then
 fi
 if [ "$WHAT" = location ]; then
     # same lesion draws as big2 / adv2; a_scale gives each mechanism the PH prevalence of the diffuse cohort in
-    # mild-to-moderate disease (src notes in CHANGELOG 0.3.13). Half field: diffuse A/2 plus field 3 x A/2.
+    # mild-to-moderate disease (THEORY.md, section 5.1). Half field: diffuse A/2 plus field 3 x A/2.
     SPECS+="big2_scar"$'\t'"200"$'\t'"$BIG --where scar"$'\n'
     SPECS+="big2_field"$'\t'"200"$'\t'"$BIG --where field --a_scale 5.8"$'\n'
     SPECS+="big2_mix50"$'\t'"200"$'\t'"$BIG --where mixed --mix 0.25 --a_scale 2.0"$'\n'

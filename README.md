@@ -25,7 +25,7 @@ The law, its exponent and the weight of the pulsatile term are derived and teste
 
 With one constant fixed on the main pulmonary artery, the law predicts the diameters of the human pulmonary arterial tree (Huang et al. 1996, 16 orders from 20 µm to 3 cm) within 14%, the venous tree within 14–18% without refitting, and, with the capillary and venular resistances of the reference calibration, a normal mean pulmonary artery pressure of 14.8 mmHg (the law sets about half of the pressure drop; [THEORY.md](THEORY.md) §2.4).
 
-**2. Pulmonary hypertension needs a vasculopathy of its own.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a structural small-artery vasculopathy in 70% of the simulated cases, mostly mild, with its own course and an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
+**2. Fibrosis alone does not produce pulmonary hypertension; a vascular lesion does.** In in silico IPF cohorts, tissue loss alone keeps mPAP below about 19 mmHg in mild-to-moderate disease and ties it tightly to FVC (r = −0.92), unlike patients. Adding a lesion of the small arteries in 70% of the simulated cases, mostly mild, with an associated capillary loss, reproduces all seven targets of mild-to-moderate IPF inside their 95% intervals (200 simulated cases):
 
 | | Model | 95% CI | Patients |
 |---|---|---|---|
@@ -104,7 +104,7 @@ print(L.base_state["vs"]["PPA"])                 # mean pulmonary artery pressur
 *A vascular contribution to pulmonary hypertension in idiopathic pulmonary fibrosis* (in preparation). The cohorts used in the paper are included as `results/ph_cohorts/big2.tsv.gz` (calibrated, 200 cases), `adv2.tsv.gz` (advanced disease, 60) and `altF.tsv.gz` (vasculopathy linked to fibrosis, 100), together with the two cohorts without vasculopathy (`hom.tsv.gz`, 60 cases; `het.tsv.gz`, 38 cases with variable vascular responses), so figures and tables can be rebuilt without re-running the simulations. All cohorts use a 256-unit tree:
 
 ```bash
-python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the two clocks) and Table 1 -> results/figures/
+python src/make_figures_erj.py        # Figures 1-4 (Figure 2a-e the calibrated cohort, 2f-h the lesion against the extent of fibrosis) and Table 1 -> results/figures/
 python src/supplement_tables.py       # Supplementary tables S2, S4, S5 and the fibrosis-only cohorts -> results/figures/
 python src/noninvasive.py             # Figure 5 and tables S13-S15 (echocardiography, blood gases, emulator)
 python src/manuscript_numbers.py      # numbers quoted in the text and table S11
@@ -160,8 +160,10 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `big2_scar` | Lesion in fibrotic and honeycomb units only | `--where scar` |
 | `big2_field`, `adv2_field` | Lesion in the scar and the healthy units next to it | `--where field --a_scale 5.8` |
 | `big2_mix50`, `adv2_mix50` | Half of the lesion diffuse, half following the field | `--where mixed --mix 0.25 --a_scale 2.0` |
+| `tau1.0`, `tau3.0` | Time constant of the lesion 1 and 3 years | `--tau 1.0`, `--tau 3.0` |
+| `pv0.50`, `pv0.85` | Lesion in 50% and 85% of the cases | `--p_vasc 0.50`, `--p_vasc 0.85` |
 
-`scripts/cohorts_local.sh` regenerates the last four families on the cores of one machine without a scheduler (`WHAT=patterns`, `advanced`, `altitude` or `location`; about 25 to 60 s of one core per case, resumable).
+`scripts/cohorts_local.sh` regenerates the last six families on the cores of one machine without a scheduler (`WHAT=patterns`, `advanced`, `altitude`, `location` or `sensitivity`; about 25 to 60 s of one core per case, resumable).
 
 ## Repository
 
@@ -200,10 +202,13 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 
 ## Limitations
 
-- The five vasculopathy parameters were chosen against the mild-to-moderate targets; the advanced-disease results and the phenotype analysis are out of sample.
-- The arterial morphometry comes from the casts of one lung, so the pulmonary exponent b has no confidence interval yet.
-- The pulsatility of the pulmonary artery is an effective value, not a measured waveform.
-- The calibrated parameters age the vessels: the lung without fibrosis sits at 16.5 mmHg, and the lesion is at its final severity in nearly every simulated visit, so its time constant is not identified by the cohorts (`docs/AUDIT.md`, findings 10–11).
+- The lesion is a resistance added to the arteriole, not a cellular mechanism; its parameters were chosen against the mild-to-moderate benchmarks. Advanced disease, the pressure–flow response and the patients are out of sample.
+- Pre-capillary pulmonary hypertension only; alveolar ventilation is fixed, so blood gases are not used for the individual estimate.
+- The arterial morphometry comes from the casts of one lung; the exponent b has no confidence interval. The pulsatility of the pulmonary artery is an effective value.
+- The vessels of the calibrated lung are aged: without fibrosis it sits at 16.5 mmHg.
+- The individual estimate was evaluated in one cohort, referred for suspected PH.
+
+The full list is in [THEORY.md](THEORY.md), section 8.
 
 ## How to cite
 
