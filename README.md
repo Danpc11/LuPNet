@@ -6,7 +6,7 @@
 ![Python](https://img.shields.io/badge/Python-3.9%2B%20%28locked%20versions%3A%203.11%2B%29-3776AB?logo=python&logoColor=white)
 [![Tests](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml/badge.svg)](https://github.com/Danpc11/LuPNet/actions/workflows/tests.yml)
 [![Calculator](https://img.shields.io/badge/Calculator-live-4285F4?logo=googlechrome&logoColor=white)](https://danpc11.github.io/LuPNet/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23125038.svg)](https://doi.org/10.5281/zenodo.23125038)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24126085.svg)](https://doi.org/10.5281/zenodo.24126085)
 [![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-lightgrey)](LICENSE)
 
 ---
@@ -223,7 +223,9 @@ The full list is in [THEORY.md](THEORY.md), section 8.
 
 ## How to cite
 
-Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.4.0). Zenodo, 2026. [concept DOI, resolves to the latest version: https://doi.org/10.5281/zenodo.23125038]
+Toscano-Marquez F, Cisneros J, Maldonado M, Cervera A, Tovar H, Vázquez-Victorio G, Pardo A, Selman M, Pérez-Calixto D. *LuPNet: Lung Perfusion Network model of the fibrotic lung and its pulmonary circulation* (v0.4.0). Zenodo, 2026. https://doi.org/10.5281/zenodo.24126085
+
+The DOI above is that of version 0.4.0. [10.5281/zenodo.23125038](https://doi.org/10.5281/zenodo.23125038) always resolves to the latest version.
 
 ## License
 
