@@ -82,14 +82,19 @@ def cmd_run(a):
 
 def cmd_summary(a):
     import glob
-    files = sorted(glob.glob(os.path.join(WORK, "*.tsv")))
+    files = sorted(glob.glob(os.path.join(WORK, "*__*.tsv")))          # one file per case: cohort__case.tsv
     if not files:
         raise SystemExit("no verified cases: run `verify_cohorts.py run` first")
     D = pd.concat([pd.read_csv(f, sep="\t") for f in files], ignore_index=True)
     S = D.groupby("cohort").agg(cases=("case", "count"), identical=("max_rel_diff", lambda x: int((x < 1e-6).sum())), max_rel_diff=("max_rel_diff", "max"),
                                 max_mPAP_diff=("mPAP_new", lambda x: float(np.abs(x - D.loc[x.index, "mPAP_stored"]).max()))).reset_index()
-    S.to_csv(os.path.join(ROOT, "data", "cohorts_verification.tsv"), sep="\t", index=False)
-    print(S.to_string(index=False)); print(f"{len(D)} cases; {int((D.max_rel_diff < 1e-6).sum())} identical within 1e-6; data/cohorts_verification.tsv written")
+    M = pd.read_csv(MAN, sep="\t").set_index("cohort").cases
+    complete = set(S.cohort) == set(M.index) and all(S.set_index("cohort").cases.reindex(M.index) == M)
+    # the record in data/ is the full verification; a partial run never replaces it
+    out = os.path.join(ROOT, "data", "cohorts_verification.tsv") if complete else os.path.join(WORK, "summary.tsv")
+    S.to_csv(out, sep="\t", index=False); print(S.to_string(index=False))
+    print(f"{len(D)} of {int(M.sum())} cases; {int((D.max_rel_diff < 1e-6).sum())} identical within 1e-6; {os.path.relpath(out, ROOT)} written"
+          + ("" if complete else " (partial run: data/cohorts_verification.tsv left as it is)"))
 
 
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ Table numbers are those of the online supplement.
 - Figure 2g of v21 and its test measure the contributions from the healthy lung of the cohort (14.28 mmHg).
 - `cohort_io.last_visit`, `usable`, `applied_severity`, `MANUSCRIPT`: one routine for the final visit, the usable visits, the effective lesion and the lesion priors; duplicated noise and benchmark code removed.
 - `src/verify_cohorts.py`, `data/cohorts_verification.tsv`: every case of the 21 cohorts simulated again and identical.
+- `verify_cohorts.py` writes `data/cohorts_verification.tsv` only for a complete run; partial runs go to `results/verify/summary.tsv`.
+- `validate_calculator.py` reads the measurement errors from the calculator file.
 - `src/table_checksums.py`, `data/table_checksums.tsv`, checked in continuous integration.
 - `ph_stats.SPREAD`, `cohort_io.DESIGN`; `ph_cohort.py` takes its defaults from `cohort_io`; `effective_lesion` used everywhere.
 - Outputs of the synthetic clinical file in `results/synthetic/`, figures watermarked.

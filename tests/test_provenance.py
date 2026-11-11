@@ -26,3 +26,15 @@ def test_one_definition_of_the_lesion():
     assert applied_severity(d) == 6.0
     assert np.allclose(effective_lesion(d), 6.0 * (1 - np.exp(-(np.array([0.0, 3.0]) + 1.0) / 4.0)))
     assert MANUSCRIPT["tau"] == 2.0 and MANUSCRIPT["p_vasc"] == 0.7
+
+
+def test_partial_verification_does_not_replace_the_record(tmp_path, monkeypatch):
+    import verify_cohorts
+    record = os.path.join(ROOT, "data", "cohorts_verification.tsv"); before = open(record, "rb").read()
+    monkeypatch.setattr(verify_cohorts, "WORK", str(tmp_path))
+    pd.DataFrame([dict(cohort="hom", case=0, visits_stored=5, visits_new=5, columns=70, max_rel_diff=0.0, column="", mPAP_stored=17.0, mPAP_new=17.0)]
+                 ).to_csv(tmp_path / "hom__000.tsv", sep="\t", index=False)
+    verify_cohorts.cmd_summary(None)
+    assert open(record, "rb").read() == before and (tmp_path / "summary.tsv").exists()
+    R = pd.read_csv(record, sep="\t"); M = pd.read_csv(cohort_manifest.OUT, sep="\t")
+    assert len(R) == len(M) and (R.identical == R.cases).all() and R.cases.sum() == M.cases.sum()

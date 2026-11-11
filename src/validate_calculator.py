@@ -12,7 +12,7 @@ import json, os, sys
 import numpy as np
 from sklearn.metrics import roc_auc_score
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from cohort_io import cases
+from cohort_io import cases, usable
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 C = json.load(open(os.path.join(ROOT, "results", "ph_calculator.json")))
@@ -20,13 +20,13 @@ R = np.array(C["reference"], float)
 ids = []
 for tag in ("big2", "adv2"):
     for i, d in cases(os.path.join(ROOT, "results", "ph_cohorts"), tag):
-        s = d[(d.converged == 1) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
+        s = d[usable(d) & (d.healthy >= 0.12) & (d.healthy <= 0.85)]
         if len(s):
             ids += [f"{tag}{i}"] * min(25, len(s))
 ids = np.array(ids)
 assert len(ids) == len(R)
 sp = (R[:, 2] - 2) / 0.61
-SDs = dict(FVC=5, DLCO=5, sPAP=8, AaDO2=6, SpO2=2)
+SDs = C["reference_sd"]                 # the measurement errors the calculator itself assumes
 test = np.random.default_rng(0).choice(np.unique(ids), 130, replace=False)
 for name, use in (("FVC + DLCO", ()), ("+ SpO2", ("SpO2",)), ("+ A-a gradient", ("AaDO2",)), ("+ echo sPAP", ("sPAP",)),
                   ("+ echo sPAP + A-a gradient", ("sPAP", "AaDO2")), ("+ all three", ("sPAP", "AaDO2", "SpO2"))):
@@ -34,9 +34,9 @@ for name, use in (("FVC + DLCO", ()), ("+ SpO2", ("SpO2",)), ("+ A-a gradient", 
     P, V, M, T, Tv, Tm = [], [], [], [], [], []
     for c in test:
         k = g.choice(np.where(ids == c)[0]); ref = ids != c
-        obs = dict(FVC=R[k, 0] + g.normal(0, 5), DLCO=R[k, 1] + g.normal(0, 5), sPAP=sp[k] + g.normal(0, 8),
-                   AaDO2=R[k, 3] + g.normal(0, 6), SpO2=R[k, 5] + g.normal(0, 2))
-        ll = -0.5 * (((R[ref, 0] - obs["FVC"]) / 5) ** 2 + ((R[ref, 1] - obs["DLCO"]) / 5) ** 2)
+        obs = dict(FVC=R[k, 0] + g.normal(0, SDs["FVC"]), DLCO=R[k, 1] + g.normal(0, SDs["DLCO"]), sPAP=sp[k] + g.normal(0, SDs["sPAP"]),
+                   AaDO2=R[k, 3] + g.normal(0, SDs["AaDO2"]), SpO2=R[k, 5] + g.normal(0, SDs["SpO2"]))
+        ll = -0.5 * (((R[ref, 0] - obs["FVC"]) / SDs["FVC"]) ** 2 + ((R[ref, 1] - obs["DLCO"]) / SDs["DLCO"]) ** 2)
         col = dict(sPAP=sp[ref], AaDO2=R[ref, 3], SpO2=R[ref, 5])
         for u in use:
             ll += -0.5 * ((col[u] - obs[u]) / SDs[u]) ** 2
