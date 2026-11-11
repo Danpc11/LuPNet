@@ -1,0 +1,13 @@
+target	observations	AUC	AUC_min	AUC_max
+vasc	FVC + DLCO	0.687	0.682	0.691
+vasc	+ SpO$_2$	0.721	0.713	0.726
+vasc	+ PaO$_2$	0.738	0.731	0.744
+vasc	+ A–a gradient	0.768	0.765	0.77
+vasc	+ echo sPAP	0.837	0.834	0.839
+vasc	+ echo sPAP + A–a gradient	0.853	0.85	0.858
+PH	FVC + DLCO	0.776	0.772	0.78
+PH	+ SpO$_2$	0.836	0.827	0.843
+PH	+ PaO$_2$	0.869	0.861	0.874
+PH	+ A–a gradient	0.874	0.868	0.88
+PH	+ echo sPAP	0.917	0.913	0.923
+PH	+ echo sPAP + A–a gradient	0.937	0.933	0.943

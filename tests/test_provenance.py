@@ -38,3 +38,14 @@ def test_partial_verification_does_not_replace_the_record(tmp_path, monkeypatch)
     assert open(record, "rb").read() == before and (tmp_path / "summary.tsv").exists()
     R = pd.read_csv(record, sep="\t"); M = pd.read_csv(cohort_manifest.OUT, sep="\t")
     assert len(R) == len(M) and (R.identical == R.cases).all() and R.cases.sum() == M.cases.sum()
+
+
+def test_table_record(tmp_path):
+    import table_checksums as tc
+    R = pd.read_csv(tc.OUT, sep="\t")
+    assert len(R) == 24 and set(R.table[R["how"] == "numeric"]) == set(os.listdir(tc.REF))
+    ref = os.path.join(tc.REF, "TableS13_detection.tsv"); D = pd.read_csv(ref, sep="\t")
+    num = [c for c in D.columns if pd.api.types.is_numeric_dtype(D[c])]
+    a = D.copy(); a[num[-1]] = a[num[-1]] + 0.005; a.to_csv(tmp_path / "a.tsv", sep="\t", index=False)
+    b = D.copy(); b[num[-1]] = b[num[-1]] + 0.2; b.to_csv(tmp_path / "b.tsv", sep="\t", index=False)
+    assert tc.close(str(tmp_path / "a.tsv"), ref) and not tc.close(str(tmp_path / "b.tsv"), ref)

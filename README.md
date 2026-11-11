@@ -189,7 +189,7 @@ All cohorts use a 256-unit tree and, within a family, the same seeds, so a diffe
 | `data/README.md`, `CITATION.cff` | Provenance of the morphometric tables and the parameter file; how to cite |
 | `src/make_figures_story.py` | Figures 1–6 of the article, on one grid and one palette; legends in `docs/FIGURES.md`. Figure 5 and Figure 6D–F need `--clinical` |
 | `src/cohort_manifest.py`, `data/cohorts_manifest.tsv` | Command, seeds, code version and md5 of every cohort; `--check` verifies them |
-| `src/table_checksums.py`, `data/table_checksums.tsv` | Checksums of the tables of `run_all.sh` in the locked environment; `--check` compares |
+| `src/table_checksums.py`, `data/table_checksums.tsv`, `data/reference_tables/` | Record of the tables of `run_all.sh` in the locked environment; `--check` compares 21 exactly and the three emulator tables (S13–S15) within a tolerance |
 | `src/verify_cohorts.py` | Simulates the cases again from the manifest and compares them with the stored cohorts (`data/cohorts_verification.tsv`) |
 | `src/synthetic_clinical.py`, `data/synthetic_patients.tsv` | Synthetic file with the columns of the clinical file, to run and test the scripts that need one; its rows are not patients |
 | `src/lesion_location.py` | Benchmarks by location of the lesion and PH by FVC band (tables S25–S26) |

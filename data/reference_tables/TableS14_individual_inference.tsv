@@ -1,0 +1,7 @@
+observations	n	MAE_mPAP	interval90_width	coverage90	AUC_vasculopathy	AUC_PH
+FVC + DLCO	300	4.21	15.8	0.92	0.714	0.78
++ SpO$_2$	300	3.65	13.7	0.89	0.739	0.821
++ PaO$_2$	300	3.47	13.2	0.89	0.754	0.851
++ A–a gradient	300	3.03	12.8	0.91	0.806	0.883
++ echo sPAP	300	2.21	9.4	0.92	0.851	0.928
++ echo sPAP + A–a gradient	300	2.15	8.7	0.91	0.889	0.94

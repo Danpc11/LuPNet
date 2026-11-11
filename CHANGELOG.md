@@ -13,7 +13,7 @@ Table numbers are those of the online supplement.
 - `src/verify_cohorts.py`, `data/cohorts_verification.tsv`: every case of the 21 cohorts simulated again and identical.
 - `verify_cohorts.py` writes `data/cohorts_verification.tsv` only for a complete run; partial runs go to `results/verify/summary.tsv`.
 - `validate_calculator.py` reads the measurement errors from the calculator file.
-- `src/table_checksums.py`, `data/table_checksums.tsv`, checked in continuous integration.
+- `src/table_checksums.py`, `data/table_checksums.tsv`, `data/reference_tables/`, checked in continuous integration: 21 tables exactly, the emulator tables S13-S15 within a tolerance.
 - `ph_stats.SPREAD`, `cohort_io.DESIGN`; `ph_cohort.py` takes its defaults from `cohort_io`; `effective_lesion` used everywhere.
 - Outputs of the synthetic clinical file in `results/synthetic/`, figures watermarked.
 - Manifest: `written_with` from the cohort file, `reproduced_with` from the verification.
