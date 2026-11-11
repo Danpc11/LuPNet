@@ -193,8 +193,8 @@ def network_diagram(ax):
     ax.text(xu1 + 0.25 + 1.5 * dx, top, "Venous tree", fontsize=6, ha="center", va="top", color=VEN)
     ax.text(xa + 0.21, bot, "Sub-tree to\n10 µm radius", fontsize=6, ha="center", va="top", color=ART)
     x0k, y, dy = 6.9, 3.32, 0.40
-    ax.plot([x0k, x0k + 0.28], [y, y], color=ART, lw=2.0); ax.text(x0k + 0.4, y, "Shared law: τ* = τ₀ r$^{b-1}$ ℓ$^{(b-1)/2}$", va="center", fontsize=6)
-    y -= 0.8 * dy; ax.text(x0k + 0.4, y, "sensed shear S = τ̄ [1 + w₁φ₁G(α)]", va="center", fontsize=6, color=NEUTRAL); y -= 1.15 * dy
+    ax.plot([x0k, x0k + 0.28], [y, y], color=ART, lw=2.0); ax.text(x0k + 0.4, y, r"Shared law: $\tau^* = \tau_0\, r^{\,b-1}\, \ell^{\,(b-1)/2}$", va="center", fontsize=6)
+    y -= 0.8 * dy; ax.text(x0k + 0.4, y, r"sensed shear $S = \bar{\tau}\,[1 + w_1 \varphi_1 G(\alpha)]$", va="center", fontsize=6, color=NEUTRAL); y -= 1.15 * dy
     for c, t in ((TISSUE[0], "Preserved unit: ventilation, capillary sheet, diffusion"), (TISSUE[1], "Fibrotic unit: low compliance and capillary bed"), (TISSUE[2], "Honeycomb unit")):
         ax.add_patch(FancyBboxPatch((x0k, y - 0.08), 0.28, 0.16, boxstyle="round,pad=0.0,rounding_size=0.05", fc=c, ec=DARK, lw=0.5)); ax.text(x0k + 0.4, y, t, va="center", fontsize=6); y -= dy
     ax.add_patch(matplotlib.patches.Rectangle((x0k + 0.09, y - 0.085), 0.09, 0.17, fc=LESION, ec="none")); ax.text(x0k + 0.4, y, "Vascular lesion: resistance in series, capillary loss", va="center", fontsize=6)
